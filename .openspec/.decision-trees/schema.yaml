@@ -1,0 +1,381 @@
+# Decision Tree Schema for MLcreator
+# Version: 2.0.0 | Created: 2025-01-05 | Updated: 2025-12-01
+# Enhanced with KB integration and GameCreator awareness
+
+metadata:
+  version: "2.0.0"
+  description: "Schema for KB-enhanced interactive decision trees in MLcreator"
+  kb_endpoint: "http://localhost:6333"
+  kb_collection: "unity_project_kb"
+  kb_items_count: 77914
+
+# Project Context - Injected into all decision paths
+project_context:
+  name: "MLcreator"
+  framework: "Unity Netcode for GameObjects 2.7.0"
+  integration: "GameCreator 2 (Invasive Integration)"
+
+  # CRITICAL: These constraints are enforced in all decision paths
+  constraints:
+    - id: "no-network-transform"
+      description: "NetworkTransform intentionally removed from character prefabs"
+      enforcement: "block"
+      reason: "Conflicts with CharacterController, causes jitter"
+      alternative: "Use NetworkCharacterAdapter for character sync"
+      reference: ".serena/memories/CRITICAL/002_network_architecture_never_forget.md"
+
+    - id: "invasive-integration"
+      description: "GameCreator source is modified with network properties"
+      pattern: "character.IsNetworkOwner, character.IsNetworkSpawned"
+      reference: ".serena/memories/CRITICAL/001_gamecreator_invasive_integration.md"
+
+    - id: "server-authoritative"
+      description: "All gameplay actions require ServerRpc"
+      pattern: "[ServerRpc] methods for mutations, server validates all input"
+      reference: ".serena/memories/CRITICAL/003_multiplayer_rpc_patterns.md"
+
+    - id: "rpc-naming"
+      description: "RPC methods MUST end with ClientRpc or ServerRpc suffix"
+      pattern: "MethodNameServerRpc(), MethodNameClientRpc()"
+      enforcement: "error"
+
+    - id: "networkbehaviour-fields"
+      description: "Never redeclare NetworkBehaviour base fields"
+      blocked_names: ["m_NetworkObject", "m_IsOwner", "m_IsServer", "m_IsClient"]
+      reference: ".serena/memories/CRITICAL/005_networkbehaviour_inheritance_pattern.md"
+
+  # GameCreator modules with sync patterns
+  gc_modules:
+    character:
+      sync_component: "NetworkCharacterAdapter"
+      ownership_check: "character.IsNetworkOwner"
+      spawn_flag: "character.IsNetworkSpawned = true"
+
+    inventory:
+      sync_pattern: "ServerRpc for transactions"
+      persistence: "NetworkVariable + Supabase hybrid"
+
+    stats:
+      sync_pattern: "Batched NetworkVariable (StatsBatch struct)"
+      bandwidth_savings: "86%"
+
+    shooter:
+      sync_pattern: "Server-authoritative damage"
+      hit_detection: "Server validates all hits"
+
+# Decision Tree Structure
+structure:
+  tree:
+    id: "unique-kebab-case-id"
+    title: "Human-readable title"
+    description: "Brief description of what this decision tree helps with"
+    category: "networking | character | visual-scripting | performance | supabase | gamecreator"
+    difficulty: "beginner | intermediate | advanced"
+    estimated_time: "Time to complete in minutes"
+
+    # Optional: GameCreator module this tree applies to
+    gc_module: "character | inventory | stats | shooter | null"
+
+    # Entry point
+    start_node: "node-id"
+
+    # All nodes in the tree
+    nodes:
+      - id: "unique-node-id"
+        type: "question | decision | action | outcome | kb_query | constraint_check"
+        content: "Question or statement"
+
+        # For question nodes
+        options:
+          - label: "Option text"
+            description: "Optional detailed explanation"
+            next: "next-node-id"
+            condition: "Optional: code condition to evaluate"
+            # NEW: Role-specific paths
+            requires_role: "host | client | server | any"
+
+        # For decision nodes
+        criteria:
+          - condition: "Expression to evaluate"
+            next: "node-id-if-true"
+
+        # For action nodes
+        action:
+          type: "code | guide | link | kb_search"
+          content: "Code snippet, guide reference, or link"
+
+        # NEW: For kb_query nodes - queries Unity KB before proceeding
+        kb_query:
+          search_terms: ["term1", "term2"]
+          filters:
+            kind: "class | method | property | field"
+            assembly_name: "Assembly filter"
+            code_type: "Filter by code type"
+          on_found: "node-id-when-results-found"
+          on_not_found: "node-id-when-no-results"
+          inject_results: true  # Add results to outcome context
+
+        # NEW: For constraint_check nodes - validates against project constraints
+        constraint_check:
+          constraint_id: "no-network-transform"
+          on_valid: "node-id-if-valid"
+          on_violation: "node-id-if-violates"
+
+        # For outcome nodes
+        outcome:
+          recommendation: "What to do"
+          code_example: "Optional code snippet"
+          # NEW: KB verification
+          kb_verify:
+            search_terms: ["verify", "pattern"]
+            must_exist: true
+          # NEW: Project-specific implementation reference
+          project_implementation:
+            file: "path/to/actual/implementation.cs"
+            class: "ClassName"
+            line_range: "10-50"
+          references:
+            - file: "path/to/file"
+              section: "Section name or line range"
+          related_trees: ["other-tree-id"]
+          # NEW: Constraints this outcome respects
+          respects_constraints: ["no-network-transform", "server-authoritative"]
+
+# KB Query Patterns - Reusable search configurations
+kb_query_patterns:
+  character_sync:
+    search_terms: ["NetworkCharacterAdapter", "character sync", "IsNetworkOwner"]
+    filters:
+      assembly_name: "MLCreator_Multiplayer.Runtime"
+
+  rpc_patterns:
+    search_terms: ["ServerRpc", "ClientRpc", "RpcDelivery"]
+    filters:
+      kind: "method"
+
+  stats_batch:
+    search_terms: ["StatsBatch", "INetworkSerializable", "NetworkVariable"]
+    filters:
+      kind: "class"
+
+  inventory_sync:
+    search_terms: ["inventory", "NetworkVariable", "Supabase"]
+    filters:
+      code_type: "runtime"
+
+# Network Role Definitions
+network_roles:
+  host:
+    description: "Player running as both server and client (listen server)"
+    is_server: true
+    is_client: true
+    authority: "full"
+
+  dedicated_server:
+    description: "Headless server with no local player"
+    is_server: true
+    is_client: false
+    authority: "full"
+
+  client:
+    description: "Pure client connected to remote server"
+    is_server: false
+    is_client: true
+    authority: "owner-only"
+
+# GameCreator Module Sync Patterns
+gc_sync_patterns:
+  character:
+    movement:
+      authority: "server"
+      sync_method: "NetworkCharacterAdapter state sync"
+      not_allowed: "NetworkTransform"
+    animation:
+      sync_method: "NetworkAnimator"
+      parameters: "auto-sync enabled parameters"
+    ik:
+      sync_method: "local-only"
+      reason: "IK uses local physics queries"
+    ragdoll:
+      sync_method: "state flag + final position"
+
+  inventory:
+    items:
+      authority: "server"
+      sync_method: "ServerRpc transactions"
+      persistence: "Supabase hybrid"
+    equipment:
+      sync_method: "NetworkVariable per slot"
+
+  stats:
+    health_mana_stamina:
+      sync_method: "Batched NetworkVariable"
+      struct: "StatsBatch : INetworkSerializable"
+    attributes:
+      authority: "server calculates final"
+      sync_method: "result values only"
+
+  shooter:
+    weapons:
+      sync_method: "NetworkVariable current weapon"
+    projectiles:
+      authority: "server spawns and validates"
+    damage:
+      authority: "server-only application"
+      validation: "ServerRpc with hit validation"
+
+# Example Decision Tree
+example:
+  id: "choose-network-sync-method"
+  title: "Choose Network Synchronization Method"
+  description: "Helps determine whether to use NetworkVariable, RPC, or Supabase for syncing game state"
+  category: "networking"
+  difficulty: "intermediate"
+  estimated_time: 5
+  
+  start_node: "frequency-check"
+  
+  nodes:
+    - id: "frequency-check"
+      type: "question"
+      content: "How frequently does this data change?"
+      options:
+        - label: "Every frame or very frequently (>10 times/second)"
+          description: "Real-time gameplay data like position, rotation"
+          next: "high-frequency"
+        - label: "Occasionally (1-10 times/second)"
+          description: "Events, state changes, actions"
+          next: "medium-frequency"
+        - label: "Rarely (< once per second)"
+          description: "Persistent data, player stats, inventory"
+          next: "low-frequency"
+    
+    - id: "high-frequency"
+      type: "question"
+      content: "Is this data gameplay-critical or cosmetic?"
+      options:
+        - label: "Gameplay-critical (affects game logic)"
+          next: "critical-high-freq"
+        - label: "Cosmetic (visual only)"
+          next: "cosmetic-high-freq"
+    
+    - id: "critical-high-freq"
+      type: "outcome"
+      outcome:
+        recommendation: "Use Unreliable ServerRpc + Client Prediction"
+        explanation: "For high-frequency gameplay data, use unreliable RPCs for performance with client-side prediction for smoothness"
+        code_example: |
+          [ServerRpc(Delivery = RpcDelivery.Unreliable)]
+          void UpdatePositionServerRpc(Vector3 position) {
+              // Server updates authoritative position
+              m_NetworkPosition.Value = position;
+          }
+        references:
+          - file: "llm-patterns.txt"
+            section: "158-172"
+          - file: "claudedocs/NETCODE_2_7_0_MIGRATION_GUIDE.md"
+            section: "Dead Reckoning"
+    
+    - id: "cosmetic-high-freq"
+      type: "outcome"
+      outcome:
+        recommendation: "Use Unreliable ClientRpc (broadcast from server)"
+        explanation: "Cosmetic data can use unreliable delivery to save bandwidth"
+        code_example: |
+          [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+          void UpdateParticleEffectClientRpc(Vector3 position) {
+              // Show effect on all clients
+              PlayEffect(position);
+          }
+    
+    - id: "medium-frequency"
+      type: "question"
+      content: "Does this data need to be persisted across sessions?"
+      options:
+        - label: "Yes, needs persistence"
+          next: "persistent-medium"
+        - label: "No, session-only"
+          next: "session-medium"
+    
+    - id: "session-medium"
+      type: "outcome"
+      outcome:
+        recommendation: "Use NetworkVariable"
+        explanation: "NetworkVariable is perfect for state that changes occasionally and needs to stay in sync"
+        code_example: |
+          private NetworkVariable<int> m_Health = new NetworkVariable<int>(
+              value: 100,
+              readPerm: NetworkVariableReadPermission.Everyone,
+              writePerm: NetworkVariableWritePermission.Server
+          );
+          
+          [ServerRpc]
+          void TakeDamageServerRpc(int damage) {
+              m_Health.Value -= damage; // Syncs automatically
+          }
+        references:
+          - file: "llm-api.txt"
+            section: "243-273"
+    
+    - id: "persistent-medium"
+      type: "outcome"
+      outcome:
+        recommendation: "Use NetworkVariable + Supabase (Hybrid Sync)"
+        explanation: "Sync immediately with NetworkVariable, persist to Supabase in background"
+        code_example: |
+          // Immediate sync
+          m_Score.Value = newScore;
+          
+          // Background persistence
+          SupabaseManager.Instance.SavePlayerData(playerId, new {
+              score = newScore
+          });
+        references:
+          - file: "openspec/changes/perfect-multiplayer-workflow/specs/supabase-deep-integration/spec.md"
+            section: "Hybrid Sync"
+    
+    - id: "low-frequency"
+      type: "outcome"
+      outcome:
+        recommendation: "Use Supabase Database with Realtime"
+        explanation: "For infrequent changes that need persistence, Supabase is ideal"
+        code_example: |
+          // Save to database
+          await SupabaseManager.Instance.SavePlayerData(playerId, data);
+          
+          // Subscribe to changes via Realtime
+          SupabaseRealtimeManager.Instance.Subscribe("player_data", 
+              (change) => UpdateLocalData(change));
+        references:
+          - file: ".serena/memories/_INTEGRATION/Supabase_Integration_Patterns.md"
+
+# Rendering Guidelines
+rendering:
+  formats:
+    markdown:
+      description: "Text-based decision tree for documentation"
+      syntax: |
+        # Title
+        
+        **Question:** [content]
+        - [ ] Option 1 → [next node]
+        - [ ] Option 2 → [next node]
+        
+        **Recommendation:** [outcome]
+        ```code
+        [code example]
+        ```
+    
+    interactive_html:
+      description: "Interactive web-based decision tree"
+      features:
+        - "Clickable nodes"
+        - "Visual flow diagram"
+        - "Code syntax highlighting"
+        - "Copy-to-clipboard for code"
+    
+    llm_embedded:
+      description: "Embedded in llm.txt for AI assistants"
+      format: "YAML in markdown code block"
+      usage: "AI parses YAML and guides user through tree"
+

@@ -1,0 +1,41 @@
+[
+  {
+    "Name": "Full Asset Database Refresh and Analysis",
+    "Type": "AssetRefreshAndAnalysis",
+    "Parameters": {
+      "includeHidden": "true",
+      "generateReport": "true"
+    }
+  },
+  {
+    "Name": "NetworkObject Prefab Validation",
+    "Type": "PrefabValidation",
+    "Parameters": {
+      "checkNetworkVariables": "true",
+      "validateRPCs": "true"
+    }
+  },
+  {
+    "Name": "Script Reference Analysis",
+    "Type": "ScriptReferences",
+    "Parameters": {
+      "findUnusedScripts": "true",
+      "findMissingReferences": "true"
+    }
+  },
+  {
+    "Name": "NetworkObject Audit",
+    "Type": "NetworkObjectAudit",
+    "Parameters": {
+      "checkTransforms": "true",
+      "validateBehaviours": "true"
+    }
+  },
+  {
+    "Name": "Complete File Reference Mapping",
+    "Type": "FileReferenceMapping",
+    "Parameters": {
+      "includeAllAssets": "true"
+    }
+  }
+]

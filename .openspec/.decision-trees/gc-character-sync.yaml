@@ -1,0 +1,657 @@
+# Decision Tree: GameCreator Character Synchronization
+# KB-Enhanced guidance for syncing GC Character across Host/Client
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "gc-character-sync"
+title: "GameCreator Character Network Synchronization"
+description: "Comprehensive guide for syncing GameCreator Character components (motion, animation, IK, ragdoll) in multiplayer"
+category: "gamecreator"
+gc_module: "character"
+difficulty: "intermediate"
+estimated_time: 10
+
+# KB Integration
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "NetworkCharacterAdapter"
+    - "IsNetworkOwner"
+    - "character sync"
+
+# Project constraints enforced
+enforced_constraints:
+  - "no-network-transform"
+  - "invasive-integration"
+  - "server-authoritative"
+
+start_node: "character-sync-entry"
+
+nodes:
+  # ============================================
+  # ENTRY: KB Query for existing patterns
+  # ============================================
+  - id: "character-sync-entry"
+    type: "kb_query"
+    content: "Searching Unity KB for existing character sync implementations..."
+    kb_query:
+      search_terms: ["NetworkCharacterAdapter", "character", "sync"]
+      filters:
+        kind: "class"
+      on_found: "what-to-sync"
+      on_not_found: "what-to-sync"
+      inject_results: true
+
+  # ============================================
+  # MAIN QUESTION: What character aspect?
+  # ============================================
+  - id: "what-to-sync"
+    type: "question"
+    content: "What aspect of the GameCreator Character do you need to synchronize?"
+    help: "Each aspect has different sync requirements and patterns"
+    options:
+      - label: "Movement & Position"
+        description: "Character motion, walk/run/strafe, position"
+        next: "movement-check-constraint"
+
+      - label: "Animation"
+        description: "Animator parameters, state machine, blend trees"
+        next: "animation-sync"
+
+      - label: "Inverse Kinematics (IK)"
+        description: "Foot placement, look-at, hand IK"
+        next: "ik-sync"
+
+      - label: "Ragdoll"
+        description: "Physics-based ragdoll state"
+        next: "ragdoll-sync"
+
+      - label: "Complete Character Setup"
+        description: "Full character networking from scratch"
+        next: "complete-setup"
+
+  # ============================================
+  # MOVEMENT SYNC
+  # ============================================
+  - id: "movement-check-constraint"
+    type: "constraint_check"
+    content: "Validating against project constraints..."
+    constraint_check:
+      constraint_id: "no-network-transform"
+      on_valid: "movement-ownership"
+      on_violation: "constraint-violation-networktransform"
+
+  - id: "constraint-violation-networktransform"
+    type: "outcome"
+    outcome:
+      recommendation: "BLOCKED: NetworkTransform is not allowed in this project"
+      explanation: |
+        ⚠️ PROJECT CONSTRAINT VIOLATION
+
+        NetworkTransform was intentionally removed from character prefabs because:
+        1. Conflicts with CharacterController (both try to control position)
+        2. Causes jitter and position fighting
+        3. GameCreator's motion system already handles movement
+
+        Use NetworkCharacterAdapter instead.
+
+      respects_constraints: []
+      references:
+        - file: ".serena/memories/CRITICAL/002_network_architecture_never_forget.md"
+          section: "NetworkTransform Removed"
+      related_trees: ["network-sync-method"]
+
+  - id: "movement-ownership"
+    type: "question"
+    content: "Who controls this character's movement?"
+    help: "Determines authority model for position sync"
+    options:
+      - label: "Owner Player (their own character)"
+        description: "Player controls their own character movement"
+        next: "movement-owner-controlled"
+
+      - label: "AI/Server (NPC or server-controlled)"
+        description: "Server-controlled character or NPC"
+        next: "movement-server-controlled"
+
+      - label: "Transferable Ownership (vehicles, mounts)"
+        description: "Ownership can transfer between players"
+        next: "movement-transferable"
+
+  - id: "movement-owner-controlled"
+    type: "outcome"
+    outcome:
+      recommendation: "Use NetworkCharacterAdapter with Owner Input → Server Validation"
+      explanation: |
+        For owner-controlled characters:
+        1. Owner processes input locally (immediate response)
+        2. Owner sends movement commands via ServerRpc
+        3. Server validates and applies movement
+        4. NetworkCharacterAdapter syncs state to all clients
+
+        This respects the invasive integration pattern using IsNetworkOwner.
+
+      bandwidth_impact: "Low (~5 KB/s per character)"
+      latency: "Near-instant with client prediction"
+
+      code_example: |
+        // In your input handler or Update
+        if (character.IsNetworkOwner)
+        {
+            // Process input locally for immediate feedback
+            Vector3 direction = GetInputDirection();
+            character.Motion.MoveToDirection(direction);
+
+            // Send to server for validation
+            m_CharacterAdapter.MoveServerRpc(direction);
+        }
+
+        // NetworkCharacterAdapter handles sync to other clients
+
+      project_implementation:
+        file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Character/NetworkCharacterAdapter.cs"
+        class: "NetworkCharacterAdapter"
+
+      kb_verify:
+        search_terms: ["NetworkCharacterAdapter", "MoveServerRpc"]
+        must_exist: true
+
+      respects_constraints: ["no-network-transform", "invasive-integration", "server-authoritative"]
+
+      references:
+        - file: ".serena/memories/CRITICAL/001_gamecreator_invasive_integration.md"
+          section: "IsNetworkOwner Pattern"
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Character Motion Synchronization"
+
+      related_trees: ["state-management", "bandwidth-optimization"]
+
+  - id: "movement-server-controlled"
+    type: "outcome"
+    outcome:
+      recommendation: "Server-Authoritative Movement via NetworkCharacterAdapter"
+      explanation: |
+        For NPCs and server-controlled characters:
+        1. Server owns the NetworkObject
+        2. Server calls character.Motion methods directly
+        3. NetworkCharacterAdapter syncs state to all clients
+        4. Clients receive position/velocity via NetworkVariables
+
+      code_example: |
+        // Server-side NPC controller
+        public class NPCController : NetworkBehaviour
+        {
+            private Character m_Character;
+            private NetworkCharacterAdapter m_Adapter;
+
+            void Update()
+            {
+                if (!IsServer) return;
+
+                // Server controls NPC movement
+                Vector3 targetDirection = CalculateAIDirection();
+                m_Character.Motion.MoveToDirection(targetDirection);
+
+                // NetworkCharacterAdapter automatically syncs to clients
+            }
+        }
+
+      respects_constraints: ["no-network-transform", "server-authoritative"]
+
+      references:
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Server authority enforcement"
+
+  - id: "movement-transferable"
+    type: "outcome"
+    outcome:
+      recommendation: "Ownership Transfer Pattern with NetworkCharacterAdapter"
+      explanation: |
+        For characters with transferable ownership (vehicles, mounts):
+        1. Use NetworkObject.ChangeOwnership() to transfer
+        2. Update character.Player reference on transfer
+        3. New owner's IsNetworkOwner returns true
+        4. Previous owner stops processing input
+
+      code_example: |
+        // Server transfers ownership
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestOwnershipTransferServerRpc(ulong newClientId, ServerRpcParams rpcParams = default)
+        {
+            // Validate request
+            if (!CanTransferTo(newClientId)) return;
+
+            // Transfer NetworkObject ownership
+            NetworkObject.ChangeOwnership(newClientId);
+
+            // Update Character.Player reference
+            var newPlayer = FindPlayerByClientId(newClientId);
+            m_Character.Player = newPlayer;
+
+            // Notify clients
+            OwnershipChangedClientRpc(newClientId);
+        }
+
+        [ClientRpc]
+        private void OwnershipChangedClientRpc(ulong newOwnerId)
+        {
+            // Local cleanup if we lost ownership
+            if (NetworkManager.Singleton.LocalClientId != newOwnerId)
+            {
+                // Stop processing input for this character
+                DisableLocalInput();
+            }
+        }
+
+      respects_constraints: ["invasive-integration", "server-authoritative"]
+
+      references:
+        - file: ".serena/memories/CRITICAL/001_gamecreator_invasive_integration.md"
+          section: "Ownership Transfer"
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Network Character Ownership Transfer"
+
+  # ============================================
+  # ANIMATION SYNC
+  # ============================================
+  - id: "animation-sync"
+    type: "question"
+    content: "What type of animation synchronization do you need?"
+    options:
+      - label: "Standard parameters (floats, bools, triggers)"
+        description: "Movement speed, jumping, states"
+        next: "animation-standard"
+
+      - label: "State machine sync"
+        description: "Ensure same state on all clients"
+        next: "animation-state-machine"
+
+      - label: "Blend tree values"
+        description: "Complex blend tree synchronization"
+        next: "animation-blend-trees"
+
+  - id: "animation-standard"
+    type: "outcome"
+    outcome:
+      recommendation: "Use NetworkAnimator with Auto-Sync Parameters"
+      explanation: |
+        NetworkAnimator automatically syncs animation parameters:
+        1. Add NetworkAnimator component to character
+        2. Enable auto-sync for parameters that should replicate
+        3. Owner sets parameters, NetworkAnimator broadcasts to clients
+
+      code_example: |
+        // Character prefab setup
+        // - Animator component (GameCreator's)
+        // - NetworkAnimator component (Unity Netcode)
+
+        // In NetworkCharacterAdapter or similar
+        private NetworkAnimator m_NetworkAnimator;
+
+        void SyncAnimationState()
+        {
+            if (!IsOwner) return;
+
+            // Set parameters normally - NetworkAnimator syncs them
+            m_Animator.SetFloat("Speed", m_Character.Motion.LinearSpeed);
+            m_Animator.SetBool("IsGrounded", m_Character.Motion.IsGrounded);
+            m_Animator.SetBool("IsJumping", m_Character.Motion.IsJumping);
+        }
+
+      best_practices:
+        - "Only sync parameters that affect visual state"
+        - "Don't sync internal state parameters"
+        - "Use triggers sparingly (can miss on late-join)"
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Character Animation Synchronization"
+
+  - id: "animation-state-machine"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkAnimator + State Hash Validation"
+      explanation: |
+        For critical state machine sync:
+        1. NetworkAnimator syncs parameters
+        2. Validate state hash matches on server
+        3. Force state if desync detected
+
+      code_example: |
+        // Periodic state validation
+        [ServerRpc]
+        void ReportAnimatorStateServerRpc(int stateHash)
+        {
+            int serverHash = m_Animator.GetCurrentAnimatorStateInfo(0).fullPathHash;
+
+            if (stateHash != serverHash)
+            {
+                // Desync detected - force correct state
+                ForceAnimatorStateClientRpc(serverHash);
+            }
+        }
+
+        [ClientRpc]
+        void ForceAnimatorStateClientRpc(int correctHash)
+        {
+            if (!IsOwner)
+            {
+                m_Animator.Play(correctHash);
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "animation-blend-trees"
+    type: "outcome"
+    outcome:
+      recommendation: "Sync Blend Tree Inputs, Not Outputs"
+      explanation: |
+        For blend trees:
+        1. Sync the input parameters (direction X/Y, speed)
+        2. Let each client compute blend locally
+        3. Results will match if inputs match
+
+      code_example: |
+        // Sync blend tree inputs
+        private NetworkVariable<Vector2> m_MoveDirection = new();
+        private NetworkVariable<float> m_MoveSpeed = new();
+
+        void Update()
+        {
+            if (IsOwner)
+            {
+                // Owner updates NetworkVariables
+                m_MoveDirection.Value = GetMoveDirection();
+                m_MoveSpeed.Value = m_Character.Motion.LinearSpeed;
+            }
+
+            // All clients apply to animator
+            m_Animator.SetFloat("MoveX", m_MoveDirection.Value.x);
+            m_Animator.SetFloat("MoveY", m_MoveDirection.Value.y);
+            m_Animator.SetFloat("Speed", m_MoveSpeed.Value);
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # IK SYNC
+  # ============================================
+  - id: "ik-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "IK is LOCAL ONLY - Do Not Sync Targets"
+      explanation: |
+        ⚠️ IMPORTANT: IK should NOT be synchronized!
+
+        Why local-only:
+        1. IK uses local physics raycasts (foot placement)
+        2. Terrain/surface data is already present on each client
+        3. Syncing IK targets would be high bandwidth for no benefit
+        4. Results would be identical anyway (same terrain data)
+
+        What to do:
+        - Let each client compute IK locally
+        - IK will naturally match because terrain matches
+        - For look-at IK, sync the LOOK TARGET position, not IK result
+
+      code_example: |
+        // DON'T sync IK results
+        // ❌ NetworkVariable<Vector3> m_LeftFootIKPosition; // Wrong!
+
+        // DO sync inputs that affect IK
+        // For look-at IK:
+        private NetworkVariable<Vector3> m_LookTarget = new();
+
+        void Update()
+        {
+            if (IsOwner)
+            {
+                // Sync where we're looking
+                m_LookTarget.Value = GetLookTargetPosition();
+            }
+
+            // IK system uses m_LookTarget.Value
+            // Each client computes IK locally
+            m_Character.IK.LookAt(m_LookTarget.Value);
+
+            // Foot IK happens automatically per client
+            // (uses local terrain data)
+        }
+
+      bandwidth_impact: "Zero for foot IK, minimal for look-at"
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Character IK Synchronization"
+
+  # ============================================
+  # RAGDOLL SYNC
+  # ============================================
+  - id: "ragdoll-sync"
+    type: "question"
+    content: "When does ragdoll activate for this character?"
+    options:
+      - label: "On death only"
+        description: "Character dies, ragdoll plays, character despawns"
+        next: "ragdoll-death"
+
+      - label: "Temporary ragdoll (explosion, stun)"
+        description: "Ragdoll then recover to standing"
+        next: "ragdoll-temporary"
+
+      - label: "Persistent ragdoll (unconscious)"
+        description: "Stay in ragdoll until external event"
+        next: "ragdoll-persistent"
+
+  - id: "ragdoll-death"
+    type: "outcome"
+    outcome:
+      recommendation: "Sync Ragdoll Trigger + Let Physics Run Locally"
+      explanation: |
+        For death ragdoll:
+        1. Server triggers ragdoll via ClientRpc
+        2. Each client simulates physics locally
+        3. Final positions will differ slightly (acceptable for death)
+        4. Despawn after delay
+
+      code_example: |
+        // Server triggers death
+        [ServerRpc]
+        public void DieServerRpc()
+        {
+            // Validate death is valid
+            if (m_Health.Value > 0) return;
+
+            // Broadcast ragdoll to all clients
+            TriggerRagdollClientRpc();
+
+            // Schedule despawn
+            StartCoroutine(DespawnAfterDelay(5f));
+        }
+
+        [ClientRpc]
+        private void TriggerRagdollClientRpc()
+        {
+            // Each client activates ragdoll locally
+            m_Character.Ragdoll.SetActive(true);
+
+            // Physics simulates independently per client
+            // Final positions differ slightly - that's OK for death
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: "openspec/specs/character-system/spec.md"
+          section: "Character Ragdoll Network Transition"
+
+  - id: "ragdoll-temporary"
+    type: "outcome"
+    outcome:
+      recommendation: "Sync Trigger + Recovery Position via Server"
+      explanation: |
+        For temporary ragdoll with recovery:
+        1. Server triggers ragdoll start
+        2. Physics runs locally on each client
+        3. Server determines recovery position
+        4. Server broadcasts recovery position to sync everyone
+
+      code_example: |
+        [ClientRpc]
+        private void TriggerRagdollClientRpc(float duration)
+        {
+            m_Character.Ragdoll.SetActive(true);
+            StartCoroutine(RecoverFromRagdoll(duration));
+        }
+
+        IEnumerator RecoverFromRagdoll(float duration)
+        {
+            yield return new WaitForSeconds(duration);
+
+            if (IsServer)
+            {
+                // Server determines recovery position
+                Vector3 recoveryPos = m_Character.transform.position;
+                RecoverAtPositionClientRpc(recoveryPos);
+            }
+        }
+
+        [ClientRpc]
+        private void RecoverAtPositionClientRpc(Vector3 position)
+        {
+            // All clients recover at same position
+            m_Character.Ragdoll.SetActive(false);
+            m_Character.transform.position = position;
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "ragdoll-persistent"
+    type: "outcome"
+    outcome:
+      recommendation: "Sync State Flag + Periodic Position Updates"
+      explanation: |
+        For persistent ragdoll (unconscious, captured):
+        1. Sync ragdoll active state via NetworkVariable
+        2. Periodically sync root position from server
+        3. Allow interaction while ragdolled
+
+      code_example: |
+        private NetworkVariable<bool> m_IsRagdoll = new();
+        private NetworkVariable<Vector3> m_RagdollPosition = new();
+
+        public override void OnNetworkSpawn()
+        {
+            m_IsRagdoll.OnValueChanged += OnRagdollStateChanged;
+        }
+
+        private void OnRagdollStateChanged(bool oldValue, bool newValue)
+        {
+            m_Character.Ragdoll.SetActive(newValue);
+
+            if (newValue)
+            {
+                // Snap to synced position
+                m_Character.transform.position = m_RagdollPosition.Value;
+            }
+        }
+
+        void FixedUpdate()
+        {
+            if (IsServer && m_IsRagdoll.Value)
+            {
+                // Server periodically updates position
+                m_RagdollPosition.Value = m_Character.transform.position;
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # COMPLETE SETUP
+  # ============================================
+  - id: "complete-setup"
+    type: "outcome"
+    outcome:
+      recommendation: "Complete GameCreator Character Network Setup"
+      explanation: |
+        Full character networking setup checklist:
+
+        1. PREFAB COMPONENTS:
+           ✅ NetworkObject
+           ✅ Character (GameCreator)
+           ✅ CharacterController (Unity)
+           ✅ NetworkCharacterAdapter (our sync)
+           ✅ NetworkAnimator
+           ❌ NO NetworkTransform (intentionally removed)
+
+        2. BEFORE SPAWNING:
+           character.IsNetworkSpawned = true;
+
+        3. OWNERSHIP CHECKS:
+           if (character.IsNetworkOwner) { ... }
+
+        4. MOVEMENT:
+           - Owner sends input via ServerRpc
+           - Server validates and applies
+           - NetworkCharacterAdapter syncs state
+
+        5. ANIMATION:
+           - NetworkAnimator auto-syncs parameters
+
+        6. IK:
+           - Local only, no sync needed
+
+        7. RAGDOLL:
+           - Trigger via ClientRpc
+           - Physics local per client
+
+      code_example: |
+        // Complete spawn sequence
+        public void SpawnPlayerCharacter(ulong clientId)
+        {
+            // 1. Instantiate prefab
+            var playerObj = Instantiate(playerPrefab);
+            var character = playerObj.GetComponent<Character>();
+            var netObj = playerObj.GetComponent<NetworkObject>();
+
+            // 2. CRITICAL: Set network flag BEFORE spawn
+            character.IsNetworkSpawned = true;
+
+            // 3. Spawn with ownership
+            netObj.SpawnAsPlayerObject(clientId);
+
+            // 4. Character is now networked
+            // - IsNetworkOwner works
+            // - NetworkCharacterAdapter syncs state
+            // - NetworkAnimator syncs animation
+        }
+
+      prefab_checklist:
+        required:
+          - "NetworkObject"
+          - "Character"
+          - "CharacterController"
+          - "NetworkCharacterAdapter"
+          - "NetworkAnimator"
+          - "Animator"
+        forbidden:
+          - "NetworkTransform"
+
+      respects_constraints: ["no-network-transform", "invasive-integration", "server-authoritative"]
+
+      kb_verify:
+        search_terms: ["NetworkCharacterAdapter", "IsNetworkSpawned", "SpawnAsPlayerObject"]
+        must_exist: true
+
+      references:
+        - file: ".serena/memories/CRITICAL/001_gamecreator_invasive_integration.md"
+        - file: ".serena/memories/CRITICAL/002_network_architecture_never_forget.md"
+        - file: "openspec/specs/character-system/spec.md"
+
+      related_trees: ["host-client-architecture", "gc-stats-sync", "gc-inventory-sync"]

@@ -1,0 +1,260 @@
+======================================================================
+GAMECREATOR CHARACTER CORE MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-character-core
+Network Sync Component: NetworkCharacterAdapter
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+GameCreator Character component architecture, CharacterController, Transform interpolation, Mannequin system, FBX models, Animations, Animator, Input System integration, IK, Skeleton, Bone rigging
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * LookTargets
+    Namespace: GameCreator.Runtime.Characters.IK
+  * GizmosExtension
+    Namespace: GameCreator.Runtime.Common
+  * IconBug
+    Namespace: GameCreator.Runtime.Common
+  * GetDirectionWorldValue
+    Namespace: GameCreator.Runtime.Common
+  * SetNumberReflectionFieldFloat
+    Namespace: GameCreator.Runtime.Common
+  * PropertySetAnimation
+    Namespace: GameCreator.Runtime.Common
+  * UpdateRegistryFirstLater
+    Namespace: GameCreator.Runtime.Common
+  * CharacterEditor
+    Namespace: GameCreator.Editor.Characters
+  * GetDecimalMathModulus
+    Namespace: GameCreator.Runtime.Common
+  * ReflectionFieldVector2Drawer
+    Namespace: GameCreator.Editor.Common
+  * LookSectionDrawer
+    Namespace: GameCreator.Editor.Characters
+  * GetSceneActive
+    Namespace: GameCreator.Runtime.Common
+  * PropertyElement
+    Namespace: GameCreator.Editor.Common
+  * IconRefresh
+    Namespace: GameCreator.Runtime.Common
+  * SetPickInsertLast
+    Namespace: GameCreator.Runtime.Variables
+  * Scenes
+    Namespace: GameCreator.Runtime.Common.SaveSystem
+  * MaterialSoundsDataDrawer
+    Namespace: GameCreator.Editor.Common
+  * AssetRelease
+    Namespace: GameCreator.Editor.Common.Versions
+  * PropertySetGameObject
+    Namespace: GameCreator.Runtime.Common
+  * SceneReferenceDrawer
+    Namespace: GameCreator.Editor.Common
+  * GetStringEmpty
+    Namespace: GameCreator.Runtime.Common
+  * SetSpriteLocalName
+    Namespace: GameCreator.Runtime.Variables
+  * TriggerEditor
+    Namespace: GameCreator.Editor.VisualScripting
+  * RigBreathing
+    Namespace: GameCreator.Runtime.Characters.IK
+  * DropdownPropertyInteger
+    Namespace: GameCreator.Runtime.Common.UnityUI
+  * IconCircleOutline
+    Namespace: GameCreator.Runtime.Common
+  * UpdateRegistryFirstEarlier
+    Namespace: GameCreator.Runtime.Common
+  * StorageJsonFile
+    Namespace: GameCreator.Runtime.Common.SaveSystem
+  * CollectorListVariable
+    Namespace: GameCreator.Runtime.Variables
+  * MemoryIsActive
+    Namespace: GameCreator.Runtime.Common
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (50 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionCharacterPropertyAngularSpeed
+  * InstructionGeometrySetDirection
+  * InstructionCharacterPropertyGravity
+  * InstructionDebugGizmosLine
+  * InstructionCommonDebugText
+  * InstructionCharacterRevive
+  * InstructionRendererChangeMaterialTexture
+  * InstructionTransformChangeScale
+  * InstructionCommonAudioMixerParameter
+  * InstructionCharacterPropertyTimeMode
+  * InstructionUIChangeRectWidth
+  * InstructionShotFirstPersonSmoothTime
+  * InstructionCharacterStopGesture
+  * InstructionCommonAudioSpeechStopGameObject
+  * InstructionAnimatorSetBoolean
+  * InstructionCommonAudioVolumeUI
+  * InstructionArithmeticClampNumber
+  * InstructionCameraShotChange
+  * InstructionCharacterPropertyMannequinRotation
+  * InstructionTextReplace
+  * InstructionArithmeticIncrementNumber
+  * InstructionCameraCullingMask
+  * InstructionCharacterPlayer
+  * InstructionCharacterAttachProp
+  * InstructionCommonAudioSFXStop
+  * InstructionCharacterNavigationJump
+  * InstructionLogicStopActions
+  * InstructionGeometrySetVectorX
+  * InstructionUIUnfocus
+  * InstructionCharacterPropertyCanJump
+  * InstructionShotFirstPersonTarget
+  * InstructionPhysics3DExplosion
+  * InstructionGeometryAddDirections
+  * InstructionArithmeticSubtractNumbers
+  * InstructionPhysics2DGravityScale
+  * InstructionShotThirdPersonMaxPitch
+  * InstructionCommonAudioVolumeAmbient
+  * InstructionUICanvasGroupInteractable
+  * InstructionUIFocus
+  * InstructionRendererChangeMaterial
+  * InstructionGameObjectSetActive
+  * InstructionCharacterGesture
+  * InstructionArithmeticSetNumber
+  * InstructionGameObjectPoolDestroy
+  * InstructionPhysics2DChangeVelocity
+  * InstructionVariablesSortDistance
+  * InstructionCommonResetGame
+  * InstructionAnimatorLayer
+  * InstructionTester
+  * InstructionCommonDebugNumber
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (30 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionCharacterIsGrounded
+  * ConditionAudioIsPlayUI
+  * ConditionCharacterBusyRightLeg
+  * ConditionHasSave
+  * ConditionDisablePlaymodeAttribute
+  * ConditionCharacterIsHumanoid
+  * ConditionMathCompareBooleans
+  * ConditionDrawer
+  * ConditionCharacterBusyLeftLeg
+  * ConditionCharacterCanInteract
+  * ConditionCharacterIsDead
+  * ConditionVisualScriptingConditionsOR
+  * ConditionMathCompareDecimals
+  * ConditionPhysicsCheckCapsule
+  * ConditionAudioIsPlayMusic
+  * ConditionVariablesListEmpty
+  * ConditionPhysicsRaycast3D
+  * ConditionCharacterBusyArms
+  * ConditionPlatformIsMobile
+  * ConditionPhysicsCharacter3DFits
+  * ConditionMathComparePoints
+  * ConditionCharacterCompareGravity
+  * ConditionAudioIsPlayAmbient
+  * ConditionInputIsKeyPress
+  * ConditionGameObjectComponentExists
+  * ConditionCharacterIsMoving
+  * ConditionCharacterBusyLeftArm
+  * ConditionPhysicsCheckSphere
+  * ConditionHideDrawer
+  * ConditionGameObjectCompare
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Bytes
+  * Title
+  * IsComplete
+  * Summary
+  * Maximum
+  * Description
+  * HasSkeleton
+  * HasObstacle
+  * SystemID
+  * CachePayload
+  * String
+  * SmoothTimePosition
+  * PropertyArrayName
+  * Duration
+  * ControlA
+  * Create
+  * Pitch
+  * Axonometry
+  * TypeSelector
+  * Delay
+  * JumpForce
+  * Name
+  * NameList
+  * LastPropDetachedPrefab
+  * AllowDisable
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Cancel()
+  * ChangeWidth()
+  * Clone()
+  * Create()
+  * Direction()
+  * Get()
+  * HandleButton()
+  * OnBeforeStart()
+  * OnChangeDeadState()
+  * OnCreate()
+  * OnDisable()
+  * OnDodge()
+  * OnDragLeave()
+  * OnDrawGizmos()
+  * OnGUI()
+  * OnRagdoll()
+  * OnSelect()
+  * OnUpdate()
+  * Quaternion ()
+  * RegisterUpdateSelected()
+  * Run()
+  * Start()
+  * StopInterval()
+  * Unregister()
+  * e()
+     ()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkCharacterAdapter
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. CharacterController requires ground detection - use GroundChecker component
+  2. Transform interpolation handled by Motion system, not direct Transform manipulation
+  3. Mannequin is the visual representation - separate from Character logic
+  4. FBX import requires proper rig configuration (Humanoid/Generic)
+  5. Animation states managed through State assets, not direct Animator control
+  6. Input system uses InputValue wrappers - never raw Input class
+  7. IK targets must be set through Character.IK system, not direct bone manipulation
+  8. Skeleton building requires proper bone mapping in Mannequin settings
+  9. State transitions use blending - abrupt changes cause visual artifacts
+  10. Driver system (NavMesh/CharacterController) determines movement authority
+
+======================================================================
+END OF SCHEMA
+======================================================================

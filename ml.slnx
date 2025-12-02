@@ -1,4 +1,7 @@
 ﻿<Solution>
+  <Project Path="GameCreator.Runtime.Core.csproj" />
+  <Project Path="GameCreator.Editor.Core.csproj" />
+  <Project Path="GameCreator.Tests.Core.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
 </Solution>

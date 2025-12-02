@@ -1,0 +1,205 @@
+======================================================================
+GAMECREATOR MAILBOX MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-mailbox-networked
+Network Sync Component: NetworkMailboxSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Async component messaging, letters, inter-component communication
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * PropertyTypeGetLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * IconLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetStringLetterReceivedDate
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetDecimalUnreadLetters
+    Namespace: GameCreator.Runtime.Mailbox
+  * PropertySetLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetStringLetterID
+    Namespace: GameCreator.Runtime.Mailbox
+  * SetLetterGlobalName
+    Namespace: GameCreator.Runtime.Mailbox
+  * LetterItemUI
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetColorsLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * SetLetterNone
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetSpriteLetterFirstItem
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetLetterNone
+    Namespace: GameCreator.Runtime.Mailbox
+  * EventOnLetterHidden
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetLetterMailboxCurrent
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetStringDynamicString
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetLetterFromGameObject
+    Namespace: GameCreator.Runtime.Mailbox
+  * EventOnLetterDeleted
+    Namespace: GameCreator.Runtime.Mailbox
+  * LetterTheme
+    Namespace: GameCreator.Runtime.Mailbox
+  * EventOnLetterOpened
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetSpriteSenderIcon
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetSpriteUnreadIcon
+    Namespace: GameCreator.Runtime.Mailbox
+  * ItemProperty
+    Namespace: GameCreator.Runtime.Mailbox
+  * MailboxUI
+    Namespace: GameCreator.Runtime.Mailbox
+  * SetLetterLocalName
+    Namespace: GameCreator.Runtime.Mailbox
+  * PropertyTypeSetLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * Letter
+    Namespace: GameCreator.Runtime.Mailbox
+  * GetSpriteReadIcon
+    Namespace: GameCreator.Runtime.Mailbox
+  * PropertyGetLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * ValueLetter
+    Namespace: GameCreator.Runtime.Mailbox
+  * EventOnLetterReceived
+    Namespace: GameCreator.Runtime.Mailbox
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (9 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionSendAutomaticLettersToPlayer
+  * InstructionClearMailbox
+  * InstructionLettersMarkAsHidden
+  * InstructionLettersClaimItem
+  * InstructionLettersMarkAsRead
+  * InstructionSendRandomLetterToPlayer
+  * InstructionDeleteLetter
+  * InstructionSendLetterToMailbox
+  * InstructionLettersSetLetter
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (9 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionCheckUnclaimedItemsInLetter
+  * ConditionMailboxHasReceivedLetter
+  * ConditionLettersIsItemClaimed
+  * ConditionLettersHasItems
+  * ConditionCheckRandomLettersInMailbox
+  * ConditionLetterEqual
+  * ConditionMailboxHasReadLetter
+  * ConditionCheckUnreadMailInMailbox
+  * ConditionCheckUnclaimedItemsInMailbox
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Create
+  * UnreadIcon
+  * LetterItemClaimedStatus
+  * LetterIDs
+  * String
+  * Theme
+  * DetailsBackgroundColor
+  * DetailsScrollbarHandleColor
+  * OpenInstructions
+  * Items
+  * ItemProperties
+  * Summary
+  * Type
+  * TypeID
+  * ConditionList
+  * SenderTextColor
+  * SendChance
+  * Title
+  * TitleTextColor
+  * CanSave
+  * ReadIcon
+  * Bytes
+  * Copy
+  * EditorValue
+  * ID
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Awake()
+  * Create()
+  * Get()
+  * GetBackgroundColor()
+  * GetLetterByID()
+  * GetLetterID()
+  * GetSprite()
+  * GetToken()
+  * GetUnreadLettersCount()
+  * InitializeMailbox()
+  * IsLetterHidden()
+  * OnDisable()
+  * OnEnable()
+  * OnSearchValueChanged()
+  * ReplaceDynamicValues()
+  * Run()
+  * SelectLetter()
+  * Set()
+  * SetReceivedLettersFromIDs()
+  * ToString()
+  * UpdateLetterIcon()
+  * UpdateListItemIcon()
+  * UpdateMailboxUI()
+  * UpdateSelectedLetterUI()
+  * UpdateUI()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkMailboxSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Variable Change Notifications]
+  Description: Mailbox messages for variable change events
+  Network: Use for decoupled cross-system communication
+  Pattern: Variable.OnChange -> Mailbox.Send(new VariableChangedLetter)
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Message ordering guaranteed within single sender only
+  2. Cross-network routing adds 1 frame minimum latency
+  3. Large payloads (>1KB) require chunked transmission
+  4. No built-in retry mechanism for failed deliveries
+  5. Mailbox capacity limits apply per-client
+
+======================================================================
+END OF SCHEMA
+======================================================================

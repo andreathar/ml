@@ -1,0 +1,278 @@
+======================================================================
+GAMECREATOR VARIABLES MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-variables-networked
+Network Sync Component: NetworkVariablesSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Global and local variables, name variables, variable repository
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * LookTargets
+    Namespace: GameCreator.Runtime.Characters.IK
+  * GizmosExtension
+    Namespace: GameCreator.Runtime.Common
+  * IconBug
+    Namespace: GameCreator.Runtime.Common
+  * GetDirectionWorldValue
+    Namespace: GameCreator.Runtime.Common
+  * SetNumberReflectionFieldFloat
+    Namespace: GameCreator.Runtime.Common
+  * PropertySetAnimation
+    Namespace: GameCreator.Runtime.Common
+  * UpdateRegistryFirstLater
+    Namespace: GameCreator.Runtime.Common
+  * GetDecimalMathModulus
+    Namespace: GameCreator.Runtime.Common
+  * GetSceneActive
+    Namespace: GameCreator.Runtime.Common
+  * IconRefresh
+    Namespace: GameCreator.Runtime.Common
+  * SetPickInsertLast
+    Namespace: GameCreator.Runtime.Variables
+  * Scenes
+    Namespace: GameCreator.Runtime.Common.SaveSystem
+  * PropertySetGameObject
+    Namespace: GameCreator.Runtime.Common
+  * GetStringEmpty
+    Namespace: GameCreator.Runtime.Common
+  * SetSpriteLocalName
+    Namespace: GameCreator.Runtime.Variables
+  * RigBreathing
+    Namespace: GameCreator.Runtime.Characters.IK
+  * DropdownPropertyInteger
+    Namespace: GameCreator.Runtime.Common.UnityUI
+  * IconCircleOutline
+    Namespace: GameCreator.Runtime.Common
+  * UpdateRegistryFirstEarlier
+    Namespace: GameCreator.Runtime.Common
+  * StorageJsonFile
+    Namespace: GameCreator.Runtime.Common.SaveSystem
+  * CollectorListVariable
+    Namespace: GameCreator.Runtime.Variables
+  * MemoryIsActive
+    Namespace: GameCreator.Runtime.Common
+  * IconUIToggle
+    Namespace: GameCreator.Runtime.Common
+  * GetPositionMathSubtract
+    Namespace: GameCreator.Runtime.Common
+  * IconBreakpoint
+    Namespace: GameCreator.Runtime.Common
+  * GetDecimalMathAngle
+    Namespace: GameCreator.Runtime.Common
+  * IconButton
+    Namespace: GameCreator.Runtime.Common
+  * Footprint
+    Namespace: GameCreator.Runtime.Characters
+  * GetColorLocalName
+    Namespace: GameCreator.Runtime.Variables
+  * IconShotAnchor
+    Namespace: GameCreator.Runtime.Common
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (50 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionCharacterPropertyAngularSpeed
+  * InstructionGeometrySetDirection
+  * InstructionCharacterPropertyGravity
+  * InstructionDebugGizmosLine
+  * InstructionCommonDebugText
+  * InstructionCharacterRevive
+  * InstructionRendererChangeMaterialTexture
+  * InstructionTransformChangeScale
+  * InstructionCommonAudioMixerParameter
+  * InstructionCharacterPropertyTimeMode
+  * InstructionUIChangeRectWidth
+  * InstructionShotFirstPersonSmoothTime
+  * InstructionCharacterStopGesture
+  * InstructionCommonAudioSpeechStopGameObject
+  * InstructionAnimatorSetBoolean
+  * InstructionCommonAudioVolumeUI
+  * InstructionArithmeticClampNumber
+  * InstructionCameraShotChange
+  * InstructionCharacterPropertyMannequinRotation
+  * InstructionTextReplace
+  * InstructionArithmeticIncrementNumber
+  * InstructionCameraCullingMask
+  * InstructionCharacterPlayer
+  * InstructionCharacterAttachProp
+  * InstructionCommonAudioSFXStop
+  * InstructionCharacterNavigationJump
+  * InstructionLogicStopActions
+  * InstructionGeometrySetVectorX
+  * InstructionUIUnfocus
+  * InstructionCharacterPropertyCanJump
+  * InstructionShotFirstPersonTarget
+  * InstructionPhysics3DExplosion
+  * InstructionGeometryAddDirections
+  * InstructionArithmeticSubtractNumbers
+  * InstructionPhysics2DGravityScale
+  * InstructionShotThirdPersonMaxPitch
+  * InstructionCommonAudioVolumeAmbient
+  * InstructionUICanvasGroupInteractable
+  * InstructionUIFocus
+  * InstructionRendererChangeMaterial
+  * InstructionGameObjectSetActive
+  * InstructionCharacterGesture
+  * InstructionArithmeticSetNumber
+  * InstructionGameObjectPoolDestroy
+  * InstructionPhysics2DChangeVelocity
+  * InstructionVariablesSortDistance
+  * InstructionCommonResetGame
+  * InstructionAnimatorLayer
+  * InstructionTester
+  * InstructionCommonDebugNumber
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (30 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionCharacterIsGrounded
+  * ConditionAudioIsPlayUI
+  * ConditionCharacterBusyRightLeg
+  * ConditionHasSave
+  * ConditionDisablePlaymodeAttribute
+  * ConditionCharacterIsHumanoid
+  * ConditionMathCompareBooleans
+  * ConditionCharacterBusyLeftLeg
+  * ConditionCharacterCanInteract
+  * ConditionCharacterIsDead
+  * ConditionVisualScriptingConditionsOR
+  * ConditionMathCompareDecimals
+  * ConditionPhysicsCheckCapsule
+  * ConditionAudioIsPlayMusic
+  * ConditionVariablesListEmpty
+  * ConditionPhysicsRaycast3D
+  * ConditionCharacterBusyArms
+  * ConditionPlatformIsMobile
+  * ConditionPhysicsCharacter3DFits
+  * ConditionMathComparePoints
+  * ConditionCharacterCompareGravity
+  * ConditionAudioIsPlayAmbient
+  * ConditionInputIsKeyPress
+  * ConditionGameObjectComponentExists
+  * ConditionCharacterIsMoving
+  * ConditionCharacterBusyLeftArm
+  * ConditionPhysicsCheckSphere
+  * ConditionGameObjectCompare
+  * ConditionTextEquals
+  * ConditionCharacterIsIdle
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Bytes
+  * Title
+  * IsComplete
+  * Summary
+  * Maximum
+  * Description
+  * HasSkeleton
+  * HasObstacle
+  * SystemID
+  * String
+  * SmoothTimePosition
+  * Duration
+  * ControlA
+  * Create
+  * Pitch
+  * Axonometry
+  * Delay
+  * JumpForce
+  * Name
+  * LastPropDetachedPrefab
+  * SaveType
+  * SaveID
+  * Transform
+  * ForcePlayer
+  * Target
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Cancel()
+  * Clone()
+  * Create()
+  * Direction()
+  * Get()
+  * GetColliders()
+  * GetColor()
+  * Insert()
+  * OnBeforeDisable()
+  * OnBeforeStart()
+  * OnDispose()
+  * OnDodge()
+  * OnDrawGizmos()
+  * OnEnable()
+  * OnPointerExit()
+  * OnRagdoll()
+  * OnSelect()
+  * Quaternion ()
+  * RegisterUpdateSelected()
+  * Run()
+  * Set()
+  * Start()
+  * StopInterval()
+  * Title()
+  * e()
+     ()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkVariablesSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Inventory Variable Bindings]
+  Description: Variables that track inventory state (item counts, equipped items)
+  Network: Variable updates should batch with inventory changes
+  Pattern: Use PropertyGetInventory for reactive UI binding
+
+  [Stat Variable Sync]
+  Description: Expose stat values as global variables for UI binding
+  Network: Use NetworkStatsSync batched struct, not individual variables
+  Pattern: Stats.OnChange -> Variable.Set (local only)
+
+  [Variable Change Notifications]
+  Description: Mailbox messages for variable change events
+  Network: Use for decoupled cross-system communication
+  Pattern: Variable.OnChange -> Mailbox.Send(new VariableChangedLetter)
+
+  [Quest Progress Variables]
+  Description: Variables tracking quest state and progress
+  Network: Quest variables synced via NetworkVariablesSync
+  Pattern: Quest.OnProgress -> Variable.Set('quest_' + id, progress)
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. FOUNDATIONAL module - all other modules depend on Variables
+  2. GameObject references require NetworkObject registration
+  3. Supabase sync adds 50-200ms latency for persistence
+  4. Variable name collisions across clients must be handled
+  5. Large variable lists (100+) should use batched sync
+
+======================================================================
+END OF SCHEMA
+======================================================================

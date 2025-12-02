@@ -1,0 +1,238 @@
+{
+  "generated": "2025-12-01T12:53:46.295255",
+  "kb_symbols": 77914,
+  "modules": {
+    "inventory": {
+      "name": "Inventory",
+      "slug": "gc-inventory-networked",
+      "network_sync": "NetworkInventorySync",
+      "dependencies": [
+        "Variables",
+        "Stats"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 37,
+        "conditions": 28,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 3,
+      "limitations": 4
+    },
+    "stats": {
+      "name": "Stats",
+      "slug": "gc-stats-networked",
+      "network_sync": "NetworkStatsSync",
+      "dependencies": [
+        "Variables"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 16,
+        "conditions": 8,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 2,
+      "limitations": 4
+    },
+    "character": {
+      "name": "Character",
+      "slug": "gc-character-networked",
+      "network_sync": "NetworkCharacterAdapter",
+      "dependencies": [],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 50,
+        "conditions": 30,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 0,
+      "limitations": 5
+    },
+    "perception": {
+      "name": "Perception",
+      "slug": "gc-perception-networked",
+      "network_sync": "NetworkPerceptionSync",
+      "dependencies": [
+        "Character",
+        "Behavior"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 13,
+        "conditions": 9,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 3,
+      "limitations": 4
+    },
+    "variables": {
+      "name": "Variables",
+      "slug": "gc-variables-networked",
+      "network_sync": "NetworkVariablesSync",
+      "dependencies": [],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 50,
+        "conditions": 30,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 4,
+      "limitations": 5
+    },
+    "behavior": {
+      "name": "Behavior",
+      "slug": "gc-behavior-networked",
+      "network_sync": "NetworkBehaviorSync",
+      "dependencies": [
+        "Variables",
+        "Perception"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 3,
+        "conditions": 1,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 2,
+      "limitations": 5
+    },
+    "mailbox": {
+      "name": "Mailbox",
+      "slug": "gc-mailbox-networked",
+      "network_sync": "NetworkMailboxSync",
+      "dependencies": [
+        "Variables"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 9,
+        "conditions": 9,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 1,
+      "limitations": 5
+    },
+    "factions": {
+      "name": "Factions",
+      "slug": "gc-factions-networked",
+      "network_sync": "NetworkFactionsSync",
+      "dependencies": [
+        "Variables",
+        "Perception"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 11,
+        "conditions": 4,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 1,
+      "limitations": 5
+    },
+    "tactile": {
+      "name": "Tactile",
+      "slug": "gc-tactile-networked",
+      "network_sync": "NetworkTactileSync",
+      "dependencies": [
+        "Variables"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 50,
+        "conditions": 21,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 0,
+      "limitations": 5
+    },
+    "quests": {
+      "name": "Quests",
+      "slug": "gc-quests-networked",
+      "network_sync": "NetworkQuestsSync",
+      "dependencies": [
+        "Variables",
+        "Inventory"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 10,
+        "conditions": 13,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 2,
+      "limitations": 4
+    },
+    "dialogue": {
+      "name": "Dialogue",
+      "slug": "gc-dialogue-networked",
+      "network_sync": "NetworkDialogueSync",
+      "dependencies": [
+        "Variables",
+        "Character"
+      ],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 4,
+        "conditions": 2,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 0,
+      "limitations": 4
+    },
+    "character-core": {
+      "name": "Character Core",
+      "slug": "gc-character-core",
+      "network_sync": "NetworkCharacterAdapter",
+      "dependencies": [],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 50,
+        "conditions": 30,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 0,
+      "limitations": 10
+    },
+    "netcode-core": {
+      "name": "Netcode Core",
+      "slug": "unity-netcode-core",
+      "network_sync": null,
+      "dependencies": [],
+      "symbol_counts": {
+        "classes": 30,
+        "instructions": 43,
+        "conditions": 29,
+        "components": 0,
+        "methods": 40,
+        "properties": 40
+      },
+      "cross_integrations": 0,
+      "limitations": 13
+    }
+  }
+}

@@ -1,0 +1,913 @@
+# Decision Tree: GameCreator Stats Synchronization
+# KB-Enhanced guidance for syncing GC Stats module across Host/Client
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "gc-stats-sync"
+title: "GameCreator Stats Network Synchronization"
+description: "Guide for syncing GameCreator Stats module (health, mana, stamina, attributes, formulas) in multiplayer with 86% bandwidth optimization"
+category: "gamecreator"
+gc_module: "stats"
+difficulty: "intermediate"
+estimated_time: 8
+
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "StatsBatch"
+    - "INetworkSerializable"
+    - "NetworkVariable"
+
+enforced_constraints:
+  - "server-authoritative"
+  - "rpc-naming"
+
+start_node: "stats-entry"
+
+nodes:
+  # ============================================
+  # ENTRY
+  # ============================================
+  - id: "stats-entry"
+    type: "question"
+    content: "What stats functionality do you need to synchronize?"
+    help: "Select the specific stats feature you're implementing"
+    options:
+      - label: "Core stats (health, mana, stamina)"
+        description: "Primary character resources"
+        next: "core-stats-sync"
+
+      - label: "Attributes (strength, agility, etc.)"
+        description: "Character attributes that affect other stats"
+        next: "attributes-sync"
+
+      - label: "Status effects (buffs, debuffs)"
+        description: "Temporary modifiers to stats"
+        next: "status-effects-sync"
+
+      - label: "Damage/healing application"
+        description: "Applying damage or healing to stats"
+        next: "damage-healing"
+
+      - label: "Complete stats setup"
+        description: "Full networked stats from scratch"
+        next: "complete-stats-setup"
+
+  # ============================================
+  # CORE STATS (Health/Mana/Stamina)
+  # ============================================
+  - id: "core-stats-sync"
+    type: "question"
+    content: "How many core stats do you need to sync?"
+    help: "Batching multiple stats saves 86% bandwidth"
+    options:
+      - label: "Single stat (health only)"
+        description: "Just one stat needs syncing"
+        next: "single-stat-sync"
+
+      - label: "Multiple stats (health + mana + stamina)"
+        description: "2-4 related stats"
+        next: "batched-stats-sync"
+
+      - label: "Many stats (5+ different stats)"
+        description: "Complex stat system"
+        next: "many-stats-sync"
+
+  - id: "single-stat-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "Simple NetworkVariable<float> for Single Stat"
+      explanation: |
+        For a single stat, use a straightforward NetworkVariable:
+        1. Server owns the stat value
+        2. Server modifies via mutations
+        3. NetworkVariable auto-syncs to clients
+        4. Subscribe to OnValueChanged for UI updates
+
+      code_example: |
+        public class NetworkHealth : NetworkBehaviour
+        {
+            private Traits m_Traits; // GameCreator Stats component
+
+            // Server-authoritative health
+            private NetworkVariable<float> m_CurrentHealth = new(
+                readPerm: NetworkVariableReadPermission.Everyone,
+                writePerm: NetworkVariableWritePermission.Server
+            );
+
+            private NetworkVariable<float> m_MaxHealth = new(
+                readPerm: NetworkVariableReadPermission.Everyone,
+                writePerm: NetworkVariableWritePermission.Server
+            );
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                // Subscribe to changes for UI
+                m_CurrentHealth.OnValueChanged += OnHealthChanged;
+                m_MaxHealth.OnValueChanged += OnMaxHealthChanged;
+
+                if (IsServer)
+                {
+                    // Initialize from GameCreator
+                    m_MaxHealth.Value = m_Traits.GetStat("health").MaxValue;
+                    m_CurrentHealth.Value = m_Traits.GetStat("health").Value;
+                }
+            }
+
+            private void OnHealthChanged(float oldValue, float newValue)
+            {
+                // Update UI on all clients
+                UpdateHealthBar(newValue, m_MaxHealth.Value);
+
+                // Sync back to GameCreator Traits (for local systems)
+                m_Traits.GetStat("health").Value = newValue;
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void TakeDamageServerRpc(float damage, ServerRpcParams rpcParams = default)
+            {
+                // Server validates and applies
+                float actualDamage = CalculateDamage(damage);
+                m_CurrentHealth.Value = Mathf.Max(0, m_CurrentHealth.Value - actualDamage);
+
+                if (m_CurrentHealth.Value <= 0)
+                {
+                    DieClientRpc();
+                }
+            }
+        }
+
+      bandwidth_impact: "8 bytes per stat change"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "batched-stats-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "Batched NetworkVariable with StatsBatch Struct (86% Bandwidth Reduction!)"
+      explanation: |
+        For multiple related stats, use a SINGLE NetworkVariable with a struct.
+        This is the RECOMMENDED approach for 2-4 stats.
+
+        Benefits:
+        - 86% fewer network messages
+        - Single OnValueChanged callback
+        - Atomic updates (all stats update together)
+        - Better performance
+
+      bandwidth_savings: "86% reduction vs individual NetworkVariables!"
+
+      code_example: |
+        // Define the batch struct
+        public struct StatsBatch : INetworkSerializable, IEquatable<StatsBatch>
+        {
+            public float Health;
+            public float MaxHealth;
+            public float Mana;
+            public float MaxMana;
+            public float Stamina;
+            public float MaxStamina;
+
+            public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+            {
+                serializer.SerializeValue(ref Health);
+                serializer.SerializeValue(ref MaxHealth);
+                serializer.SerializeValue(ref Mana);
+                serializer.SerializeValue(ref MaxMana);
+                serializer.SerializeValue(ref Stamina);
+                serializer.SerializeValue(ref MaxStamina);
+            }
+
+            public bool Equals(StatsBatch other) =>
+                Health == other.Health &&
+                MaxHealth == other.MaxHealth &&
+                Mana == other.Mana &&
+                MaxMana == other.MaxMana &&
+                Stamina == other.Stamina &&
+                MaxStamina == other.MaxStamina;
+
+            public override int GetHashCode() =>
+                HashCode.Combine(Health, MaxHealth, Mana, MaxMana, Stamina, MaxStamina);
+        }
+
+        public class NetworkStatsSync : NetworkBehaviour
+        {
+            private Traits m_Traits;
+
+            // ONE NetworkVariable for ALL core stats
+            private NetworkVariable<StatsBatch> m_Stats = new(
+                readPerm: NetworkVariableReadPermission.Everyone,
+                writePerm: NetworkVariableWritePermission.Server
+            );
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+                m_Stats.OnValueChanged += OnStatsChanged;
+
+                if (IsServer)
+                {
+                    // Initialize batch from GameCreator
+                    m_Stats.Value = new StatsBatch
+                    {
+                        Health = m_Traits.GetStat("health").Value,
+                        MaxHealth = m_Traits.GetStat("health").MaxValue,
+                        Mana = m_Traits.GetStat("mana").Value,
+                        MaxMana = m_Traits.GetStat("mana").MaxValue,
+                        Stamina = m_Traits.GetStat("stamina").Value,
+                        MaxStamina = m_Traits.GetStat("stamina").MaxValue
+                    };
+                }
+            }
+
+            private void OnStatsChanged(StatsBatch oldValue, StatsBatch newValue)
+            {
+                // Update all UI elements
+                UpdateHealthBar(newValue.Health, newValue.MaxHealth);
+                UpdateManaBar(newValue.Mana, newValue.MaxMana);
+                UpdateStaminaBar(newValue.Stamina, newValue.MaxStamina);
+
+                // Sync to GameCreator Traits
+                m_Traits.GetStat("health").Value = newValue.Health;
+                m_Traits.GetStat("mana").Value = newValue.Mana;
+                m_Traits.GetStat("stamina").Value = newValue.Stamina;
+            }
+
+            // Server-side stat modifications
+            public void ModifyHealth(float delta)
+            {
+                if (!IsServer) return;
+
+                var batch = m_Stats.Value;
+                batch.Health = Mathf.Clamp(batch.Health + delta, 0, batch.MaxHealth);
+                m_Stats.Value = batch; // Single network message for all changes!
+            }
+
+            public void ModifyMana(float delta)
+            {
+                if (!IsServer) return;
+
+                var batch = m_Stats.Value;
+                batch.Mana = Mathf.Clamp(batch.Mana + delta, 0, batch.MaxMana);
+                m_Stats.Value = batch;
+            }
+
+            // Modify multiple stats at once (MOST EFFICIENT)
+            public void ApplyAbilityCost(float manaCost, float staminaCost)
+            {
+                if (!IsServer) return;
+
+                var batch = m_Stats.Value;
+                batch.Mana = Mathf.Max(0, batch.Mana - manaCost);
+                batch.Stamina = Mathf.Max(0, batch.Stamina - staminaCost);
+                m_Stats.Value = batch; // ONE message for TWO changes!
+            }
+        }
+
+      kb_verify:
+        search_terms: ["StatsBatch", "INetworkSerializable"]
+        must_exist: true
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: "openspec/.decision-trees/bandwidth-optimization.yaml"
+          section: "use-batching"
+
+  - id: "many-stats-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "Multiple Batched Structs by Category"
+      explanation: |
+        For many stats (5+), group into logical batches:
+        - CoreStatsBatch: health, mana, stamina
+        - CombatStatsBatch: attack, defense, speed
+        - AttributesBatch: strength, agility, intelligence
+
+        Each batch is a separate NetworkVariable.
+
+      code_example: |
+        // Group 1: Core resources
+        public struct CoreStatsBatch : INetworkSerializable, IEquatable<CoreStatsBatch>
+        {
+            public float Health, MaxHealth;
+            public float Mana, MaxMana;
+            public float Stamina, MaxStamina;
+            // ... NetworkSerialize implementation
+        }
+
+        // Group 2: Combat stats
+        public struct CombatStatsBatch : INetworkSerializable, IEquatable<CombatStatsBatch>
+        {
+            public float Attack;
+            public float Defense;
+            public float Speed;
+            public float CritChance;
+            // ... NetworkSerialize implementation
+        }
+
+        // Group 3: Attributes
+        public struct AttributesBatch : INetworkSerializable, IEquatable<AttributesBatch>
+        {
+            public int Strength;
+            public int Agility;
+            public int Intelligence;
+            public int Vitality;
+            // ... NetworkSerialize implementation
+        }
+
+        public class NetworkFullStats : NetworkBehaviour
+        {
+            private NetworkVariable<CoreStatsBatch> m_CoreStats = new();
+            private NetworkVariable<CombatStatsBatch> m_CombatStats = new();
+            private NetworkVariable<AttributesBatch> m_Attributes = new();
+
+            // Each group syncs independently
+            // Update frequency can differ per batch
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # ATTRIBUTES
+  # ============================================
+  - id: "attributes-sync"
+    type: "question"
+    content: "Do attributes affect other stats via formulas?"
+    help: "Example: Strength increases Attack damage"
+    options:
+      - label: "Yes, attributes feed into formulas"
+        description: "Server calculates derived stats from attributes"
+        next: "attributes-with-formulas"
+
+      - label: "No, attributes are standalone"
+        description: "Attributes don't affect other stats"
+        next: "attributes-standalone"
+
+  - id: "attributes-with-formulas"
+    type: "outcome"
+    outcome:
+      recommendation: "Sync Attributes + Server Calculates Derived Stats"
+      explanation: |
+        When attributes affect other stats:
+        1. Sync base attributes via NetworkVariable
+        2. Server calculates derived stats using GameCreator formulas
+        3. Sync final calculated values (not formulas)
+        4. Clients receive RESULTS, not calculations
+
+        Why server calculates:
+        - Prevents cheating (client can't fake high stats)
+        - Formulas might reference server-only data
+        - Ensures all clients see same values
+
+      code_example: |
+        public class NetworkAttributes : NetworkBehaviour
+        {
+            private Traits m_Traits;
+
+            // Base attributes (level up, equipment bonuses)
+            private NetworkVariable<AttributesBatch> m_Attributes = new();
+
+            // Derived combat stats (calculated from attributes)
+            private NetworkVariable<CombatStatsBatch> m_DerivedStats = new();
+
+            [ServerRpc]
+            public void IncreaseAttributeServerRpc(AttributeType attr, int amount)
+            {
+                // Modify base attribute
+                var attrs = m_Attributes.Value;
+                switch (attr)
+                {
+                    case AttributeType.Strength:
+                        attrs.Strength += amount;
+                        break;
+                    case AttributeType.Agility:
+                        attrs.Agility += amount;
+                        break;
+                    // ...
+                }
+                m_Attributes.Value = attrs;
+
+                // Recalculate derived stats on server
+                RecalculateDerivedStats();
+            }
+
+            private void RecalculateDerivedStats()
+            {
+                if (!IsServer) return;
+
+                var attrs = m_Attributes.Value;
+
+                // Use GameCreator formulas OR custom calculations
+                var derived = new CombatStatsBatch
+                {
+                    Attack = CalculateAttack(attrs.Strength),
+                    Defense = CalculateDefense(attrs.Vitality),
+                    Speed = CalculateSpeed(attrs.Agility),
+                    CritChance = CalculateCrit(attrs.Agility)
+                };
+
+                m_DerivedStats.Value = derived; // Sync to all clients
+            }
+
+            private float CalculateAttack(int strength)
+            {
+                // Example formula: base + strength * multiplier
+                return 10f + strength * 2.5f;
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "attributes-standalone"
+    type: "outcome"
+    outcome:
+      recommendation: "Simple Batched NetworkVariable for Attributes"
+      explanation: |
+        For standalone attributes (no formulas):
+        Use the same batching pattern as core stats.
+
+      code_example: |
+        public struct AttributesBatch : INetworkSerializable, IEquatable<AttributesBatch>
+        {
+            public int Strength;
+            public int Agility;
+            public int Intelligence;
+            public int Vitality;
+            public int Luck;
+
+            public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+            {
+                serializer.SerializeValue(ref Strength);
+                serializer.SerializeValue(ref Agility);
+                serializer.SerializeValue(ref Intelligence);
+                serializer.SerializeValue(ref Vitality);
+                serializer.SerializeValue(ref Luck);
+            }
+
+            // ... IEquatable implementation
+        }
+
+        private NetworkVariable<AttributesBatch> m_Attributes = new();
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # STATUS EFFECTS
+  # ============================================
+  - id: "status-effects-sync"
+    type: "question"
+    content: "How complex are your status effects?"
+    options:
+      - label: "Simple flags (poisoned, burning, frozen)"
+        description: "Boolean states"
+        next: "status-flags"
+
+      - label: "Stacking effects with duration"
+        description: "Multiple stacks, countdown timers"
+        next: "status-stacking"
+
+      - label: "Complex modifiers (% increase, flat bonus)"
+        description: "Effects that modify stats mathematically"
+        next: "status-modifiers"
+
+  - id: "status-flags"
+    type: "outcome"
+    outcome:
+      recommendation: "Bit Flags in NetworkVariable<int>"
+      explanation: |
+        For simple boolean status effects:
+        Use bit flags in a single int/uint for extreme efficiency.
+
+      code_example: |
+        [Flags]
+        public enum StatusFlags
+        {
+            None = 0,
+            Poisoned = 1 << 0,
+            Burning = 1 << 1,
+            Frozen = 1 << 2,
+            Stunned = 1 << 3,
+            Bleeding = 1 << 4,
+            Regenerating = 1 << 5,
+            Shielded = 1 << 6,
+            Invisible = 1 << 7
+        }
+
+        public class NetworkStatusEffects : NetworkBehaviour
+        {
+            // All status flags in ONE int (4 bytes total!)
+            private NetworkVariable<int> m_StatusFlags = new();
+
+            public bool HasStatus(StatusFlags status)
+            {
+                return (m_StatusFlags.Value & (int)status) != 0;
+            }
+
+            [ServerRpc]
+            public void ApplyStatusServerRpc(StatusFlags status)
+            {
+                m_StatusFlags.Value |= (int)status;
+                StartStatusEffect(status);
+            }
+
+            [ServerRpc]
+            public void RemoveStatusServerRpc(StatusFlags status)
+            {
+                m_StatusFlags.Value &= ~(int)status;
+            }
+
+            private void OnStatusFlagsChanged(int oldFlags, int newFlags)
+            {
+                // Determine what changed
+                int added = newFlags & ~oldFlags;
+                int removed = oldFlags & ~newFlags;
+
+                // Update visuals
+                if ((added & (int)StatusFlags.Burning) != 0)
+                    ShowBurningEffect();
+                if ((removed & (int)StatusFlags.Burning) != 0)
+                    HideBurningEffect();
+                // ... etc
+            }
+        }
+
+      bandwidth_impact: "4 bytes for ALL status effects"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "status-stacking"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkList<StatusEffect> for Stacking Effects"
+      explanation: |
+        For stacking effects with duration:
+        Use NetworkList to track active effects.
+
+      code_example: |
+        public struct ActiveStatusEffect : INetworkSerializable, IEquatable<ActiveStatusEffect>
+        {
+            public int EffectId;
+            public int Stacks;
+            public float RemainingDuration;
+            public ulong AppliedByClientId;
+
+            public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+            {
+                serializer.SerializeValue(ref EffectId);
+                serializer.SerializeValue(ref Stacks);
+                serializer.SerializeValue(ref RemainingDuration);
+                serializer.SerializeValue(ref AppliedByClientId);
+            }
+
+            // ... IEquatable
+        }
+
+        public class NetworkStackingEffects : NetworkBehaviour
+        {
+            private NetworkList<ActiveStatusEffect> m_ActiveEffects;
+
+            void Awake()
+            {
+                m_ActiveEffects = new NetworkList<ActiveStatusEffect>();
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void ApplyEffectServerRpc(int effectId, int stacks, float duration,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong appliedBy = rpcParams.Receive.SenderClientId;
+
+                // Check if effect already exists (add stacks)
+                for (int i = 0; i < m_ActiveEffects.Count; i++)
+                {
+                    if (m_ActiveEffects[i].EffectId == effectId)
+                    {
+                        var existing = m_ActiveEffects[i];
+                        existing.Stacks += stacks;
+                        existing.RemainingDuration = Mathf.Max(existing.RemainingDuration, duration);
+                        m_ActiveEffects[i] = existing;
+                        return;
+                    }
+                }
+
+                // New effect
+                m_ActiveEffects.Add(new ActiveStatusEffect
+                {
+                    EffectId = effectId,
+                    Stacks = stacks,
+                    RemainingDuration = duration,
+                    AppliedByClientId = appliedBy
+                });
+            }
+
+            void Update()
+            {
+                if (!IsServer) return;
+
+                // Server ticks down durations
+                for (int i = m_ActiveEffects.Count - 1; i >= 0; i--)
+                {
+                    var effect = m_ActiveEffects[i];
+                    effect.RemainingDuration -= Time.deltaTime;
+
+                    if (effect.RemainingDuration <= 0)
+                    {
+                        m_ActiveEffects.RemoveAt(i);
+                    }
+                    else
+                    {
+                        m_ActiveEffects[i] = effect;
+                    }
+                }
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "status-modifiers"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Calculates Final Stats, Sync Results Only"
+      explanation: |
+        For complex stat modifiers:
+        1. Track modifiers server-side only
+        2. Calculate final stat values on server
+        3. Sync final values via NetworkVariable
+        4. Clients don't need modifier details
+
+      code_example: |
+        // Server-only modifier tracking
+        private List<StatModifier> m_Modifiers = new(); // NOT synced
+
+        // Final calculated stats (synced)
+        private NetworkVariable<CombatStatsBatch> m_FinalStats = new();
+
+        public void AddModifier(StatModifier mod)
+        {
+            if (!IsServer) return;
+
+            m_Modifiers.Add(mod);
+            RecalculateFinalStats();
+        }
+
+        private void RecalculateFinalStats()
+        {
+            if (!IsServer) return;
+
+            // Start with base stats
+            var final = new CombatStatsBatch
+            {
+                Attack = m_BaseAttack,
+                Defense = m_BaseDefense,
+                Speed = m_BaseSpeed,
+                CritChance = m_BaseCritChance
+            };
+
+            // Apply all modifiers
+            foreach (var mod in m_Modifiers)
+            {
+                switch (mod.Type)
+                {
+                    case ModifierType.FlatAttack:
+                        final.Attack += mod.Value;
+                        break;
+                    case ModifierType.PercentAttack:
+                        final.Attack *= (1 + mod.Value / 100f);
+                        break;
+                    // ... etc
+                }
+            }
+
+            m_FinalStats.Value = final; // Sync only the results
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # DAMAGE/HEALING
+  # ============================================
+  - id: "damage-healing"
+    type: "outcome"
+    outcome:
+      recommendation: "Server-Authoritative Damage with Validation"
+      explanation: |
+        ALL damage and healing MUST go through server:
+        1. Client requests damage via ServerRpc
+        2. Server validates damage source and amount
+        3. Server applies modifiers (defense, resistances)
+        4. Server updates health NetworkVariable
+        5. Server broadcasts damage event for VFX
+
+        NEVER trust client damage values!
+
+      code_example: |
+        public class NetworkDamageSystem : NetworkBehaviour
+        {
+            private NetworkVariable<StatsBatch> m_Stats;
+
+            // Client requests damage application
+            [ServerRpc(RequireOwnership = false)]
+            public void RequestDamageServerRpc(DamageRequest request,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong attackerClientId = rpcParams.Receive.SenderClientId;
+
+                // CRITICAL: Validate damage request
+                if (!ValidateDamageRequest(attackerClientId, request))
+                {
+                    Debug.LogWarning($"Invalid damage request from {attackerClientId}");
+                    return;
+                }
+
+                // Calculate actual damage (apply defense, resistances)
+                float baseDamage = request.BaseDamage;
+                float defense = m_Stats.Value.Defense;
+                float actualDamage = CalculateFinalDamage(baseDamage, defense, request.DamageType);
+
+                // Apply damage
+                var stats = m_Stats.Value;
+                stats.Health = Mathf.Max(0, stats.Health - actualDamage);
+                m_Stats.Value = stats;
+
+                // Broadcast damage event for VFX
+                DamageAppliedClientRpc(actualDamage, request.DamageType, request.HitPosition);
+
+                // Check death
+                if (stats.Health <= 0)
+                {
+                    HandleDeathServerRpc();
+                }
+            }
+
+            private bool ValidateDamageRequest(ulong attackerId, DamageRequest request)
+            {
+                // Validate attacker exists
+                var attacker = GetPlayerByClientId(attackerId);
+                if (attacker == null) return false;
+
+                // Validate reasonable damage range
+                if (request.BaseDamage < 0 || request.BaseDamage > 10000) return false;
+
+                // Validate hit position is near target
+                float distance = Vector3.Distance(request.HitPosition, transform.position);
+                if (distance > 5f) return false;
+
+                // Validate attacker is within attack range
+                float attackerDistance = Vector3.Distance(attacker.transform.position, transform.position);
+                if (attackerDistance > request.WeaponRange * 1.5f) return false;
+
+                return true;
+            }
+
+            [ClientRpc]
+            private void DamageAppliedClientRpc(float damage, DamageType type, Vector3 hitPos)
+            {
+                // Show damage number
+                DamageNumberPool.Instance.Show(hitPos, damage, type);
+
+                // Play hit effect
+                PlayHitEffect(hitPos, type);
+            }
+
+            // Healing follows same pattern
+            [ServerRpc(RequireOwnership = false)]
+            public void RequestHealServerRpc(float amount, ServerRpcParams rpcParams = default)
+            {
+                // Validate healer has ability/item
+                ulong healerId = rpcParams.Receive.SenderClientId;
+                if (!ValidateHealRequest(healerId, amount)) return;
+
+                var stats = m_Stats.Value;
+                stats.Health = Mathf.Min(stats.MaxHealth, stats.Health + amount);
+                m_Stats.Value = stats;
+
+                HealAppliedClientRpc(amount);
+            }
+        }
+
+        [System.Serializable]
+        public struct DamageRequest : INetworkSerializable
+        {
+            public float BaseDamage;
+            public DamageType DamageType;
+            public Vector3 HitPosition;
+            public float WeaponRange;
+
+            public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+            {
+                serializer.SerializeValue(ref BaseDamage);
+                serializer.SerializeValue(ref DamageType);
+                serializer.SerializeValue(ref HitPosition);
+                serializer.SerializeValue(ref WeaponRange);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      references:
+        - file: "openspec/.decision-trees/gc-shooter-sync.yaml"
+          section: "damage-application"
+
+  # ============================================
+  # COMPLETE SETUP
+  # ============================================
+  - id: "complete-stats-setup"
+    type: "outcome"
+    outcome:
+      recommendation: "Complete GameCreator Stats Network Setup"
+      explanation: |
+        Full stats networking setup:
+
+        1. BATCH YOUR STATS:
+           - Group related stats into structs
+           - Use INetworkSerializable
+           - 86% bandwidth savings!
+
+        2. SERVER AUTHORITY:
+           - Server owns all stat values
+           - All modifications via ServerRpc
+           - Validate ALL inputs
+
+        3. DAMAGE SYSTEM:
+           - Never trust client damage
+           - Server calculates final damage
+           - Broadcast VFX via ClientRpc
+
+        4. FORMULAS:
+           - Server calculates derived stats
+           - Sync results, not formulas
+           - Clients receive final values
+
+      code_example: |
+        // Complete stats networking component
+        public class NetworkGameCreatorStats : NetworkBehaviour
+        {
+            private Traits m_Traits; // GameCreator component
+
+            // Batched stats - 86% bandwidth savings
+            private NetworkVariable<StatsBatch> m_CoreStats = new(
+                readPerm: NetworkVariableReadPermission.Everyone,
+                writePerm: NetworkVariableWritePermission.Server
+            );
+
+            // Status flags - extremely efficient
+            private NetworkVariable<int> m_StatusFlags = new();
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                m_CoreStats.OnValueChanged += OnCoreStatsChanged;
+                m_StatusFlags.OnValueChanged += OnStatusFlagsChanged;
+
+                if (IsServer)
+                {
+                    InitializeFromGameCreator();
+                }
+            }
+
+            private void InitializeFromGameCreator()
+            {
+                m_CoreStats.Value = new StatsBatch
+                {
+                    Health = m_Traits.GetStat("health").Value,
+                    MaxHealth = m_Traits.GetStat("health").MaxValue,
+                    Mana = m_Traits.GetStat("mana").Value,
+                    MaxMana = m_Traits.GetStat("mana").MaxValue,
+                    Stamina = m_Traits.GetStat("stamina").Value,
+                    MaxStamina = m_Traits.GetStat("stamina").MaxValue
+                };
+            }
+
+            private void OnCoreStatsChanged(StatsBatch oldValue, StatsBatch newValue)
+            {
+                // Sync to GameCreator for local systems
+                m_Traits.GetStat("health").Value = newValue.Health;
+                m_Traits.GetStat("mana").Value = newValue.Mana;
+                m_Traits.GetStat("stamina").Value = newValue.Stamina;
+
+                // Update UI
+                UpdateAllStatBars(newValue);
+            }
+
+            // Server-side stat modifications
+            public void TakeDamage(float damage) { /* ... */ }
+            public void Heal(float amount) { /* ... */ }
+            public void UseMana(float cost) { /* ... */ }
+            public void UseStamina(float cost) { /* ... */ }
+        }
+
+      checklist:
+        - "Stats batched into structs (INetworkSerializable)"
+        - "Server owns all stat NetworkVariables"
+        - "All modifications via ServerRpc"
+        - "Damage/healing validated server-side"
+        - "Status effects use bit flags or NetworkList"
+        - "Derived stats calculated on server"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      related_trees: ["gc-character-sync", "gc-shooter-sync", "bandwidth-optimization"]

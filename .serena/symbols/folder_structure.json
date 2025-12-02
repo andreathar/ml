@@ -1,0 +1,113 @@
+{
+  "generated_at": "2025-11-23T23:30:00Z",
+  "root": "D:/GithubRepos/MLcreator",
+  "structure": {
+    "Assets/": {
+      "description": "Unity assets directory",
+      "Plugins/": {
+        "GameCreator/": {
+          "Runtime/Core/": "GameCreator core runtime code",
+          "Editor/Core/": "GameCreator core editor code",
+          "Modules/": {
+            "Inventory/": "Inventory module",
+            "Stats/": "Stats module",
+            "Shooter/": "Shooter module",
+            "Quests/": "Quests module",
+            "Dialogue/": "Dialogue module",
+            "Behavior/": "Behavior module",
+            "Perception/": "Perception module",
+            "Factions/": "Factions module"
+          }
+        },
+        "GameCreator_Multiplayer/": {
+          "Runtime/": {
+            "Character/": "Character networking",
+            "Player/": "Player network prefabs",
+            "Networking/": "Network utilities",
+            "VisualScripting/": "Multiplayer Instructions/Conditions"
+          },
+          "Editor/": {
+            "Tools/": "Editor utilities",
+            "Windows/": "Editor windows"
+          }
+        },
+        "LLMUnity/": "LLM integration plugin"
+      },
+      "_Project/": {
+        "Core/": "Project core functionality",
+        "AI/": "AI integration code",
+        "Framework/": "Project framework",
+        "Scenes/": "Unity scenes",
+        "Prefabs/": "Project prefabs"
+      },
+      "Tests/": {
+        "Runtime/": "Runtime tests",
+        "Editor/": "Editor tests"
+      }
+    },
+    ".serena/": {
+      "description": "Serena MCP memory structure",
+      "memories/": {
+        "CRITICAL/": "P0 critical knowledge",
+        "TOOLS/": "Workflow and tooling patterns",
+        "CONTEXT/": "Reference documentation"
+      },
+      "ai/": "AI context files",
+      "symbols/": "Symbol maps and references"
+    },
+    ".project-brain/": {
+      "description": "Project Intelligence Engine",
+      "core/": "Auto-generated state",
+      "registries/": "System registry",
+      "context-engine/": "Manifest generation",
+      "validators/": "Cross-reference validation",
+      "automation/": "Cleanup automation"
+    },
+    "openspec/": {
+      "description": "Spec-driven development",
+      "specs/": "Current specifications",
+      "changes/": {
+        "active/": "Active change proposals",
+        "archive/": "Archived changes"
+      }
+    },
+    "claudedocs/": {
+      "description": "AI-generated documentation",
+      "reports/": "Implementation reports",
+      "action-items/": "TODO and next steps",
+      "guides/": "AI-created guides"
+    },
+    "scripts/": {
+      "description": "Utility scripts",
+      "build/": "Build automation",
+      "deploy/": "Deployment scripts",
+      "tools/": "Development utilities",
+      "serena-network/": "DEPRECATED - marked with DEPRECATED.md"
+    },
+    ".claude/": "Claude Code configuration",
+    ".mcp.json": "MCP servers configuration",
+    ".roomodes": "GameCreator icon definitions"
+  },
+  "key_directories": [
+    {
+      "path": "Assets/Plugins/GameCreator_Multiplayer/Runtime",
+      "purpose": "Multiplayer networking code",
+      "important_files": ["Character/NetworkCharacterAdapter.cs", "Player/Player_Network.prefab"]
+    },
+    {
+      "path": ".serena/memories/CRITICAL",
+      "purpose": "P0 critical knowledge - always load first",
+      "important_files": ["001_gamecreator_invasive_integration.md", "002_network_architecture_never_forget.md"]
+    },
+    {
+      "path": ".project-brain/core",
+      "purpose": "Auto-generated project state",
+      "important_files": ["state.json"]
+    },
+    {
+      "path": "openspec/changes",
+      "purpose": "Active change proposals",
+      "important_files": ["*/proposal.md", "*/tasks.md", "*/design.md"]
+    }
+  ]
+}

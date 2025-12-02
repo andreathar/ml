@@ -1,0 +1,219 @@
+======================================================================
+GAMECREATOR PERCEPTION MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-perception-networked
+Network Sync Component: NetworkPerceptionSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+AI perception, sensors, awareness, target tracking, evidence, noise
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Character
+  * Behavior
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * HearManager
+    Namespace: GameCreator.Runtime.Perception
+  * IconPerception
+    Namespace: GameCreator.Runtime.Perception
+  * ProgressLuminance
+    Namespace: GameCreator.Runtime.Perception.UnityUI
+  * IconStorm
+    Namespace: GameCreator.Runtime.Perception
+  * GetPositionLastSeen
+    Namespace: GameCreator.Runtime.Perception
+  * IconFeel
+    Namespace: GameCreator.Runtime.Perception
+  * EventPerceptionNoticeEvidence
+    Namespace: GameCreator.Runtime.Perception
+  * Noise
+    Namespace: GameCreator.Runtime.Perception
+  * TProgressSection
+    Namespace: GameCreator.Runtime.Perception.UnityUI
+  * Scent
+    Namespace: GameCreator.Runtime.Perception
+  * GetStringScentTagMostIntense
+    Namespace: GameCreator.Runtime.Perception
+  * GetBoolAwarenessInStage
+    Namespace: GameCreator.Runtime.Perception
+  * Scents
+    Namespace: GameCreator.Runtime.Perception
+  * TSensor
+    Namespace: GameCreator.Runtime.Perception
+  * IconEvidence
+    Namespace: GameCreator.Runtime.Perception
+  * GetGameObjectScentNext
+    Namespace: GameCreator.Runtime.Perception
+  * SpatialHashScent
+    Namespace: GameCreator.Runtime.Perception
+  * GetGameObjectPerception
+    Namespace: GameCreator.Runtime.Perception
+  * SensorFeel
+    Namespace: GameCreator.Runtime.Perception
+  * IconNoise
+    Namespace: GameCreator.Runtime.Perception
+  * ProgressSmell
+    Namespace: GameCreator.Runtime.Perception.UnityUI
+  * EventPerceptionOnAwarenessStage
+    Namespace: GameCreator.Runtime.Perception
+  * IconDissipation
+    Namespace: GameCreator.Runtime.Perception
+  * MemoryEvidences
+    Namespace: GameCreator.Runtime.Perception
+  * TInstructionPerceptionAwareness
+    Namespace: GameCreator.Runtime.Perception
+  * GetGameObjectLastEvidence
+    Namespace: GameCreator.Runtime.Perception
+  * SmellUI
+    Namespace: GameCreator.Runtime.Perception.UnityUI
+  * LuminanceUI
+    Namespace: GameCreator.Runtime.Perception.UnityUI
+  * EventPerceptionEvidenceTamper
+    Namespace: GameCreator.Runtime.Perception
+  * GetStringLastNoiseTag
+    Namespace: GameCreator.Runtime.Perception
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (13 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionPerceptionEmitScent
+  * InstructionPerceptionUntrack
+  * InstructionPerceptionAwarenessAdd
+  * InstructionPerceptionEvidenceTamper
+  * InstructionPerceptionEvidenceRelay
+  * InstructionPerceptionAmbientLuminance
+  * InstructionPerceptionTrack
+  * InstructionPerceptionAwarenessRelay
+  * InstructionPerceptionDissipation
+  * InstructionPerceptionEmitNoise
+  * InstructionPerceptionGlobalDin
+  * InstructionPerceptionAwarenessSubtract
+  * InstructionPerceptionEvidenceRestore
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (9 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionCanHearNoise
+  * ConditionHearsNoiseTag
+  * ConditionSmellsScentTag
+  * ConditionCanSmellScent
+  * ConditionPerceptionAwareness
+  * ConditionPerceptionIsEvidenceTampered
+  * ConditionPerceptionAwareStage
+  * ConditionPerceptionLuminance
+  * ConditionPerceptionCanSee
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * LastNoticedEvidence
+  * Intensity
+  * Summary
+  * Title
+  * Awareness
+  * AwareDuration
+  * Bytes
+  * Radius
+  * String
+  * Trackers
+  * TrackerList
+  * Stage
+  * List
+  * Position
+  * Time
+  * Luminance
+  * Frame
+  * OpticsRotation
+  * Args
+  * Perception
+  * SensorSee
+  * SensorSmell
+  * ForgetSpeed
+  * ForgetDelay
+  * Create
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Awake()
+  * CalculateOcclusion()
+  * CalculateScore()
+  * CanHearStimulusIntensity()
+  * Create()
+  * DinFor()
+  * Get()
+  * GetEvidence()
+  * GetToken()
+  * GetTracker()
+  * InsertLocalDin()
+  * IsTracking()
+  * OnAwake()
+  * OnChangeAwarenessLevel()
+  * OnCreate()
+  * OnDisable()
+  * OnDrawGizmos()
+  * OnDrawGizmosSelected()
+  * OnEnable()
+  * OnFixedUpdate()
+  * OnHearNoise()
+  * OnRelayedAwareness()
+  * OnUpdate()
+  * RelayEvidence()
+  * Run()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkPerceptionSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Character Awareness]
+  Description: Character's perception affecting AI targeting and detection
+  Network: Perception results affect behavior which affects character state
+  Pattern: Perception.OnTargetAcquired -> Behavior.SetTarget
+
+  [Perception-Driven Behavior]
+  Description: AI behaviors triggered by perception events (sight, noise)
+  Network: Server calculates perception, drives behavior, syncs result
+  Pattern: Server: Perception.Update -> Behavior.Evaluate -> SyncState
+
+  [Faction-Based Targeting]
+  Description: Perception filters based on faction relationships
+  Network: Faction changes must invalidate cached perception targets
+  Pattern: Perception.Filter += (t) => Faction.IsEnemy(t)
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Perception calculations are server-only to prevent cheating
+  2. Target list sync uses NetworkList with 500ms update interval
+  3. Evidence/track synchronization limited to major state changes
+  4. Noise propagation calculated server-side only
+
+======================================================================
+END OF SCHEMA
+======================================================================

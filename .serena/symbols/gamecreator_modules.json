@@ -1,0 +1,133 @@
+{
+  "generated_at": "2025-11-23T23:30:00Z",
+  "modules": [
+    {
+      "id": "core",
+      "name": "GameCreator Core",
+      "category": "framework",
+      "runtime_assembly": "GameCreator.Runtime.Core",
+      "editor_assembly": "GameCreator.Editor.Core",
+      "path": "Assets/Plugins/GameCreator",
+      "description": "Core framework providing Characters, Visual Scripting, Variables",
+      "key_features": ["Character system", "Visual scripting", "Variable management", "Save system"],
+      "dependencies": []
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Inventory",
+      "editor_assembly": "GameCreator.Editor.Inventory",
+      "path": "Assets/Plugins/GameCreator/Modules/Inventory",
+      "description": "Complete inventory and item management system",
+      "key_features": ["Item database", "Bag containers", "Equipment slots", "Crafting system"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "stats",
+      "name": "Stats Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Stats",
+      "editor_assembly": "GameCreator.Editor.Stats",
+      "path": "Assets/Plugins/GameCreator/Modules/Stats",
+      "description": "Character attributes, stats, and progression",
+      "key_features": ["Attributes", "Stats", "Status effects", "Level progression"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "shooter",
+      "name": "Shooter Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Shooter",
+      "editor_assembly": "GameCreator.Editor.Shooter",
+      "path": "Assets/Plugins/GameCreator/Modules/Shooter",
+      "description": "Weapon and combat system for shooting mechanics",
+      "key_features": ["Weapons", "Ammunition", "Shooting mechanics", "Recoil system"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "quests",
+      "name": "Quests Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Quests",
+      "editor_assembly": "GameCreator.Editor.Quests",
+      "path": "Assets/Plugins/GameCreator/Modules/Quests",
+      "description": "Quest and objective system",
+      "key_features": ["Quest database", "Tasks", "Objectives", "Quest tracking"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "dialogue",
+      "name": "Dialogue Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Dialogue",
+      "editor_assembly": "GameCreator.Editor.Dialogue",
+      "path": "Assets/Plugins/GameCreator/Modules/Dialogue",
+      "description": "Branching dialogue and story system",
+      "key_features": ["Dialogue trees", "Branching conversations", "Story nodes", "Choice system"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "behavior",
+      "name": "Behavior Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Behavior",
+      "editor_assembly": "GameCreator.Editor.Behavior",
+      "path": "Assets/Plugins/GameCreator/Modules/Behavior",
+      "description": "AI behavior trees and state machines",
+      "key_features": ["Behavior trees", "State machines", "AI navigation", "Decision making"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "perception",
+      "name": "Perception Module",
+      "category": "module",
+      "runtime_assembly": "GameCreator.Runtime.Perception",
+      "editor_assembly": "GameCreator.Editor.Perception",
+      "path": "Assets/Plugins/GameCreator/Modules/Perception",
+      "description": "Sensory awareness system for AI",
+      "key_features": ["Vision", "Hearing", "Awareness", "Threat detection"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "factions",
+      "name": "Factions Module",
+      "category": "module",
+      "runtime_assembly": "NinjutsuGames.Runtime.Factions",
+      "editor_assembly": "NinjutsuGames.Editor.Factions",
+      "path": "Assets/Plugins/GameCreator/Modules/Factions",
+      "description": "Faction and relationship system",
+      "key_features": ["Faction management", "Reputation", "Relationships", "Alliance system"],
+      "dependencies": ["core"]
+    },
+    {
+      "id": "multiplayer",
+      "name": "Multiplayer Module (Custom)",
+      "category": "custom",
+      "runtime_assembly": "GameCreator.Multiplayer.Runtime",
+      "editor_assembly": "GameCreator.Multiplayer.Editor",
+      "path": "Assets/Plugins/GameCreator_Multiplayer",
+      "description": "Unity Netcode integration for GameCreator",
+      "key_features": ["Character networking", "RPC patterns", "Network sync", "Server authority"],
+      "dependencies": ["core"],
+      "custom_integration": {
+        "invasive": true,
+        "modifies_core": ["Character", "CharacterController"],
+        "adds_components": ["NetworkCharacterAdapter"],
+        "adds_properties": ["IsNetworkOwner", "IsNetworkSpawned"]
+      }
+    }
+  ],
+  "dependency_graph": {
+    "core": [],
+    "inventory": ["core"],
+    "stats": ["core"],
+    "shooter": ["core"],
+    "quests": ["core"],
+    "dialogue": ["core"],
+    "behavior": ["core"],
+    "perception": ["core"],
+    "factions": ["core"],
+    "multiplayer": ["core"]
+  }
+}

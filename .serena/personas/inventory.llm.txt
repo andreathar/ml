@@ -1,0 +1,262 @@
+======================================================================
+GAMECREATOR INVENTORY MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-inventory-networked
+Network Sync Component: NetworkInventorySync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Item management, bags, equipment, runtime items, loot, crafting
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+  * Stats
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * GetRuntimeItemLastParentAttached
+    Namespace: GameCreator.Runtime.Inventory
+  * GetDecimalInventoryLastItemEquipProperty
+    Namespace: GameCreator.Runtime.Inventory
+  * BagWealth
+    Namespace: GameCreator.Runtime.Inventory
+  * CellMerchantUIDrawer
+    Namespace: GameCreator.Editor.Inventory.UnityUI
+  * BagWealthUI
+    Namespace: GameCreator.Runtime.Inventory.UnityUI
+  * MerchantEditor
+    Namespace: GameCreator.Editor.Inventory
+  * EventInventoryOnAddToBag
+    Namespace: GameCreator.Runtime.Inventory
+  * EquipmentEditor
+    Namespace: GameCreator.Editor.Inventory
+  * BagListUITabEditor
+    Namespace: GameCreator.Editor.Inventory.UnityUI
+  * AnyOrItem
+    Namespace: GameCreator.Runtime.Inventory
+  * LootList
+    Namespace: GameCreator.Runtime.Inventory
+  * BagEquipUI
+    Namespace: GameCreator.Runtime.Inventory.UnityUI
+  * EventInventoryOnDropItem
+    Namespace: GameCreator.Runtime.Inventory.UnityUI
+  * TooltipSocketUI
+    Namespace: GameCreator.Runtime.Inventory.UnityUI
+  * CraftingDrawer
+    Namespace: GameCreator.Editor.Inventory
+  * MerchantInfoDrawer
+    Namespace: GameCreator.Editor.Inventory
+  * PropertyUIEditor
+    Namespace: GameCreator.Editor.Inventory.UnityUI
+  * ValueRuntimeItem
+    Namespace: GameCreator.Runtime.Inventory
+  * EquipmentIndex
+    Namespace: GameCreator.Runtime.Inventory
+  * GetRuntimeItemLocalName
+    Namespace: GameCreator.Runtime.Inventory
+  * TBagUI
+    Namespace: GameCreator.Runtime.Inventory.UnityUI
+  * CoinTool
+    Namespace: GameCreator.Editor.Inventory
+  * EquipmentRuntimeSlot
+    Namespace: GameCreator.Runtime.Inventory
+  * TBagShapeDrawer
+    Namespace: GameCreator.Editor.Inventory
+  * GetRuntimeItemLastBought
+    Namespace: GameCreator.Runtime.Inventory
+  * GetDecimalInventoryBagRatioWeight
+    Namespace: GameCreator.Runtime.Inventory
+  * RuntimeProperty
+    Namespace: GameCreator.Runtime.Inventory
+  * GetItemLastAttemptedAdd
+    Namespace: GameCreator.Runtime.Inventory
+  * GetItemLastDropped
+    Namespace: GameCreator.Runtime.Inventory
+  * PropertyTypeGetItem
+    Namespace: GameCreator.Runtime.Inventory
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (37 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionInventorySocketsAttach
+  * InstructionInventoryLoot
+  * InstructionInventoryBagUISplitAmount
+  * InstructionInventoryCooldownAddItem
+  * InstructionInventoryMoveWealthToBag
+  * InstructionInventoryUnequipRuntimeItem
+  * InstructionInventoryCooldownClear
+  * InstructionInventorySetRuntimeItem
+  * InstructionInventorySocketsDetach
+  * InstructionInventoryCurrency
+  * InstructionInventoryEquipRuntimeItem
+  * InstructionInventorySetItem
+  * InstructionInventoryInstantiateItem
+  * InstructionInventoryRemoveItem
+  * InstructionInventoryBagIncrementHeight
+  * InstructionInventoryCooldownAddRuntimeItem
+  * InstructionInventoryDropRuntimeItem
+  * InstructionInventoryAddItem
+  * InstructionInventoryBagUIDropAmount
+  * InstructionInventoryBagUIDeselect
+  * InstructionInventoryCloseTinkerUI
+  * InstructionInventoryBagIncrementWidth
+  * InstructionInventoryCloseMerchantUI
+  * InstructionInventoryMoveContentToBag
+  * InstructionInventoryDropItem
+  * InstructionInventoryOpenTinkerUI
+  * InstructionInventoryBagUISetTransferAmount
+  * InstructionInventoryOpenBagUI
+  * InstructionInventoryCooldownResetItem
+  * InstructionInventoryRemoveRuntimeItem
+  * InstructionInventoryCooldownResetRuntimeItem
+  * InstructionInventoryOpenMerchantUI
+  * InstructionInventoryEquipItem
+  * InstructionInventorySetBagUI
+  * InstructionInventoryAddRuntimeItem
+  * InstructionInventoryCloseBagUI
+  * InstructionInventoryUnequipItem
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (28 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionInventoryTabUIActive
+  * ConditionInventoryIsEquipped
+  * ConditionInventoryIsDismantable
+  * ConditionInventoryHasRuntimeItem
+  * ConditionInventoryRuntimeItemHasProperty
+  * ConditionInventoryItemCooldown
+  * ConditionInventoryIsUsable
+  * ConditionInventoryCompareWealth
+  * ConditionInventoryIsCraftable
+  * ConditionInventoryCanDismantle
+  * ConditionInventoryIsOpenTinkerUI
+  * ConditionInventoryCanAdd
+  * ConditionInventoryHasItem
+  * ConditionInventoryItemHasProperty
+  * ConditionInventoryRuntimeItemCooldown
+  * ConditionInventoryEnoughIngredients
+  * ConditionInventoryIsOpenMerchantUI
+  * ConditionInventoryBagOverloaded
+  * ConditionInventoryCanCraft
+  * ConditionInventoryAvailableSpace
+  * ConditionInventoryIsEquippable
+  * ConditionInventoryCanEquip
+  * ConditionInventoryIsEquippedRuntimeItem
+  * ConditionInventoryIsOpenBagUI
+  * ConditionInventoryCanBuy
+  * ConditionInventoryIsEquipmentSlotFree
+  * ConditionInventoryCanSell
+  * ConditionInventoryItemType
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * String
+  * Type
+  * Items
+  * AllowCopyPaste
+  * AllowInsertion
+  * Title
+  * Title
+  * LastLooted
+  * Create
+  * Socket_LastAttachmentAttached
+  * Bytes
+  * Bag_LastItemUsed
+  * Bag
+  * Amount
+  * UI_LastPropertyHovered
+  * ElementNameHead
+  * ElementNameBody
+  * InputBag
+  * CanIncreaseWidth
+  * CanBuyFromMerchant
+  * Color
+  * Content
+  * Weight
+  * CustomStyleSheetPaths
+  * Price
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Add()
+  * AddType()
+  * Attach()
+  * AttachTo()
+  * Awake()
+  * Create()
+  * CreatePropertyGUI()
+  * DecreaseWidth()
+  * DeleteCell()
+  * ExecuteEventChange()
+  * Get()
+  * GetCooldownDuration()
+  * GetList()
+  * GetSprite()
+  * GetText()
+  * OnDestroy()
+  * OnEnable()
+  * OnSelect()
+  * OnSubmit()
+  * OnTrade()
+  * RemoveType()
+  * Run()
+  * RuntimeContent()
+  * Set()
+  * Use()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkInventorySync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Inventory Variable Bindings]
+  Description: Variables that track inventory state (item counts, equipped items)
+  Network: Variable updates should batch with inventory changes
+  Pattern: Use PropertyGetInventory for reactive UI binding
+
+  [Item Stat Modifiers]
+  Description: Equipment items that modify character stats when equipped
+  Network: Stat changes must propagate after equipment sync confirms
+  Pattern: OnEquip -> ServerRpc -> Stats.AddModifier -> Broadcast
+
+  [Quest Item Requirements]
+  Description: Quests requiring specific items for completion
+  Network: Item check server-validated for quest completion
+  Pattern: Quest.CheckTask -> Inventory.Has(item) -> ServerValidate
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Server-authoritative only - no client prediction for item manipulation
+  2. RuntimeItem instances require NetworkObject spawning for full sync
+  3. Equipment visual sync depends on Character model system
+  4. Crafting recipes validated server-side, client shows predictions
+
+======================================================================
+END OF SCHEMA
+======================================================================

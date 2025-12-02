@@ -1,0 +1,78 @@
+# MLcreator Unity Project Configuration for Serena
+# Unity Knowledge Base Integration
+
+project:
+  name: "MLcreator"
+  type: "unity_multiplayer"
+  version: "2.0.0"
+  unity_version: "6000.2.13f1"
+
+# Technology Stack
+tech_stack:
+  - unity: "6.0"
+  - csharp: "9.0+"
+  - netcode: "2.7.0"
+  - gamecreator: "2.0+"
+  - python: "3.x"
+  - qdrant: "latest"
+
+# Unity-Specific Configuration
+unity:
+  editor_path: "C:\\Program Files\\Unity\\Hub\\Editor\\6000.2.13f1\\Editor\\Unity.exe"
+  project_path: "D:\\GithubRepos\\MLcreator"
+  mcp_server_path: "Library\\mcp-server\\win-x64\\unity-mcp-server.exe"
+  mcp_port: 8081
+
+# Knowledge Base Configuration
+knowledge_base:
+  enabled: true
+  collection: "unity_project_kb"
+  host: "localhost"
+  port: 6333
+  expected_symbols: 30364
+  cache_enabled: true
+  cache_ttl_hours: 24
+
+# MCP Server Integration
+mcp_servers:
+  unity:
+    enabled: true
+    type: "unity"
+    priority: 1
+  unity-knowledge-base:
+    enabled: true
+    type: "knowledge_base"
+    priority: 2
+  filesystem-mlcreator:
+    enabled: true
+    type: "filesystem"
+    priority: 3
+  memory:
+    enabled: true
+    type: "memory"
+    priority: 4
+  serena:
+    enabled: true
+    type: "assistant"
+    priority: 5
+
+# Development Workflows
+workflows:
+  scene_validation: true
+  kb_query_integration: true
+  automated_testing: true
+  performance_monitoring: true
+
+# Quality Assurance
+qa:
+  linting_enabled: true
+  testing_enabled: true
+  documentation_required: true
+  kb_health_checks: true
+
+# Performance Monitoring
+performance:
+  memory_tracking: true
+  query_performance: true
+  cache_hit_rate: true
+  error_rate_tracking: true

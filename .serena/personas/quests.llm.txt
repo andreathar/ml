@@ -1,0 +1,215 @@
+======================================================================
+GAMECREATOR QUESTS MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-quests-networked
+Network Sync Component: NetworkQuestsSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Quest management, tasks, objectives, journal, tracking
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+  * Inventory
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * EventOnTaskActivate
+    Namespace: GameCreator.Runtime.Quests
+  * EventOnTaskDeactivate
+    Namespace: GameCreator.Runtime.Quests
+  * TasksToolInspector
+    Namespace: GameCreator.Editor.Quests
+  * GetQuestTaskColor
+    Namespace: GameCreator.Runtime.Quests
+  * SetQuestNone
+    Namespace: GameCreator.Runtime.Quests
+  * ActiveTaskUI
+    Namespace: GameCreator.Runtime.Quests.UnityUI
+  * Task
+    Namespace: GameCreator.Runtime.Quests
+  * IconTaskSolid
+    Namespace: GameCreator.Runtime.Quests
+  * TasksTree
+    Namespace: GameCreator.Runtime.Quests
+  * TEventOnQuest
+    Namespace: GameCreator.Runtime.Quests
+  * TaskEntries
+    Namespace: GameCreator.Runtime.Quests
+  * MemoryJournal
+    Namespace: GameCreator.Runtime.Quests
+  * TTaskUIEditor
+    Namespace: GameCreator.Editor.Quests
+  * QuestUI
+    Namespace: GameCreator.Runtime.Quests.UnityUI
+  * TokenJournal
+    Namespace: GameCreator.Runtime.Quests
+  * PropertyTypeGetQuest
+    Namespace: GameCreator.Runtime.Quests
+  * SelectedQuestUI
+    Namespace: GameCreator.Runtime.Quests.UnityUI
+  * SelectableHelper
+    Namespace: GameCreator.Runtime.Quests.UnityUI
+  * GetQuestInstance
+    Namespace: GameCreator.Runtime.Quests
+  * EventOnTaskComplete
+    Namespace: GameCreator.Runtime.Quests
+  * StateExtensions
+    Namespace: GameCreator.Runtime.Quests
+  * QuestListUITabEditor
+    Namespace: GameCreator.Editor.Quests
+  * TActiveUIDrawer
+    Namespace: GameCreator.Editor.Quests
+  * TFormatUIDrawer
+    Namespace: GameCreator.Editor.Quests
+  * TTaskUI
+    Namespace: GameCreator.Runtime.Quests.UnityUI
+  * JournalTaskTool
+    Namespace: GameCreator.Editor.Quests
+  * IconSubtaskCombination
+    Namespace: GameCreator.Runtime.Quests
+  * JournalEditor
+    Namespace: GameCreator.Editor.Quests
+  * IconSubtaskSingle
+    Namespace: GameCreator.Runtime.Quests
+  * GetQuestLastFailed
+    Namespace: GameCreator.Runtime.Quests
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (10 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionQuestsTaskFail
+  * InstructionQuestsDeactivate
+  * InstructionQuestTaskValue
+  * InstructionQuestUntrack
+  * InstructionQuestsActivate
+  * InstructionQuestUntrackAll
+  * InstructionQuestsTaskAbandon
+  * InstructionGameObjectSetGameObject
+  * InstructionQuestsTaskComplete
+  * InstructionQuestTrack
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (13 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionQuestsCompareSame
+  * ConditionQuestsGroupAnyCompleted
+  * ConditionQuestsIsQuestFailed
+  * ConditionQuestsIsQuestInactive
+  * ConditionQuestsIsTaskAbandoned
+  * ConditionQuestsIsQuestAbandoned
+  * ConditionQuestsIsTaskFailed
+  * ConditionQuestsIsTaskInactive
+  * ConditionQuestsGroupAllCompleted
+  * ConditionQuestsIsQuestActive
+  * ConditionQuestsIsTaskActive
+  * ConditionQuestsIsTaskCompleted
+  * ConditionQuestsIsQuestCompleted
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Bytes
+  * Summary
+  * TasksTool
+  * TaskId
+  * Create
+  * Quest
+  * Args
+  * TriggersLut
+  * IsHidden
+  * State
+  * State
+  * Completion
+  * List
+  * Tree
+  * Name
+  * Entries
+  * Title
+  * Id
+  * Icon
+  * String
+  * PropertyData
+  * Property
+  * Type
+  * RepositoryID
+  * IsTracking
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Awake()
+  * CanComplete()
+  * CreateAdditionalProperties()
+  * Get()
+  * GetSprite()
+  * GetTitle()
+  * IsActive()
+  * IsFailed()
+  * IsInactive()
+  * NewCompleted()
+  * OnAbandon()
+  * OnAbandonFromManual()
+  * OnDeselect()
+  * OnDisable()
+  * OnEnableTask()
+  * OnRemember()
+  * OnSceneLoad()
+  * OnSubmit()
+  * Refresh()
+  * RefreshTasks()
+  * ReorderItems()
+  * Run()
+  * Set()
+  * ToString()
+  * ToggleTracking()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkQuestsSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Quest Progress Variables]
+  Description: Variables tracking quest state and progress
+  Network: Quest variables synced via NetworkVariablesSync
+  Pattern: Quest.OnProgress -> Variable.Set('quest_' + id, progress)
+
+  [Quest Item Requirements]
+  Description: Quests requiring specific items for completion
+  Network: Item check server-validated for quest completion
+  Pattern: Quest.CheckTask -> Inventory.Has(item) -> ServerValidate
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Quest state changes are server-authoritative
+  2. Task completion validated server-side
+  3. Journal UI updates are client-local
+  4. Shared quests require explicit party sync
+
+======================================================================
+END OF SCHEMA
+======================================================================

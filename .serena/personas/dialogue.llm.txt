@@ -1,0 +1,185 @@
+======================================================================
+GAMECREATOR DIALOGUE MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-dialogue-networked
+Network Sync Component: NetworkDialogueSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Conversations, dialogue trees, actors, speech, choices
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+  * Character
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * EventDialogueStartLine
+    Namespace: GameCreator.Runtime.Dialogue
+  * ExpressingTool
+    Namespace: GameCreator.Editor.Dialogue
+  * Role
+    Namespace: GameCreator.Runtime.Dialogue
+  * DialogueLogsUIEditor
+    Namespace: GameCreator.Editor.Dialogue
+  * ValuesNodeRandomDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * NodeTextValuesTool
+    Namespace: GameCreator.Editor.Dialogue
+  * ValuesNodeChoicesDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * ExpressionsDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * GetGameObjectDialogue
+    Namespace: GameCreator.Runtime.Dialogue
+  * NodeTypeText
+    Namespace: GameCreator.Runtime.Dialogue
+  * Expressing
+    Namespace: GameCreator.Runtime.Dialogue
+  * GetStringActorDescription
+    Namespace: GameCreator.Runtime.Dialogue
+  * DialogueCoordinatesUIEditor
+    Namespace: GameCreator.Editor.Dialogue
+  * NodeAnimation
+    Namespace: GameCreator.Runtime.Dialogue
+  * Node
+    Namespace: GameCreator.Runtime.Dialogue
+  * EventDialogueFinishLine
+    Namespace: GameCreator.Runtime.Dialogue
+  * ValuesNodeRandom
+    Namespace: GameCreator.Runtime.Dialogue
+  * GetSpriteDialogueActorExpression
+    Namespace: GameCreator.Runtime.Dialogue
+  * ContentToolSettings
+    Namespace: GameCreator.Editor.Dialogue
+  * IconNodeNew
+    Namespace: GameCreator.Runtime.Dialogue
+  * DialogueUnitChoicesUI
+    Namespace: GameCreator.Runtime.Dialogue.UnityUI
+  * DialogueCoordinatesUI
+    Namespace: GameCreator.Runtime.Dialogue.UnityUI
+  * VisitsTags
+    Namespace: GameCreator.Runtime.Dialogue
+  * ExpressionsTool
+    Namespace: GameCreator.Editor.Dialogue
+  * TypewriterDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * TNodeTypeDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * ExpressionDrawer
+    Namespace: GameCreator.Editor.Dialogue
+  * NodeSequence
+    Namespace: GameCreator.Runtime.Dialogue
+  * Visits
+    Namespace: GameCreator.Runtime.Dialogue
+  * StoryDrawer
+    Namespace: GameCreator.Editor.Dialogue
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (4 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionDialogueUIChoiceIndex
+  * InstructionDialoguePlay
+  * InstructionDialogueStop
+  * InstructionDialogueUISkip
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (2 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionDialogueHasPlayed
+  * ConditionDialogueTagVisited
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Args
+  * AllowDeleting
+  * AllowContextMenu
+  * UseColor
+  * UseSmoothPosition
+  * State
+  * Bytes
+  * Id
+  * TransitionOut
+  * Actor
+  * CustomStyleSheetPaths
+  * PropertyDataKeys
+  * PropertyData
+  * Rows
+  * DurationOpen
+  * Values
+  * Value
+  * Samples
+  * Pitch
+  * String
+  * Create
+  * OverrideSpeechSkin
+  * ElementNameBody
+  * ElementNameFoot
+  * CurrentElapsed
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * AddText()
+  * CloseUI()
+  * ContainsActor()
+  * CreateBody()
+  * CreateFromMenuItem()
+  * CreatePropertyGUI()
+  * GetDuration()
+  * GetTargetFromActor()
+  * GetToken()
+  * MakeItemTool()
+  * MakePropertyGUI()
+  * OnAwake()
+  * OnDisable()
+  * OnEnable()
+  * OnFinishNext()
+  * OnReset()
+  * PlayClipFinish()
+  * RefreshAlternateAsSpeaker()
+  * Run()
+  * SetupFoot()
+  * SynchronizeRoots()
+  * SynchronizeTree()
+  * ToString()
+  * ToggleInspector()
+  * Uninstall()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkDialogueSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Dialogue state synced at node level, not per-character
+  2. Voice/audio playback is client-local
+  3. Choice selection server-validated for branching
+  4. Cutscene sync requires additional coordination
+
+======================================================================
+END OF SCHEMA
+======================================================================

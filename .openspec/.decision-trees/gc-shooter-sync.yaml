@@ -1,0 +1,1029 @@
+# Decision Tree: GameCreator Shooter Synchronization
+# KB-Enhanced guidance for syncing GC Shooter module across Host/Client
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "gc-shooter-sync"
+title: "GameCreator Shooter Network Synchronization"
+description: "Guide for syncing GameCreator Shooter module (weapons, projectiles, hit detection, damage) in multiplayer"
+category: "gamecreator"
+gc_module: "shooter"
+difficulty: "advanced"
+estimated_time: 12
+
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "shooter"
+    - "projectile"
+    - "damage"
+    - "ServerRpc"
+
+enforced_constraints:
+  - "server-authoritative"
+  - "rpc-naming"
+
+start_node: "shooter-entry"
+
+nodes:
+  # ============================================
+  # ENTRY
+  # ============================================
+  - id: "shooter-entry"
+    type: "question"
+    content: "What shooter functionality do you need to synchronize?"
+    help: "Select the specific shooter feature you're implementing"
+    options:
+      - label: "Weapon equipping/switching"
+        description: "Players changing weapons"
+        next: "weapon-switching"
+
+      - label: "Firing/shooting"
+        description: "Triggering weapon fire"
+        next: "weapon-firing"
+
+      - label: "Projectile synchronization"
+        description: "Syncing bullets, rockets, grenades"
+        next: "projectile-sync"
+
+      - label: "Hit detection"
+        description: "Detecting hits on targets"
+        next: "hit-detection"
+
+      - label: "Damage application"
+        description: "Applying damage to targets"
+        next: "damage-application"
+
+      - label: "Ammo management"
+        description: "Syncing ammo counts, reloading"
+        next: "ammo-sync"
+
+      - label: "Complete shooter setup"
+        description: "Full networked shooter from scratch"
+        next: "complete-shooter-setup"
+
+  # ============================================
+  # WEAPON SWITCHING
+  # ============================================
+  - id: "weapon-switching"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable<int> for Current Weapon + Visual Sync"
+      explanation: |
+        Weapon switching pattern:
+        1. Player sends equip request via ServerRpc
+        2. Server validates player owns weapon
+        3. Server updates NetworkVariable<int> weaponId
+        4. All clients update visual representation
+
+      code_example: |
+        public class NetworkWeaponManager : NetworkBehaviour
+        {
+            [SerializeField] private WeaponConfig[] m_AvailableWeapons;
+            [SerializeField] private Transform m_WeaponHolder;
+
+            private NetworkVariable<int> m_CurrentWeaponId = new(-1);
+            private NetworkVariable<int> m_CurrentAmmo = new(0);
+
+            private GameObject m_CurrentWeaponVisual;
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+                m_CurrentWeaponId.OnValueChanged += OnWeaponChanged;
+            }
+
+            [ServerRpc]
+            public void EquipWeaponServerRpc(int weaponId)
+            {
+                // Validate weapon exists and player owns it
+                if (weaponId < 0 || weaponId >= m_AvailableWeapons.Length) return;
+                if (!PlayerOwnsWeapon(OwnerClientId, weaponId)) return;
+
+                // Update weapon
+                m_CurrentWeaponId.Value = weaponId;
+                m_CurrentAmmo.Value = m_AvailableWeapons[weaponId].MaxAmmo;
+            }
+
+            private void OnWeaponChanged(int oldWeaponId, int newWeaponId)
+            {
+                // Update visual on ALL clients
+                if (m_CurrentWeaponVisual != null)
+                {
+                    Destroy(m_CurrentWeaponVisual);
+                }
+
+                if (newWeaponId >= 0)
+                {
+                    var config = m_AvailableWeapons[newWeaponId];
+                    m_CurrentWeaponVisual = Instantiate(config.WeaponPrefab, m_WeaponHolder);
+
+                    // Play equip animation
+                    if (m_Animator != null)
+                    {
+                        m_Animator.SetTrigger("Equip");
+                    }
+
+                    // Play equip sound
+                    PlayEquipSound(config);
+                }
+            }
+        }
+
+      bandwidth_impact: "4 bytes per weapon change"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # WEAPON FIRING
+  # ============================================
+  - id: "weapon-firing"
+    type: "question"
+    content: "What type of weapon are you implementing?"
+    options:
+      - label: "Hitscan (instant raycast)"
+        description: "Bullets, lasers - instant hit detection"
+        next: "hitscan-weapon"
+
+      - label: "Projectile (physical bullet)"
+        description: "Rockets, grenades - travel time"
+        next: "projectile-weapon"
+
+      - label: "Melee"
+        description: "Swords, fists - close range"
+        next: "melee-weapon"
+
+  - id: "hitscan-weapon"
+    type: "outcome"
+    outcome:
+      recommendation: "Client Predicts + Server Validates Raycast"
+      explanation: |
+        Hitscan weapons (instant bullets):
+        1. Client performs raycast locally (immediate feedback)
+        2. Client sends fire request with hit info via ServerRpc
+        3. Server re-validates raycast (anti-cheat)
+        4. Server applies damage if hit valid
+        5. Server broadcasts visual effects via ClientRpc
+
+        Client prediction provides instant feedback while server maintains authority.
+
+      code_example: |
+        public class NetworkHitscanWeapon : NetworkBehaviour
+        {
+            [SerializeField] private float m_Range = 100f;
+            [SerializeField] private float m_Damage = 25f;
+            [SerializeField] private LayerMask m_HitLayers;
+
+            [ServerRpc]
+            public void FireServerRpc(Vector3 origin, Vector3 direction, NetworkObjectReference hitTarget)
+            {
+                // Server validates the shot
+                Ray ray = new Ray(origin, direction);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit, m_Range, m_HitLayers))
+                {
+                    // Validate hit matches client's reported hit
+                    NetworkObject targetNetObj;
+                    if (hitTarget.TryGet(out targetNetObj))
+                    {
+                        // Check distance tolerance (lag compensation)
+                        float hitDistance = Vector3.Distance(hit.point, targetNetObj.transform.position);
+                        if (hitDistance > 2f) // Too far from reported target
+                        {
+                            Debug.LogWarning("Hit validation failed - distance mismatch");
+                            return;
+                        }
+
+                        // Apply damage
+                        var damageable = targetNetObj.GetComponent<NetworkDamageReceiver>();
+                        if (damageable != null)
+                        {
+                            damageable.TakeDamage(m_Damage, OwnerClientId);
+                        }
+                    }
+
+                    // Broadcast visual effects
+                    FireEffectClientRpc(origin, hit.point);
+                }
+                else
+                {
+                    // Miss - still show tracer
+                    Vector3 endPoint = origin + direction * m_Range;
+                    FireEffectClientRpc(origin, endPoint);
+                }
+            }
+
+            [ClientRpc]
+            private void FireEffectClientRpc(Vector3 origin, Vector3 hitPoint)
+            {
+                // Show tracer on all clients
+                m_TracerPool.SpawnTracer(origin, hitPoint);
+
+                // Play muzzle flash
+                m_MuzzleFlash.Play();
+
+                // Play sound
+                m_AudioSource.PlayOneShot(m_FireSound);
+
+                // Show impact effect at hit point
+                m_ImpactPool.SpawnImpact(hitPoint);
+            }
+
+            // Called locally by owner for immediate feedback
+            public void FireLocal(Vector3 origin, Vector3 direction)
+            {
+                if (!IsOwner) return;
+
+                // Local prediction - instant visual feedback
+                Ray ray = new Ray(origin, direction);
+                RaycastHit hit;
+
+                NetworkObjectReference hitRef = default;
+                if (Physics.Raycast(ray, out hit, m_Range, m_HitLayers))
+                {
+                    var netObj = hit.collider.GetComponent<NetworkObject>();
+                    if (netObj != null)
+                    {
+                        hitRef = netObj;
+                    }
+
+                    // Local effects (immediate)
+                    ShowLocalHitEffect(hit.point);
+                }
+
+                // Send to server for validation
+                FireServerRpc(origin, direction, hitRef);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "melee-weapon"
+    type: "outcome"
+    outcome:
+      recommendation: "ServerRpc Attack Request + Server Overlap Check"
+      explanation: |
+        Melee weapons:
+        1. Client sends attack request via ServerRpc
+        2. Server performs overlap sphere/box check
+        3. Server applies damage to targets in range
+        4. Server broadcasts attack animation via ClientRpc
+
+      code_example: |
+        public class NetworkMeleeWeapon : NetworkBehaviour
+        {
+            [SerializeField] private float m_AttackRange = 2f;
+            [SerializeField] private float m_AttackAngle = 90f;
+            [SerializeField] private float m_Damage = 50f;
+            [SerializeField] private float m_AttackCooldown = 0.5f;
+
+            private float m_LastAttackTime;
+
+            [ServerRpc]
+            public void AttackServerRpc()
+            {
+                // Validate cooldown
+                if (Time.time < m_LastAttackTime + m_AttackCooldown) return;
+                m_LastAttackTime = Time.time;
+
+                // Find targets in range
+                Collider[] hits = Physics.OverlapSphere(transform.position, m_AttackRange);
+
+                foreach (var hit in hits)
+                {
+                    if (hit.gameObject == gameObject) continue;
+
+                    // Check angle
+                    Vector3 toTarget = hit.transform.position - transform.position;
+                    float angle = Vector3.Angle(transform.forward, toTarget);
+                    if (angle > m_AttackAngle / 2) continue;
+
+                    // Apply damage
+                    var damageable = hit.GetComponent<NetworkDamageReceiver>();
+                    if (damageable != null)
+                    {
+                        damageable.TakeDamage(m_Damage, OwnerClientId);
+                    }
+                }
+
+                // Broadcast attack animation
+                PlayAttackClientRpc();
+            }
+
+            [ClientRpc]
+            private void PlayAttackClientRpc()
+            {
+                m_Animator.SetTrigger("Attack");
+                m_AudioSource.PlayOneShot(m_SwingSound);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # PROJECTILE SYNC
+  # ============================================
+  - id: "projectile-sync"
+    type: "question"
+    content: "How should projectiles be spawned and controlled?"
+    options:
+      - label: "Server spawns, server controls"
+        description: "Most secure - server owns all projectiles"
+        next: "server-owned-projectile"
+
+      - label: "Server spawns, physics simulated"
+        description: "Server spawns, physics runs on all clients"
+        next: "physics-projectile"
+
+      - label: "Client predicted projectiles"
+        description: "Low latency but complex - client spawns local, server validates"
+        next: "predicted-projectile"
+
+  - id: "server-owned-projectile"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Spawns and Owns Projectile NetworkObject"
+      explanation: |
+        Most secure approach:
+        1. Client sends fire request via ServerRpc
+        2. Server spawns projectile NetworkObject
+        3. Server moves projectile each frame
+        4. NetworkTransform syncs position to clients
+        5. Server handles collision and damage
+
+        Best for: Slow projectiles, rockets, grenades
+
+      code_example: |
+        public class NetworkProjectileLauncher : NetworkBehaviour
+        {
+            [SerializeField] private NetworkProjectile m_ProjectilePrefab;
+            [SerializeField] private Transform m_SpawnPoint;
+            [SerializeField] private float m_ProjectileSpeed = 20f;
+
+            [ServerRpc]
+            public void FireProjectileServerRpc()
+            {
+                // Server spawns projectile
+                var projectile = Instantiate(m_ProjectilePrefab,
+                    m_SpawnPoint.position,
+                    m_SpawnPoint.rotation);
+
+                projectile.Initialize(m_ProjectileSpeed, OwnerClientId);
+                projectile.NetworkObject.Spawn();
+
+                // Notify clients of fire (for effects)
+                ProjectileFiredClientRpc();
+            }
+
+            [ClientRpc]
+            private void ProjectileFiredClientRpc()
+            {
+                // Muzzle flash, sound
+                PlayFireEffects();
+            }
+        }
+
+        public class NetworkProjectile : NetworkBehaviour
+        {
+            private float m_Speed;
+            private ulong m_OwnerClientId;
+            [SerializeField] private float m_Damage = 100f;
+            [SerializeField] private float m_Lifetime = 10f;
+
+            public void Initialize(float speed, ulong ownerClientId)
+            {
+                m_Speed = speed;
+                m_OwnerClientId = ownerClientId;
+            }
+
+            void Update()
+            {
+                if (!IsServer) return;
+
+                // Server moves projectile
+                transform.position += transform.forward * m_Speed * Time.deltaTime;
+
+                // Lifetime check
+                m_Lifetime -= Time.deltaTime;
+                if (m_Lifetime <= 0)
+                {
+                    NetworkObject.Despawn();
+                }
+            }
+
+            void OnTriggerEnter(Collider other)
+            {
+                if (!IsServer) return;
+
+                // Check for damageable
+                var damageable = other.GetComponent<NetworkDamageReceiver>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage(m_Damage, m_OwnerClientId);
+                }
+
+                // Spawn explosion effect
+                ExplodeClientRpc(transform.position);
+                NetworkObject.Despawn();
+            }
+
+            [ClientRpc]
+            private void ExplodeClientRpc(Vector3 position)
+            {
+                // Spawn explosion VFX
+                ExplosionPool.Instance.Spawn(position);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "physics-projectile"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Spawns, NetworkRigidbody Syncs Physics"
+      explanation: |
+        For physics-based projectiles (grenades):
+        1. Server spawns with initial velocity
+        2. NetworkRigidbody syncs physics state
+        3. All clients simulate physics
+        4. Server handles collision damage
+
+      code_example: |
+        public class NetworkGrenadeLauncher : NetworkBehaviour
+        {
+            [SerializeField] private NetworkGrenade m_GrenadePrefab;
+            [SerializeField] private Transform m_SpawnPoint;
+            [SerializeField] private float m_ThrowForce = 15f;
+
+            [ServerRpc]
+            public void ThrowGrenadeServerRpc(Vector3 throwDirection)
+            {
+                // Server spawns grenade
+                var grenade = Instantiate(m_GrenadePrefab,
+                    m_SpawnPoint.position,
+                    Quaternion.identity);
+
+                // Apply initial velocity
+                var rb = grenade.GetComponent<Rigidbody>();
+                rb.velocity = throwDirection.normalized * m_ThrowForce;
+
+                // Add some spin
+                rb.angularVelocity = Random.insideUnitSphere * 5f;
+
+                grenade.Initialize(OwnerClientId);
+                grenade.NetworkObject.Spawn();
+            }
+        }
+
+        public class NetworkGrenade : NetworkBehaviour
+        {
+            [SerializeField] private float m_FuseTime = 3f;
+            [SerializeField] private float m_ExplosionRadius = 5f;
+            [SerializeField] private float m_Damage = 150f;
+
+            private ulong m_OwnerClientId;
+
+            public void Initialize(ulong ownerClientId)
+            {
+                m_OwnerClientId = ownerClientId;
+            }
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                if (IsServer)
+                {
+                    StartCoroutine(FuseCountdown());
+                }
+            }
+
+            IEnumerator FuseCountdown()
+            {
+                yield return new WaitForSeconds(m_FuseTime);
+                Explode();
+            }
+
+            private void Explode()
+            {
+                if (!IsServer) return;
+
+                // Find targets in radius
+                Collider[] hits = Physics.OverlapSphere(transform.position, m_ExplosionRadius);
+                foreach (var hit in hits)
+                {
+                    var damageable = hit.GetComponent<NetworkDamageReceiver>();
+                    if (damageable != null)
+                    {
+                        // Damage falloff by distance
+                        float distance = Vector3.Distance(transform.position, hit.transform.position);
+                        float falloff = 1f - (distance / m_ExplosionRadius);
+                        damageable.TakeDamage(m_Damage * falloff, m_OwnerClientId);
+                    }
+                }
+
+                // Broadcast explosion effect
+                ExplodeClientRpc(transform.position);
+                NetworkObject.Despawn();
+            }
+
+            [ClientRpc]
+            private void ExplodeClientRpc(Vector3 position)
+            {
+                ExplosionPool.Instance.SpawnLarge(position);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "predicted-projectile"
+    type: "outcome"
+    outcome:
+      recommendation: "Client Prediction + Server Reconciliation (Advanced)"
+      explanation: |
+        For competitive FPS with low latency requirements:
+        1. Client spawns LOCAL projectile immediately (prediction)
+        2. Client sends fire request to server
+        3. Server spawns authoritative projectile
+        4. Server sends back projectile ID
+        5. Client reconciles local with server projectile
+
+        Complex but provides best feel. Only use if latency critical.
+
+      code_example: |
+        public class NetworkPredictedProjectile : NetworkBehaviour
+        {
+            private Dictionary<int, GameObject> m_LocalProjectiles = new();
+            private int m_LocalProjectileId = 0;
+
+            // Client-side: Fire with prediction
+            public void FirePredicted(Vector3 origin, Vector3 direction)
+            {
+                if (!IsOwner) return;
+
+                int localId = m_LocalProjectileId++;
+
+                // Spawn local projectile immediately (prediction)
+                var localProj = Instantiate(m_LocalProjectilePrefab, origin, Quaternion.LookRotation(direction));
+                localProj.GetComponent<LocalProjectile>().Initialize(direction);
+                m_LocalProjectiles[localId] = localProj;
+
+                // Send to server
+                FireProjectileServerRpc(origin, direction, localId);
+            }
+
+            [ServerRpc]
+            private void FireProjectileServerRpc(Vector3 origin, Vector3 direction, int localId)
+            {
+                // Server spawns authoritative projectile
+                var serverProj = Instantiate(m_ServerProjectilePrefab, origin, Quaternion.LookRotation(direction));
+                serverProj.Initialize(direction, OwnerClientId);
+                serverProj.NetworkObject.Spawn();
+
+                // Tell owner to reconcile
+                ReconcileProjectileClientRpc(localId, serverProj.NetworkObject,
+                    GetOwnerRpcParams());
+            }
+
+            [ClientRpc]
+            private void ReconcileProjectileClientRpc(int localId, NetworkObjectReference serverProj,
+                ClientRpcParams rpcParams = default)
+            {
+                // Destroy local prediction
+                if (m_LocalProjectiles.TryGetValue(localId, out var local))
+                {
+                    Destroy(local);
+                    m_LocalProjectiles.Remove(localId);
+                }
+
+                // Server projectile now shows instead
+            }
+        }
+
+      complexity: "High - only use if latency is critical"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # HIT DETECTION
+  # ============================================
+  - id: "hit-detection"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Validates All Hits (Anti-Cheat)"
+      explanation: |
+        Hit detection MUST be server-authoritative:
+        1. Client reports potential hit
+        2. Server re-validates with lag compensation
+        3. Server applies damage if valid
+        4. Never trust client-reported damage
+
+        Lag compensation: Server rewinds target positions slightly to account for network latency.
+
+      code_example: |
+        public class ServerHitValidator : NetworkBehaviour
+        {
+            // Position history for lag compensation
+            private Dictionary<ulong, Queue<PositionSnapshot>> m_PositionHistory = new();
+            private const int HISTORY_SIZE = 30; // ~500ms at 60fps
+            private const float SNAPSHOT_INTERVAL = 0.016f;
+
+            void FixedUpdate()
+            {
+                if (!IsServer) return;
+
+                // Record all player positions
+                foreach (var client in NetworkManager.Singleton.ConnectedClients)
+                {
+                    var player = client.Value.PlayerObject;
+                    if (player == null) continue;
+
+                    if (!m_PositionHistory.ContainsKey(client.Key))
+                    {
+                        m_PositionHistory[client.Key] = new Queue<PositionSnapshot>();
+                    }
+
+                    var history = m_PositionHistory[client.Key];
+                    history.Enqueue(new PositionSnapshot
+                    {
+                        Position = player.transform.position,
+                        Time = Time.time
+                    });
+
+                    while (history.Count > HISTORY_SIZE)
+                    {
+                        history.Dequeue();
+                    }
+                }
+            }
+
+            public bool ValidateHit(ulong shooterClientId, ulong targetClientId,
+                Vector3 shootOrigin, Vector3 shootDirection, float weaponRange)
+            {
+                // Get shooter's RTT for lag compensation
+                float rtt = GetClientRTT(shooterClientId);
+                float rewindTime = rtt / 2f; // Half RTT
+
+                // Get target position at shoot time
+                Vector3 targetPosAtShootTime = GetHistoricalPosition(targetClientId, rewindTime);
+
+                // Perform raycast against historical position
+                Ray ray = new Ray(shootOrigin, shootDirection);
+
+                // Create temporary collider at historical position
+                // (simplified - real implementation would use capsule/bounds)
+                float hitDistance = Vector3.Distance(shootOrigin, targetPosAtShootTime);
+
+                if (hitDistance > weaponRange) return false;
+
+                // Check if ray passes near target
+                Vector3 closestPoint = ray.GetPoint(
+                    Vector3.Dot(targetPosAtShootTime - shootOrigin, shootDirection)
+                );
+                float distanceToTarget = Vector3.Distance(closestPoint, targetPosAtShootTime);
+
+                // Hit tolerance based on target size
+                const float HIT_RADIUS = 0.5f;
+                return distanceToTarget <= HIT_RADIUS;
+            }
+
+            private Vector3 GetHistoricalPosition(ulong clientId, float secondsAgo)
+            {
+                if (!m_PositionHistory.TryGetValue(clientId, out var history))
+                {
+                    return Vector3.zero;
+                }
+
+                float targetTime = Time.time - secondsAgo;
+
+                // Find snapshots bracketing target time
+                PositionSnapshot before = default;
+                PositionSnapshot after = default;
+
+                foreach (var snapshot in history)
+                {
+                    if (snapshot.Time <= targetTime)
+                    {
+                        before = snapshot;
+                    }
+                    else
+                    {
+                        after = snapshot;
+                        break;
+                    }
+                }
+
+                // Interpolate
+                if (before.Time == 0) return after.Position;
+                if (after.Time == 0) return before.Position;
+
+                float t = (targetTime - before.Time) / (after.Time - before.Time);
+                return Vector3.Lerp(before.Position, after.Position, t);
+            }
+        }
+
+        struct PositionSnapshot
+        {
+            public Vector3 Position;
+            public float Time;
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # DAMAGE APPLICATION
+  # ============================================
+  - id: "damage-application"
+    type: "outcome"
+    outcome:
+      recommendation: "Server-Only Damage Application with Validation"
+      explanation: |
+        Damage application rules:
+        1. ONLY server can reduce health
+        2. Server validates damage source
+        3. Server applies modifiers (armor, resistances)
+        4. Server broadcasts damage event for UI/VFX
+
+        See gc-stats-sync.yaml for detailed damage patterns.
+
+      code_example: |
+        public class NetworkDamageReceiver : NetworkBehaviour
+        {
+            private NetworkGameCreatorStats m_Stats;
+
+            // Called by weapons, projectiles, etc.
+            public void TakeDamage(float baseDamage, ulong attackerClientId)
+            {
+                if (!IsServer)
+                {
+                    Debug.LogError("TakeDamage called on client - this should never happen!");
+                    return;
+                }
+
+                // Validate attacker exists
+                if (!ValidateAttacker(attackerClientId)) return;
+
+                // Apply armor/resistance modifiers
+                float finalDamage = ApplyModifiers(baseDamage);
+
+                // Apply to stats
+                m_Stats.TakeDamage(finalDamage);
+
+                // Broadcast damage event
+                DamageReceivedClientRpc(finalDamage, attackerClientId);
+            }
+
+            [ClientRpc]
+            private void DamageReceivedClientRpc(float damage, ulong attackerClientId)
+            {
+                // Show damage number
+                DamageNumberPool.Instance.Show(transform.position + Vector3.up, damage);
+
+                // Play hit sound
+                m_AudioSource.PlayOneShot(m_HitSound);
+
+                // Flash character red
+                StartCoroutine(DamageFlash());
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      related_trees: ["gc-stats-sync"]
+
+  # ============================================
+  # AMMO SYNC
+  # ============================================
+  - id: "ammo-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable<int> per Weapon + Server Validates"
+      explanation: |
+        Ammo management:
+        1. Current ammo in NetworkVariable<int>
+        2. Reserve ammo in NetworkVariable<int>
+        3. Server decrements on fire
+        4. Server handles reload logic
+        5. Client can't fire without server-confirmed ammo
+
+      code_example: |
+        public class NetworkAmmoManager : NetworkBehaviour
+        {
+            [SerializeField] private int m_MaxClipSize = 30;
+            [SerializeField] private int m_MaxReserve = 120;
+            [SerializeField] private float m_ReloadTime = 2f;
+
+            private NetworkVariable<int> m_CurrentAmmo = new();
+            private NetworkVariable<int> m_ReserveAmmo = new();
+            private NetworkVariable<bool> m_IsReloading = new();
+
+            public bool CanFire => m_CurrentAmmo.Value > 0 && !m_IsReloading.Value;
+
+            [ServerRpc]
+            public void ConsumeAmmoServerRpc()
+            {
+                if (m_CurrentAmmo.Value <= 0) return;
+                if (m_IsReloading.Value) return;
+
+                m_CurrentAmmo.Value--;
+            }
+
+            [ServerRpc]
+            public void ReloadServerRpc()
+            {
+                if (m_IsReloading.Value) return;
+                if (m_CurrentAmmo.Value >= m_MaxClipSize) return;
+                if (m_ReserveAmmo.Value <= 0) return;
+
+                m_IsReloading.Value = true;
+                StartCoroutine(ReloadCoroutine());
+            }
+
+            private IEnumerator ReloadCoroutine()
+            {
+                // Notify clients of reload start
+                ReloadStartedClientRpc();
+
+                yield return new WaitForSeconds(m_ReloadTime);
+
+                // Calculate ammo to load
+                int needed = m_MaxClipSize - m_CurrentAmmo.Value;
+                int available = Mathf.Min(needed, m_ReserveAmmo.Value);
+
+                m_CurrentAmmo.Value += available;
+                m_ReserveAmmo.Value -= available;
+                m_IsReloading.Value = false;
+
+                // Notify clients of reload complete
+                ReloadCompletedClientRpc();
+            }
+
+            [ClientRpc]
+            private void ReloadStartedClientRpc()
+            {
+                // Play reload animation
+                m_Animator.SetTrigger("Reload");
+                m_AudioSource.PlayOneShot(m_ReloadSound);
+            }
+
+            [ClientRpc]
+            private void ReloadCompletedClientRpc()
+            {
+                // Reload complete feedback
+                m_AudioSource.PlayOneShot(m_ReloadCompleteSound);
+            }
+
+            [ServerRpc]
+            public void AddAmmoServerRpc(int amount)
+            {
+                m_ReserveAmmo.Value = Mathf.Min(m_MaxReserve, m_ReserveAmmo.Value + amount);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # COMPLETE SETUP
+  # ============================================
+  - id: "complete-shooter-setup"
+    type: "outcome"
+    outcome:
+      recommendation: "Complete GameCreator Shooter Network Setup"
+      explanation: |
+        Full shooter networking setup:
+
+        1. WEAPON SWITCHING:
+           - NetworkVariable<int> currentWeaponId
+           - Visual sync via OnValueChanged
+           - Server validates ownership
+
+        2. FIRING:
+           - Hitscan: Client predicts, server validates
+           - Projectile: Server spawns and owns
+           - Always validate on server
+
+        3. HIT DETECTION:
+           - Server validates ALL hits
+           - Implement lag compensation for fairness
+           - Never trust client-reported hits
+
+        4. DAMAGE:
+           - Server-only damage application
+           - Apply modifiers server-side
+           - Broadcast VFX via ClientRpc
+
+        5. AMMO:
+           - NetworkVariables for current/reserve
+           - Server controls consumption
+           - Server handles reload timing
+
+      code_example: |
+        // Main shooter component that ties everything together
+        public class NetworkShooterController : NetworkBehaviour
+        {
+            private NetworkWeaponManager m_WeaponManager;
+            private NetworkAmmoManager m_AmmoManager;
+            private ServerHitValidator m_HitValidator;
+
+            [SerializeField] private Transform m_AimPoint;
+            [SerializeField] private LayerMask m_HitLayers;
+
+            void Update()
+            {
+                if (!IsOwner) return;
+
+                // Handle weapon switching
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                    m_WeaponManager.EquipWeaponServerRpc(0);
+                if (Input.GetKeyDown(KeyCode.Alpha2))
+                    m_WeaponManager.EquipWeaponServerRpc(1);
+
+                // Handle firing
+                if (Input.GetButtonDown("Fire1"))
+                {
+                    TryFire();
+                }
+
+                // Handle reload
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    m_AmmoManager.ReloadServerRpc();
+                }
+            }
+
+            private void TryFire()
+            {
+                if (!m_AmmoManager.CanFire) return;
+
+                // Get aim direction
+                Vector3 origin = m_AimPoint.position;
+                Vector3 direction = m_AimPoint.forward;
+
+                // Local prediction (for hitscan)
+                Ray ray = new Ray(origin, direction);
+                RaycastHit hit;
+
+                NetworkObjectReference hitTarget = default;
+                if (Physics.Raycast(ray, out hit, 100f, m_HitLayers))
+                {
+                    var netObj = hit.collider.GetComponent<NetworkObject>();
+                    if (netObj != null)
+                    {
+                        hitTarget = netObj;
+                    }
+
+                    // Local hit effect (prediction)
+                    ShowLocalHitEffect(hit.point);
+                }
+
+                // Send to server
+                FireServerRpc(origin, direction, hitTarget);
+            }
+
+            [ServerRpc]
+            private void FireServerRpc(Vector3 origin, Vector3 direction, NetworkObjectReference hitTarget)
+            {
+                // Validate ammo
+                if (!m_AmmoManager.CanFire) return;
+
+                // Consume ammo
+                m_AmmoManager.ConsumeAmmoServerRpc();
+
+                // Validate hit
+                if (hitTarget.TryGet(out NetworkObject targetObj))
+                {
+                    bool validHit = m_HitValidator.ValidateHit(
+                        OwnerClientId,
+                        targetObj.OwnerClientId,
+                        origin,
+                        direction,
+                        m_WeaponManager.CurrentWeaponRange
+                    );
+
+                    if (validHit)
+                    {
+                        var damageable = targetObj.GetComponent<NetworkDamageReceiver>();
+                        if (damageable != null)
+                        {
+                            damageable.TakeDamage(m_WeaponManager.CurrentWeaponDamage, OwnerClientId);
+                        }
+                    }
+                }
+
+                // Broadcast fire effect
+                FireEffectClientRpc(origin, direction);
+            }
+        }
+
+      checklist:
+        - "Server validates all weapon switches"
+        - "Server validates all hits (lag compensation)"
+        - "Server owns all damage application"
+        - "Ammo managed via NetworkVariables"
+        - "Visual effects via ClientRpc"
+        - "Client prediction for instant feedback"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      related_trees: ["gc-stats-sync", "gc-character-sync", "bandwidth-optimization"]

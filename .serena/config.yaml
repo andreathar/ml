@@ -1,0 +1,62 @@
+# Serena Configuration for MLcreator Unity Development
+# Unity Knowledge Base Integration Enabled
+
+# MCP Server Integration
+mcp:
+  enabled: true
+  servers:
+    unity:
+      enabled: true
+      command: "D:\\UnityWorkspaces\\ml\\Library\\mcp-server\\win-x64\\unity-mcp-server.exe"
+      args: ["--client-transport", "stdio", "--port", "8081"]
+    unity-knowledge-base:
+      enabled: true
+      command: "python"
+      args: ["D:\\UnityWorkspaces\\ml\\scripts\\unity-kb\\direct_mcp_server.py"]
+      env:
+        QDRANT_HOST: "localhost"
+        QDRANT_PORT: "6333"
+        QDRANT_COLLECTION: "unity_project_kb"
+    filesystem-mlcreator:
+      enabled: true
+    memory:
+      enabled: true
+    sequential-thinking:
+      enabled: true
+    web-fetch:
+      enabled: true
+    time:
+      enabled: true
+    serena:
+      enabled: true
+
+# Knowledge Base Integration
+kb_integration:
+  enabled: true
+  cache_enabled: true
+  cache_ttl_hours: 24
+  fallback_to_direct_queries: true
+  health_monitoring_enabled: true
+  auto_start_services: true
+
+# Memory Management
+memory:
+  tiers:
+    critical: true
+    core: true
+    integration: true
+    tools: true
+  auto_preload: true
+  predictive_caching: true
+
+# Development Workflow Integration
+workflows:
+  unity_scene_validation: true
+  kb_query_automation: true
+  ai_assistant_integration: true
+
+# Performance Settings
+performance:
+  query_timeout_seconds: 30
+  cache_size_mb: 100
+  concurrent_queries: 3

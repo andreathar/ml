@@ -1,0 +1,551 @@
+# Decision Tree: Choose Network Synchronization Method
+# Helps determine: NetworkVariable vs RPC vs Supabase
+# Version: 2.0.0 | Updated: 2025-12-01
+# Enhanced with KB integration and GameCreator awareness
+
+id: "choose-network-sync-method"
+title: "Choose Network Synchronization Method"
+description: "Determine the best way to sync game state: NetworkVariable, RPC, or Supabase"
+category: "networking"
+difficulty: "intermediate"
+estimated_time: 5
+
+# KB Integration
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "NetworkVariable"
+    - "ServerRpc"
+    - "ClientRpc"
+
+# Project constraints enforced
+enforced_constraints:
+  - "server-authoritative"
+  - "rpc-naming"
+  - "no-network-transform"
+
+# GameCreator awareness
+gc_awareness:
+  character_sync: "See gc-character-sync.yaml for GC Character data"
+  inventory_sync: "See gc-inventory-sync.yaml for GC Inventory data"
+  stats_sync: "See gc-stats-sync.yaml for GC Stats data"
+  visual_scripting: "See gc-visual-scripting-sync.yaml for VS events/instructions/conditions"
+
+start_node: "gamecreator-check"
+
+nodes:
+  # NEW: Check if this is GameCreator data
+  - id: "gamecreator-check"
+    type: "question"
+    content: "Is this data from a GameCreator module?"
+    help: "GameCreator modules have specialized sync patterns"
+    options:
+      - label: "Yes, GameCreator Character data"
+        description: "Movement, animation, IK from GC Character"
+        next: "redirect-gc-character"
+
+      - label: "Yes, GameCreator Inventory data"
+        description: "Items, equipment from GC Inventory"
+        next: "redirect-gc-inventory"
+
+      - label: "Yes, GameCreator Stats data"
+        description: "Health, mana, attributes from GC Stats"
+        next: "redirect-gc-stats"
+
+      - label: "Yes, GameCreator Visual Scripting"
+        description: "Custom triggers, instructions, conditions"
+        next: "redirect-gc-visual-scripting"
+
+      - label: "No, custom/generic data"
+        description: "Not from a GameCreator module"
+        next: "frequency-check"
+
+  - id: "redirect-gc-character"
+    type: "outcome"
+    outcome:
+      recommendation: "Use gc-character-sync.yaml decision tree"
+      explanation: |
+        GameCreator Character data has specialized sync patterns.
+        Use the dedicated decision tree for:
+        - Movement synchronization (NetworkCharacterAdapter)
+        - Animation sync (NetworkAnimator)
+        - IK handling (local-only)
+        - Ragdoll sync
+
+        CRITICAL: Do NOT use NetworkTransform for characters!
+        Our project uses NetworkCharacterAdapter instead.
+
+      respects_constraints: ["no-network-transform", "invasive-integration"]
+      related_trees: ["gc-character-sync"]
+
+  - id: "redirect-gc-inventory"
+    type: "outcome"
+    outcome:
+      recommendation: "Use gc-inventory-sync.yaml decision tree"
+      explanation: |
+        GameCreator Inventory data requires server-authoritative transactions.
+        Use the dedicated decision tree for:
+        - Item pickup/drop
+        - Trading between players
+        - Equipment sync
+        - Container access
+
+      respects_constraints: ["server-authoritative"]
+      related_trees: ["gc-inventory-sync"]
+
+  - id: "redirect-gc-stats"
+    type: "outcome"
+    outcome:
+      recommendation: "Use gc-stats-sync.yaml decision tree"
+      explanation: |
+        GameCreator Stats should use batched NetworkVariables for 86% bandwidth savings.
+        Use the dedicated decision tree for:
+        - Core stats (health/mana/stamina)
+        - Attributes
+        - Status effects
+        - Damage/healing
+
+      respects_constraints: ["server-authoritative"]
+      related_trees: ["gc-stats-sync"]
+
+  - id: "redirect-gc-visual-scripting"
+    type: "outcome"
+    outcome:
+      recommendation: "Use gc-visual-scripting-sync.yaml decision tree"
+      explanation: |
+        GameCreator Visual Scripting has dedicated network patterns.
+        Use the dedicated decision tree for:
+        - Network Triggers (NPC interaction, perception, connection events)
+        - Network Instructions (inventory add/remove, stat changes, spawning)
+        - Network Conditions (IsServer, IsFaction, IsLocalPlayer)
+        - Network Variables (GameCreator variable sync)
+
+        Example patterns:
+        - "On NPC from Faction Orcs interact → add gold to LocalPlayer"
+        - "On perception feel Elf → change Fear stat"
+
+      respects_constraints: ["server-authoritative", "task-signature"]
+      related_trees: ["gc-visual-scripting-sync"]
+
+  # Original nodes continue below...
+  - id: "frequency-check"
+    type: "question"
+    content: "How frequently does this data change?"
+    help: "Think about update rate: position updates every frame vs health changes occasionally"
+    options:
+      - label: "Very frequently (>10 updates/second)"
+        description: "Real-time data: position, rotation, velocity"
+        examples: ["Player movement", "Projectile position", "Animation state"]
+        next: "high-frequency"
+      
+      - label: "Occasionally (1-10 updates/second)"
+        description: "Event-driven data: actions, state changes"
+        examples: ["Health changes", "Ability cooldowns", "Status effects"]
+        next: "medium-frequency"
+      
+      - label: "Rarely (<1 update/second)"
+        description: "Persistent or infrequent data"
+        examples: ["Inventory", "Player stats", "Quest progress"]
+        next: "low-frequency"
+
+  - id: "high-frequency"
+    type: "question"
+    content: "Is this data gameplay-critical?"
+    help: "Critical = affects game logic. Cosmetic = visual only."
+    options:
+      - label: "Gameplay-critical (affects logic)"
+        description: "Must be accurate for fair gameplay"
+        examples: ["Player position (for collision)", "Aim direction", "Combat state"]
+        next: "critical-high-freq"
+      
+      - label: "Cosmetic (visual effects only)"
+        description: "Can occasionally drop without breaking game"
+        examples: ["Particle effects", "Footstep sounds", "Avatar animations"]
+        next: "cosmetic-high-freq"
+
+  - id: "critical-high-freq"
+    type: "outcome"
+    outcome:
+      recommendation: "Unreliable ServerRpc + NetworkVariable + Client Prediction"
+      explanation: |
+        For high-frequency gameplay data:
+        1. Use Unreliable ServerRpc to reduce bandwidth
+        2. Store authoritative state in NetworkVariable
+        3. Implement client-side prediction for smoothness
+        4. Server corrects prediction errors
+      
+      bandwidth_impact: "Moderate (unreliable delivery saves ~60%)"
+      latency: "20-50ms perceived (with prediction)"
+      complexity: "High (requires prediction logic)"
+      
+      code_example: |
+        // Client sends frequent updates (unreliable)
+        [ServerRpc(Delivery = RpcDelivery.Unreliable)]
+        void UpdatePositionServerRpc(Vector3 position, Quaternion rotation) {
+            if (!IsServer) return;
+            
+            // Server validates and stores
+            m_NetworkPosition.Value = position;
+            m_NetworkRotation.Value = rotation;
+        }
+        
+        // Client prediction (runs locally)
+        void Update() {
+            if (IsOwner) {
+                // Predict movement locally
+                Vector3 predicted = PredictMovement();
+                transform.position = predicted;
+                
+                // Send to server
+                UpdatePositionServerRpc(predicted, transform.rotation);
+            }
+        }
+      
+      references:
+        - file: "llm-patterns.txt"
+          section: "158-172"
+          topic: "Unreliable RPC pattern"
+        - file: "claudedocs/NETCODE_2_7_0_MIGRATION_GUIDE.md"
+          topic: "Dead Reckoning"
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/multiplayer-excellence/spec.md"
+          topic: "Dead Reckoning Implementation"
+      
+      best_for:
+        - "Player character movement"
+        - "Projectile physics"
+        - "Real-time combat"
+      
+      avoid_for:
+        - "Health/damage (use reliable RPC)"
+        - "Inventory changes (use NetworkVariable)"
+        - "Quest completion (use Supabase)"
+
+  - id: "cosmetic-high-freq"
+    type: "outcome"
+    outcome:
+      recommendation: "Unreliable ClientRpc (broadcast from server)"
+      explanation: |
+        For cosmetic high-frequency data:
+        1. Server broadcasts to all clients via unreliable ClientRpc
+        2. Clients play effects locally
+        3. Missed packets = minor visual glitch (acceptable)
+        4. Saves massive bandwidth
+      
+      bandwidth_impact: "Low (unreliable + optional)"
+      latency: "Immediate (no acknowledgment)"
+      complexity: "Low"
+      
+      code_example: |
+        // Server broadcasts effect
+        [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+        void PlayEffectClientRpc(Vector3 position, int effectId) {
+            // All clients play effect
+            ParticleSystem effect = GetEffect(effectId);
+            effect.transform.position = position;
+            effect.Play();
+        }
+        
+        // Usage on server
+        void OnPlayerJump() {
+            if (IsServer) {
+                PlayEffectClientRpc(transform.position, dustEffectId);
+            }
+        }
+      
+      references:
+        - file: "llm-api.txt"
+          section: "226-234"
+          topic: "Unreliable ClientRpc"
+      
+      best_for:
+        - "Particle effects"
+        - "Footstep sounds"
+        - "Cosmetic animations"
+        - "Visual feedback"
+
+  - id: "medium-frequency"
+    type: "question"
+    content: "Does this data need persistence across sessions?"
+    help: "Persistence = saved when player disconnects, restored on reconnect"
+    options:
+      - label: "Yes, must persist"
+        description: "Data survives disconnect/reconnect"
+        examples: ["Inventory", "Character stats", "Quest progress"]
+        next: "persistent-medium"
+      
+      - label: "No, session-only"
+        description: "Data resets when session ends"
+        examples: ["Current health", "Active buffs", "Match score"]
+        next: "session-medium"
+
+  - id: "session-medium"
+    type: "question"
+    content: "Do you need to batch multiple updates together?"
+    help: "Batching = combine multiple changes into one network message"
+    options:
+      - label: "Yes, often update multiple values together"
+        description: "Example: health + mana + stamina all change at once"
+        next: "batched-network-variable"
+      
+      - label: "No, individual values change independently"
+        description: "Example: only health changes"
+        next: "simple-network-variable"
+
+  - id: "batched-network-variable"
+    type: "outcome"
+    outcome:
+      recommendation: "Batched NetworkVariable (Netcode 2.7.0)"
+      explanation: |
+        Use struct-based NetworkVariable for batching:
+        1. Combine related values in a struct
+        2. Update entire struct at once
+        3. 86% fewer network messages!
+        4. Better performance and bandwidth
+      
+      bandwidth_impact: "Very Low (86% reduction!)"
+      latency: "Same as NetworkVariable"
+      complexity: "Medium (requires struct)"
+      
+      code_example: |
+        // Define batch struct
+        public struct StatsBatch : INetworkSerializable, IEquatable<StatsBatch> {
+            public float health;
+            public float mana;
+            public float stamina;
+            
+            public void NetworkSerialize<T>(BufferSerializer<T> s) where T : IReaderWriter {
+                s.SerializeValue(ref health);
+                s.SerializeValue(ref mana);
+                s.SerializeValue(ref stamina);
+            }
+            
+            public bool Equals(StatsBatch other) =>
+                health == other.health && 
+                mana == other.mana && 
+                stamina == other.stamina;
+        }
+        
+        // Single NetworkVariable for all stats
+        private NetworkVariable<StatsBatch> m_Stats = new NetworkVariable<StatsBatch>();
+        
+        // Update all at once (1 message instead of 3!)
+        [ServerRpc]
+        void UpdateStatsServerRpc(float newHealth, float newMana, float newStamina) {
+            m_Stats.Value = new StatsBatch {
+                health = newHealth,
+                mana = newMana,
+                stamina = newStamina
+            };
+        }
+      
+      references:
+        - file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Components/NetworkStatsSync.cs"
+          topic: "StatsBatch implementation"
+        - file: "claudedocs/NETCODE_2_7_0_MIGRATION_GUIDE.md"
+          section: "NetworkVariable Batching"
+      
+      best_for:
+        - "Player stats (health/mana/stamina)"
+        - "Multiple related properties"
+        - "Frequent simultaneous updates"
+
+  - id: "simple-network-variable"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable"
+      explanation: |
+        Standard NetworkVariable for individual state:
+        1. Automatically syncs to all clients
+        2. Subscribe to OnValueChanged for updates
+        3. Server-authoritative (secure)
+        4. Perfect for occasional state changes
+      
+      bandwidth_impact: "Low"
+      latency: "~50ms (one round-trip)"
+      complexity: "Low (built-in)"
+      
+      code_example: |
+        private NetworkVariable<int> m_Score = new NetworkVariable<int>(
+            value: 0,
+            readPerm: NetworkVariableReadPermission.Everyone,
+            writePerm: NetworkVariableWritePermission.Server
+        );
+        
+        public override void OnNetworkSpawn() {
+            base.OnNetworkSpawn();
+            
+            // Subscribe to changes (clients only)
+            if (!IsServer) {
+                m_Score.OnValueChanged += OnScoreChanged;
+            }
+        }
+        
+        private void OnScoreChanged(int oldValue, int newValue) {
+            Debug.Log($"Score changed: {oldValue} -> {newValue}");
+            UpdateScoreUI(newValue);
+        }
+        
+        [ServerRpc]
+        void AddScoreServerRpc(int points) {
+            m_Score.Value += points; // Syncs automatically
+        }
+      
+      references:
+        - file: "llm-api.txt"
+          section: "243-273"
+        - file: "llm-patterns.txt"
+          section: "175-235"
+      
+      best_for:
+        - "Individual stats"
+        - "Boolean flags"
+        - "Enum states"
+
+  - id: "persistent-medium"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable + Supabase Hybrid Sync"
+      explanation: |
+        Best of both worlds:
+        1. NetworkVariable for immediate sync (gameplay)
+        2. Supabase for persistence (database)
+        3. On reconnect, load from Supabase → NetworkVariable
+        4. Server handles conflict resolution
+      
+      bandwidth_impact: "Medium (NetworkVariable + DB writes)"
+      latency: "~50ms gameplay, async persistence"
+      complexity: "Medium (two sync systems)"
+      
+      code_example: |
+        // Immediate gameplay sync
+        private NetworkVariable<int> m_Inventory = new NetworkVariable<int>();
+        
+        [ServerRpc]
+        async void AddItemServerRpc(int itemId) {
+            // 1. Update NetworkVariable (immediate sync)
+            m_Inventory.Value++;
+            
+            // 2. Persist to Supabase (background)
+            await SupabaseManager.Instance.SavePlayerData(OwnerClientId, new {
+                inventory = m_Inventory.Value
+            });
+        }
+        
+        // On reconnect (server loads from database)
+        public override async void OnNetworkSpawn() {
+            base.OnNetworkSpawn();
+            
+            if (IsServer) {
+                var data = await SupabaseManager.Instance.LoadPlayerData(OwnerClientId);
+                m_Inventory.Value = data.inventory; // Restore from DB
+            }
+        }
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/supabase-deep-integration/spec.md"
+          topic: "Hybrid Sync Pattern"
+        - file: ".serena/memories/_INTEGRATION/Supabase_Integration_Patterns.md"
+      
+      best_for:
+        - "Inventory systems"
+        - "Character stats"
+        - "Quest progress"
+        - "Persistent world state"
+
+  - id: "low-frequency"
+    type: "question"
+    content: "Does this data need real-time collaboration?"
+    help: "Multiple players editing same data simultaneously"
+    options:
+      - label: "Yes, real-time collaboration needed"
+        description: "Multiple players editing same object"
+        examples: ["Shared whiteboard", "Collaborative world building"]
+        next: "collaborative-supabase"
+      
+      - label: "No, single-player data or sequential edits"
+        description: "One player owns/edits at a time"
+        examples: ["Player profile", "Individual quest log"]
+        next: "simple-supabase"
+
+  - id: "collaborative-supabase"
+    type: "outcome"
+    outcome:
+      recommendation: "Supabase Realtime with CRDTs"
+      explanation: |
+        For collaborative real-time editing:
+        1. Use Supabase Realtime broadcast channel
+        2. Implement CRDT (Conflict-free Replicated Data Type)
+        3. All edits merge without conflicts
+        4. Automatic undo/redo support
+      
+      bandwidth_impact: "Medium (Realtime messages)"
+      latency: "<100ms (Supabase Realtime)"
+      complexity: "High (CRDT implementation)"
+      
+      code_example: |
+        // Subscribe to Realtime channel
+        var channel = supabase.Realtime.Channel("world-edit");
+        
+        channel.On<WorldEdit>(ChannelEventType.Broadcast, (edit) => {
+            ApplyCRDTOperation(edit);
+        });
+        
+        // Broadcast edit
+        await channel.Broadcast("edit", new WorldEdit {
+            operation = "add",
+            objectId = "building-123",
+            position = newPosition
+        });
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/supabase-deep-integration/spec.md"
+          topic: "CRDTs"
+      
+      best_for:
+        - "Collaborative editing"
+        - "Shared documents"
+        - "Multi-player world building"
+
+  - id: "simple-supabase"
+    type: "outcome"
+    outcome:
+      recommendation: "Supabase Database with optional Realtime"
+      explanation: |
+        For infrequent persistent data:
+        1. Save to Supabase database
+        2. Optional: Subscribe to Realtime for updates
+        3. Row-Level Security for data protection
+        4. No need for NetworkVariable overhead
+      
+      bandwidth_impact: "Very Low (only on save/load)"
+      latency: "200-500ms (database query)"
+      complexity: "Low (REST API)"
+      
+      code_example: |
+        // Save data
+        await SupabaseManager.Instance.SavePlayerData(playerId, new {
+            quest_progress = questData,
+            achievements = achievements
+        });
+        
+        // Load data
+        var data = await SupabaseManager.Instance.LoadPlayerData(playerId);
+        
+        // Optional: Subscribe to changes
+        supabase.From<PlayerData>()
+            .On(PostgresChangeEvent.Update, (change) => {
+                UpdateLocalData(change.New);
+            })
+            .Subscribe();
+      
+      references:
+        - file: ".serena/memories/_INTEGRATION/Supabase_Integration_Patterns.md"
+        - file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Supabase/SupabaseManager.cs"
+      
+      best_for:
+        - "Player profiles"
+        - "Quest logs"
+        - "Achievements"
+        - "Save game data"
+

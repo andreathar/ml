@@ -1,0 +1,215 @@
+======================================================================
+GAMECREATOR STATS MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-stats-networked
+Network Sync Component: NetworkStatsSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Character stats, traits, attributes, status effects, formulas
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * FormulaHelpTool
+    Namespace: GameCreator.Editor.Stats
+  * FormulaUI
+    Namespace: GameCreator.Runtime.Stats.UnityUI
+  * Table
+    Namespace: GameCreator.Runtime.Stats
+  * AttributeDataDrawer
+    Namespace: GameCreator.Editor.Stats
+  * IconFormula
+    Namespace: GameCreator.Runtime.Stats
+  * MemoryTraits
+    Namespace: GameCreator.Runtime.Stats
+  * StatusEffectOrAny
+    Namespace: GameCreator.Runtime.Stats
+  * StatDataDrawer
+    Namespace: GameCreator.Editor.Stats
+  * StatusEffectData
+    Namespace: GameCreator.Runtime.Stats
+  * StatusEffectListUI
+    Namespace: GameCreator.Runtime.Stats.UnityUI
+  * GetStringStatusEffectDescription
+    Namespace: GameCreator.Runtime.Stats
+  * OverrideAttributesDrawer
+    Namespace: GameCreator.Editor.Stats
+  * ValueStat
+    Namespace: GameCreator.Runtime.Stats
+  * PropertyTypeSetStat
+    Namespace: GameCreator.Runtime.Stats
+  * GetDecimalAttributeMinValue
+    Namespace: GameCreator.Runtime.Stats
+  * GetFormulaInstance
+    Namespace: GameCreator.Runtime.Stats
+  * ValueAttribute
+    Namespace: GameCreator.Runtime.Stats
+  * StatItemTool
+    Namespace: GameCreator.Editor.Stats
+  * SetFormulaGlobalName
+    Namespace: GameCreator.Runtime.Stats
+  * GetStringAttributeMaxValue
+    Namespace: GameCreator.Runtime.Stats
+  * SetNumberStat
+    Namespace: GameCreator.Runtime.Stats
+  * TableManualProgressionDrawer
+    Namespace: GameCreator.Editor.Stats
+  * AttributeUIEditor
+    Namespace: GameCreator.Editor.Stats.UnityUI
+  * EventStatsStatChange
+    Namespace: GameCreator.Runtime.Stats
+  * ClassEditor
+    Namespace: GameCreator.Editor.Stats
+  * RuntimeStatData
+    Namespace: GameCreator.Runtime.Stats
+  * SetAttributeGlobalName
+    Namespace: GameCreator.Runtime.Stats
+  * TokenStats
+    Namespace: GameCreator.Runtime.Stats
+  * SetNumberAttribute
+    Namespace: GameCreator.Runtime.Stats
+  * GetStringAttributeDescription
+    Namespace: GameCreator.Runtime.Stats
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (16 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionStatsSetStat
+  * InstructionStatsUIChangeStatUIStat
+  * InstructionStatsRemoveStatusEffect
+  * InstructionStatusEffectsSetStatusEffect
+  * InstructionAttributesSetAttribute
+  * InstructionStatsAddModifier
+  * InstructionStatsRemoveModifier
+  * InstructionStatsUIChangeStatusEffectsListUI
+  * InstructionStatsUIChangeAttributeUIAttribute
+  * InstructionStatsUIChangeAttributeUI
+  * InstructionStatsAddStatusEffect
+  * InstructionFormulasSetFormula
+  * InstructionStatsClearStatusEffects
+  * InstructionStatsUIChangeStatUI
+  * InstructionStatsChangeStat
+  * InstructionStatsChangeAttribute
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (8 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionCompareAttribute
+  * ConditionHasStatusEffect
+  * ConditionHasStatModifiers
+  * ConditionFormula
+  * ConditionTraitsIsClass
+  * ConditionTraitsHasAttribute
+  * ConditionCompareStat
+  * ConditionTraitsHasStat
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Description
+  * AllowDocumentation
+  * AllowDuplicating
+  * Count
+  * RuntimeAttributes
+  * RuntimeStats
+  * Type
+  * TypeID
+  * String
+  * List
+  * Summary
+  * ChangeBase
+  * MinLevel
+  * Create
+  * StatsLength
+  * StatsKeys
+  * MaxValue
+  * MaxLevel
+  * Value
+  * Title
+  * Bytes
+  * Associativity
+  * LastRemoved
+  * LastChange
+  * Label
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * AttrSourceName()
+  * ClauseName()
+  * Clear()
+  * ClearModifiers()
+  * Contains()
+  * CreatePropertyGUI()
+  * CreateValue()
+  * CumulativeFromLevel()
+  * EvaluateOp()
+  * Get()
+  * GetKeys()
+  * GetUInt()
+  * OnChange()
+  * OnDisable()
+  * OnEnable()
+  * PrintDocumentation()
+  * Rebuild()
+  * Run()
+  * RunWhileActive()
+  * Set()
+  * Start()
+  * Step()
+  * ToString()
+  * UpdateTransitionOptions()
+  * VariableTargetName()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkStatsSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Stat Variable Sync]
+  Description: Expose stat values as global variables for UI binding
+  Network: Use NetworkStatsSync batched struct, not individual variables
+  Pattern: Stats.OnChange -> Variable.Set (local only)
+
+  [Item Stat Modifiers]
+  Description: Equipment items that modify character stats when equipped
+  Network: Stat changes must propagate after equipment sync confirms
+  Pattern: OnEquip -> ServerRpc -> Stats.AddModifier -> Broadcast
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. Batched updates reduce granularity (86% bandwidth savings vs per-stat sync)
+  2. StatusEffect duration sync requires server time authority
+  3. Death state coordination has 100ms max propagation delay
+  4. Formula evaluation is server-side only for security
+
+======================================================================
+END OF SCHEMA
+======================================================================

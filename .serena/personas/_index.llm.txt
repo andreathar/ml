@@ -1,0 +1,112 @@
+======================================================================
+GAMECREATOR NETWORKED MODULES - MASTER INDEX
+======================================================================
+Generated: 2025-12-01 12:53
+Total Modules: 13
+KB Symbols: 77914
+
+----------------------------------------------------------------------
+MODULE OVERVIEW
+----------------------------------------------------------------------
+
+[Inventory] (gc-inventory-networked)
+  Sync: NetworkInventorySync
+  Symbols: 175 (Classes: 30, Instructions: 37, Conditions: 28)
+  Dependencies: Variables, Stats
+
+[Stats] (gc-stats-networked)
+  Sync: NetworkStatsSync
+  Symbols: 134 (Classes: 30, Instructions: 16, Conditions: 8)
+  Dependencies: Variables
+
+[Character] (gc-character-networked)
+  Sync: NetworkCharacterAdapter
+  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
+  Dependencies: None
+
+[Perception] (gc-perception-networked)
+  Sync: NetworkPerceptionSync
+  Symbols: 132 (Classes: 30, Instructions: 13, Conditions: 9)
+  Dependencies: Character, Behavior
+
+[Variables] (gc-variables-networked)
+  Sync: NetworkVariablesSync
+  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
+  Dependencies: None
+
+[Behavior] (gc-behavior-networked)
+  Sync: NetworkBehaviorSync
+  Symbols: 114 (Classes: 30, Instructions: 3, Conditions: 1)
+  Dependencies: Variables, Perception
+
+[Mailbox] (gc-mailbox-networked)
+  Sync: NetworkMailboxSync
+  Symbols: 128 (Classes: 30, Instructions: 9, Conditions: 9)
+  Dependencies: Variables
+
+[Factions] (gc-factions-networked)
+  Sync: NetworkFactionsSync
+  Symbols: 125 (Classes: 30, Instructions: 11, Conditions: 4)
+  Dependencies: Variables, Perception
+
+[Tactile] (gc-tactile-networked)
+  Sync: NetworkTactileSync
+  Symbols: 181 (Classes: 30, Instructions: 50, Conditions: 21)
+  Dependencies: Variables
+
+[Quests] (gc-quests-networked)
+  Sync: NetworkQuestsSync
+  Symbols: 133 (Classes: 30, Instructions: 10, Conditions: 13)
+  Dependencies: Variables, Inventory
+
+[Dialogue] (gc-dialogue-networked)
+  Sync: NetworkDialogueSync
+  Symbols: 116 (Classes: 30, Instructions: 4, Conditions: 2)
+  Dependencies: Variables, Character
+
+[Character Core] (gc-character-core)
+  Sync: NetworkCharacterAdapter
+  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
+  Dependencies: None
+
+[Netcode Core] (unity-netcode-core)
+  Sync: N/A
+  Symbols: 182 (Classes: 30, Instructions: 43, Conditions: 29)
+  Dependencies: None
+
+----------------------------------------------------------------------
+DEPENDENCY GRAPH
+----------------------------------------------------------------------
+
+Variables <- FOUNDATIONAL (all modules depend on this)
+    |
+    +-- Stats
+    |     +-- Inventory, Character
+    |
+    +-- Behavior
+    |     +-- Perception
+    |           +-- Factions
+    |
+    +-- Quests
+    |     +-- Dialogue
+    |
+    +-- Mailbox (decoupled messaging)
+    |
+    +-- Tactile (input layer)
+
+Character <- CORE (owns NetworkCharacterAdapter)
+    +-- All gameplay modules attach to Character
+
+----------------------------------------------------------------------
+USAGE INSTRUCTIONS
+----------------------------------------------------------------------
+
+1. Load persona schema before working on module:
+   .serena/personas/{module}.llm.txt
+
+2. Check cross-integration proposals when adding features
+   that span multiple modules
+
+3. Respect limitations - they document real network constraints
+
+4. Use dependency graph for understanding module relationships

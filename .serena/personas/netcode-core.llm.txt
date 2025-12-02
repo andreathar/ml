@@ -1,0 +1,247 @@
+======================================================================
+GAMECREATOR NETCODE CORE MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: unity-netcode-core
+Network Sync Component: N/A
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Unity Netcode for GameObjects, NetworkBehaviour, NetworkVariable, NetworkList, RPCs, Unity Transport, WebSocket/WebGL, Spawning, Pooling, Ownership, Authority, Host/Client architecture, Hotspot interactions, Player targeting
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * MemoryPool
+    Namespace: MLCreator.Core.Pooling
+  * NetworkVariablesSync
+    Namespace: MLCreator_Multiplayer.Runtime.Modules
+  * VisualScriptingRPCManager
+    Namespace: MLCreator_Multiplayer.Runtime.RPC
+  * CharacterSpawnFixer
+    Namespace: MLCreator.Core.Networking
+  * LocalPlayerSpawnedEvent
+    Namespace: MLCreator_Multiplayer.Core
+  *         {
+   
+    Namespace: MLCreator.Core.Memory
+  * ComponentHarmonizer
+    Namespace: GameCreator.Multiplayer.Runtime.Components
+  * PersistentCache
+    Namespace: MLCreator.Core.Caching
+  * NetworkHotspotExtension
+    Namespace: MLCreator_Multiplayer.Runtime.Interactions
+  * RPCVariableSyncReceiver
+    Namespace: MLCreator_Multiplayer.Runtime.RPC
+  * EventOnNPCDespawned
+    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.NPC
+  * NetworkObjectPool
+    Namespace: MLCreator.Core.Pooling
+  * NetworkPickup
+    Namespace: MLCreator_Multiplayer.Runtime.Objects
+  * PickupPrefabConfig
+    Namespace: MLCreator_Multiplayer.Runtime.Objects
+  * BehaviorTreeSync
+    Namespace: MLCreator_Multiplayer.Runtime.Behavior
+  * EventOnClientDisconnected
+    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Connection
+  * NetworkModuleSyncBase
+    Namespace: MLCreator_Multiplayer.Runtime.Modules
+  * PowerSource
+    Namespace: MLCreator_Multiplayer.Runtime.PowerGrid
+  * NetworkActionAuthority
+    Namespace: MLCreator_Multiplayer.Runtime.Components
+  * ObjectPool
+    Namespace: MLCreator.Core.Pooling
+  * NetworkTrafficManager
+    Namespace: MLCreator_Multiplayer.Runtime.CityVehicles
+  * 
+        {
+   
+    Namespace: MLCreator.Core.Memory
+  * NetworkSpawnPointIntegration
+    Namespace: MLCreator_Multiplayer.Runtime.Components
+  * RPCMetric
+    Namespace: MLCreator_Multiplayer.Runtime.RPC
+  * NetworkTraitsAdapter
+    Namespace: MLCreator_Multiplayer.Runtime.Components
+  * EventOnRPCReceived
+    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Network
+  * MultiplayerCameraManager
+    Namespace: MLCreator_Multiplayer.Runtime.Managers
+  * EventOnServerStopped
+    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Connection
+  * GetGameObjectLocalNetworkPlayer
+    Namespace: MLCreator_Multiplayer.Runtime.Properties
+  * NPCSpawnConfig
+    Namespace: MLCreator_Multiplayer.Runtime.Characters
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (43 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionNetworkExecuteGesture
+  * InstructionPlayGesture
+  * InstructionNetworkShutdown
+  * InstructionActivateGameObjectSequence
+  * InstructionPowerDeviceTurnOff
+  * InstructionExecuteRPCOnHost
+  * InstructionPowerConsumerDisconnect
+  * InstructionNetworkExecuteInputAction
+  * InstructionNetworkSetVariable
+  * InstructionNetworkChangeActive
+  * InstructionNetworkDamage
+  * InstructionNetworkAddItem
+  * InstructionSetNetworkAwareness
+  * InstructionDeactivateAllExcept
+  * InstructionActivateOnCondition
+  * InstructionNetworkStartHost
+  * InstructionRetryUntilSuccess
+  * InstructionEnableLocalPlayerControl
+  * InstructionNetworkInstantiate
+  * InstructionNetworkSendRPC
+  * InstructionRPCToNearby
+  * InstructionNetworkSendMessage
+  * InstructionStartRPCTracking
+  * InstructionNetworkDebugLog
+  * InstructionNetworkSpawnPlayer
+  * InstructionNetworkStartClient
+  * InstructionNetworkSpawnHostPlayer
+  * InstructionInitializeSceneForMultiplayer
+  * InstructionWaitForLocalPlayer
+  * InstructionPowerConsumerConnect
+  * InstructionLLMChat
+  * InstructionNetworkSpawnClientPlayer
+  * InstructionIsHostPlayer
+  * InstructionNetworkSpawnPickup
+  * InstructionNetworkChangePosition
+  * InstructionPowerDeviceTurnOn
+  * InstructionNetworkSpawnNPC
+  * InstructionNetworkSyncVariable
+  * InstructionNetworkEmitSignal
+  * InstructionNetworkDestroy
+  * InstructionRPCToServer
+  * InstructionNetworkSpawnAllPlayers
+  * InstructionPowerDeviceToggle
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (29 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionRPCCanReach
+  * ConditionIsClient
+  * ConditionIsClientPlayer
+  * ConditionPowerDeviceHasPower
+  * ConditionSpecificPlayerCount
+  * ConditionIsServer
+  * ConditionIsHost
+  * ConditionRPCManagerReady
+  * ConditionPowerConsumerIsPowered
+  * ConditionTransportConnected
+  * ConditionIsOwner
+  * ConditionAllClientsLoaded
+  * ConditionIsHostPlayer
+  * ConditionNetworkHealthBelow
+  * ConditionIsLocallyOwned
+  * ConditionPlayerWithinRange
+  * ConditionNetworkAwarenessStage
+  * ConditionRPCIsTargetType
+  * ConditionLocalPlayerExists
+  * ConditionHasSavedServerChoice
+  * ConditionNetworkIsSpawned
+  * ConditionMaxPlayersReached
+  * ConditionApprovalCallbackRegistered
+  * ConditionIsGesturePlaying
+  * ConditionPowerDeviceIsOperational
+  * ConditionIsLocalPlayer
+  * ConditionObjectNearPlayer
+  * ConditionPowerConsumerIsConnected
+  * ConditionNetworkHasItem
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * IsInteracting
+  * IsInitialized
+  * LookInput
+  * Loop
+  * Summary
+  * Summary
+  * antity =
+  * jectCount =
+  * PerceptionSync
+  * @Look
+  * Icon
+  * String
+  * Title
+  * LastSenderId
+  * LastReply
+  * LoadPercentage
+  * IsDirty
+  * Instance
+  * Instance
+  * PrimaryInteractor
+  * Username
+  * UseWebSocket
+  * Default
+  * @Click
+  * EstimatedSize
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  *            m_IsC()
+  *      {
+         ()
+  *   {
+         ()
+  * CreatePayloadForNearby()
+  * CreateWebSocketConnection()
+  * DebugAwarenessCortex()
+  * DebugInventory()
+  * Equals()
+  * ExecuteOnServerServerRpc()
+  * GetSaveFilePath()
+  * Heal()
+  * IsHostile()
+  * IsNetworkSerializable()
+  * LogDebug()
+  * MarkDirty()
+  * OnCrouchPerformed()
+  * OnDestroy()
+  * ProcessMessage()
+  * RegisterHandler()
+  * RequestValidatedTriggerServerRpc()
+  * Run()
+  * SetMaxHealth()
+  * ar()
+()
+  * sterScriptableObject(Scr()
+  * ts()
+        {
+    ()
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. NetworkBehaviour requires NetworkObject component on same or parent GameObject
+  2. NetworkVariables only sync from server to clients (owner can write with permissions)
+  3. RPCs have naming convention: ServerRpc suffix for client->server, ClientRpc for server->clients
+  4. WebGL requires WebSocket transport - UDP not supported in browsers
+  5. Spawning must use NetworkManager.Singleton.SpawnManager for proper registration
+  6. Object pooling requires INetworkPrefabInstanceHandler implementation
+  7. Ownership transfer uses ChangeOwnership() - only server can transfer
+  8. Host is both server AND client - check IsServer/IsClient/IsHost appropriately
+  9. Hotspot interactions require ownership validation before execution
+  10. Player targeting uses NetworkObjectId or ClientId - never direct references across network
+  11. NPC spawning uses server-authoritative spawn with client visual sync
+  12. Late joiners receive full state sync via NetworkVariable OnValueChanged
+  13. Connection approval can filter clients before full connection
+
+======================================================================
+END OF SCHEMA
+======================================================================

@@ -1,0 +1,907 @@
+# Decision Tree: GameCreator Inventory Synchronization
+# KB-Enhanced guidance for syncing GC Inventory across Host/Client
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "gc-inventory-sync"
+title: "GameCreator Inventory Network Synchronization"
+description: "Guide for syncing GameCreator Inventory module (items, equipment, containers) in multiplayer"
+category: "gamecreator"
+gc_module: "inventory"
+difficulty: "intermediate"
+estimated_time: 8
+
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "inventory"
+    - "NetworkVariable"
+    - "Supabase"
+
+enforced_constraints:
+  - "server-authoritative"
+  - "rpc-naming"
+
+start_node: "inventory-entry"
+
+nodes:
+  # ============================================
+  # ENTRY
+  # ============================================
+  - id: "inventory-entry"
+    type: "question"
+    content: "What inventory functionality do you need to synchronize?"
+    help: "Select the specific inventory feature you're implementing"
+    options:
+      - label: "Item pickup/drop"
+        description: "Players picking up or dropping items in world"
+        next: "item-pickup-drop"
+
+      - label: "Item transfer between players"
+        description: "Trading, giving items to other players"
+        next: "item-transfer"
+
+      - label: "Equipment slots (weapons, armor)"
+        description: "Equipping/unequipping gear"
+        next: "equipment-sync"
+
+      - label: "Container interaction (chests, loot)"
+        description: "Opening containers, taking from shared storage"
+        next: "container-sync"
+
+      - label: "Inventory persistence"
+        description: "Saving/loading inventory across sessions"
+        next: "inventory-persistence"
+
+      - label: "Complete inventory setup"
+        description: "Full networked inventory from scratch"
+        next: "complete-inventory-setup"
+
+  # ============================================
+  # ITEM PICKUP/DROP
+  # ============================================
+  - id: "item-pickup-drop"
+    type: "question"
+    content: "How are items spawned in your world?"
+    options:
+      - label: "Pre-placed items (level design)"
+        description: "Items placed in editor, exist at match start"
+        next: "preplaced-items"
+
+      - label: "Dynamically spawned (loot drops)"
+        description: "Items spawn from enemies, events, etc."
+        next: "dynamic-items"
+
+      - label: "Player-dropped items"
+        description: "Items dropped by players into world"
+        next: "player-dropped-items"
+
+  - id: "preplaced-items"
+    type: "outcome"
+    outcome:
+      recommendation: "Scene NetworkObjects with ServerRpc Pickup"
+      explanation: |
+        For pre-placed items:
+        1. Items are scene NetworkObjects (exist at load)
+        2. Player sends pickup request via ServerRpc
+        3. Server validates (in range, not taken, player can carry)
+        4. Server adds to inventory, despawns world item
+        5. Late-joiners don't see already-picked items
+
+      code_example: |
+        public class NetworkPickupItem : NetworkBehaviour
+        {
+            [SerializeField] private Item m_Item;
+            [SerializeField] private int m_Amount = 1;
+            [SerializeField] private float m_PickupRange = 2f;
+
+            private NetworkVariable<bool> m_IsPickedUp = new(false);
+
+            [ServerRpc(RequireOwnership = false)]
+            public void RequestPickupServerRpc(ServerRpcParams rpcParams = default)
+            {
+                if (m_IsPickedUp.Value) return; // Already taken
+
+                ulong clientId = rpcParams.Receive.SenderClientId;
+                var player = GetPlayerByClientId(clientId);
+
+                // Validate distance
+                float distance = Vector3.Distance(player.transform.position, transform.position);
+                if (distance > m_PickupRange) return;
+
+                // Validate can carry
+                var bag = player.GetComponent<Bag>();
+                if (!bag.CanAdd(m_Item, m_Amount)) return;
+
+                // Server adds item
+                bag.Add(m_Item, m_Amount);
+                m_IsPickedUp.Value = true;
+
+                // Notify and despawn
+                ItemPickedUpClientRpc(clientId);
+                NetworkObject.Despawn();
+            }
+
+            [ClientRpc]
+            private void ItemPickedUpClientRpc(ulong pickerClientId)
+            {
+                // Play pickup effect on all clients
+                PlayPickupEffect();
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      references:
+        - file: "openspec/specs/spawn-system/spec.md"
+
+  - id: "dynamic-items"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Spawns Items + NetworkVariable State"
+      explanation: |
+        For dynamically spawned items:
+        1. Only SERVER spawns item NetworkObjects
+        2. Item has NetworkVariable<bool> for pickup state
+        3. Server controls spawn timing (enemy death, event)
+        4. Same pickup flow as pre-placed items
+
+      code_example: |
+        // Server-side loot spawner
+        public class LootSpawner : NetworkBehaviour
+        {
+            [SerializeField] private NetworkPickupItem[] m_LootTable;
+
+            public void SpawnLoot(Vector3 position)
+            {
+                if (!IsServer) return;
+
+                // Server picks random loot
+                var lootPrefab = m_LootTable[Random.Range(0, m_LootTable.Length)];
+
+                // Server spawns NetworkObject
+                var loot = Instantiate(lootPrefab, position, Quaternion.identity);
+                loot.NetworkObject.Spawn();
+
+                // Clients see item appear via NetworkObject sync
+            }
+        }
+
+        // Called when enemy dies (server-side)
+        void OnEnemyDeath(Vector3 deathPosition)
+        {
+            if (IsServer)
+            {
+                m_LootSpawner.SpawnLoot(deathPosition);
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "player-dropped-items"
+    type: "outcome"
+    outcome:
+      recommendation: "ServerRpc Drop Request + Server Spawns World Item"
+      explanation: |
+        When player drops an item:
+        1. Player sends drop request via ServerRpc
+        2. Server validates player has item
+        3. Server removes from inventory
+        4. Server spawns world item NetworkObject
+        5. Other players can now pick it up
+
+      code_example: |
+        // In player's inventory network component
+        [ServerRpc]
+        public void DropItemServerRpc(int itemId, int amount)
+        {
+            // Validate player has item
+            var bag = GetComponent<Bag>();
+            var item = ItemDatabase.GetById(itemId);
+
+            if (!bag.Contains(item, amount)) return;
+
+            // Remove from inventory
+            bag.Remove(item, amount);
+
+            // Spawn world item at player position
+            Vector3 dropPos = transform.position + transform.forward;
+            var worldItem = Instantiate(m_WorldItemPrefab, dropPos, Quaternion.identity);
+            worldItem.SetItem(item, amount);
+            worldItem.NetworkObject.Spawn();
+
+            // Notify client
+            ItemDroppedClientRpc(itemId, amount, dropPos);
+        }
+
+        [ClientRpc]
+        private void ItemDroppedClientRpc(int itemId, int amount, Vector3 position)
+        {
+            // Play drop effect
+            PlayDropEffect(position);
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # ITEM TRANSFER
+  # ============================================
+  - id: "item-transfer"
+    type: "question"
+    content: "What type of item transfer are you implementing?"
+    options:
+      - label: "Direct trade (both players confirm)"
+        description: "Trade window with confirmation"
+        next: "trade-system"
+
+      - label: "Give item (one-way transfer)"
+        description: "Player gives item to another"
+        next: "give-item"
+
+      - label: "Shared party inventory"
+        description: "Party members share an inventory"
+        next: "shared-inventory"
+
+  - id: "trade-system"
+    type: "outcome"
+    outcome:
+      recommendation: "Two-Phase Trade with Server Validation"
+      explanation: |
+        Trading requires two-phase commit:
+        1. Both players add items to trade
+        2. Both players confirm trade
+        3. Server validates both sides
+        4. Server executes atomic swap
+        5. If anything fails, trade cancelled
+
+      code_example: |
+        public class TradeManager : NetworkBehaviour
+        {
+            private Dictionary<ulong, TradeOffer> m_PendingTrades = new();
+
+            [ServerRpc(RequireOwnership = false)]
+            public void ProposeTradeServerRpc(ulong targetPlayerId, TradeOffer offer,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong initiatorId = rpcParams.Receive.SenderClientId;
+
+                // Validate initiator has offered items
+                if (!ValidateOffer(initiatorId, offer))
+                {
+                    RejectTradeClientRpc(initiatorId, "Invalid offer");
+                    return;
+                }
+
+                // Store pending trade
+                m_PendingTrades[initiatorId] = offer;
+
+                // Notify target
+                TradeProposedClientRpc(targetPlayerId, initiatorId, offer);
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void AcceptTradeServerRpc(ulong initiatorId,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong acceptorId = rpcParams.Receive.SenderClientId;
+                var offer = m_PendingTrades[initiatorId];
+
+                // Re-validate both sides still have items
+                if (!ValidateOffer(initiatorId, offer) ||
+                    !ValidateOffer(acceptorId, offer.CounterOffer))
+                {
+                    RejectTradeClientRpc(initiatorId, "Items no longer available");
+                    RejectTradeClientRpc(acceptorId, "Items no longer available");
+                    return;
+                }
+
+                // Execute atomic swap
+                ExecuteTrade(initiatorId, acceptorId, offer);
+
+                // Notify both parties
+                TradeCompletedClientRpc(initiatorId);
+                TradeCompletedClientRpc(acceptorId);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "give-item"
+    type: "outcome"
+    outcome:
+      recommendation: "ServerRpc Give with Target Validation"
+      explanation: |
+        For one-way item giving:
+        1. Giver sends ServerRpc with target player and item
+        2. Server validates giver has item
+        3. Server validates target can receive
+        4. Server transfers item
+        5. Both players notified
+
+      code_example: |
+        [ServerRpc]
+        public void GiveItemServerRpc(ulong targetClientId, int itemId, int amount)
+        {
+            // Validate giver has item
+            var giverBag = GetComponent<Bag>();
+            var item = ItemDatabase.GetById(itemId);
+
+            if (!giverBag.Contains(item, amount)) return;
+
+            // Get target and validate
+            var targetPlayer = GetPlayerByClientId(targetClientId);
+            if (targetPlayer == null) return;
+
+            var targetBag = targetPlayer.GetComponent<Bag>();
+            if (!targetBag.CanAdd(item, amount))
+            {
+                NotifyClientRpc(OwnerClientId, "Target inventory full");
+                return;
+            }
+
+            // Execute transfer
+            giverBag.Remove(item, amount);
+            targetBag.Add(item, amount);
+
+            // Notify both
+            ItemGivenClientRpc(OwnerClientId, targetClientId, itemId, amount);
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "shared-inventory"
+    type: "outcome"
+    outcome:
+      recommendation: "Server-Owned Shared Bag with Access Control"
+      explanation: |
+        For party shared inventory:
+        1. Create server-owned NetworkObject with Bag
+        2. Track party members who can access
+        3. All operations go through server
+        4. Sync changes to all party members
+
+      code_example: |
+        public class SharedPartyInventory : NetworkBehaviour
+        {
+            private Bag m_SharedBag;
+            private NetworkList<ulong> m_PartyMembers;
+
+            [ServerRpc(RequireOwnership = false)]
+            public void AddToSharedServerRpc(int itemId, int amount,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                // Validate party member
+                if (!m_PartyMembers.Contains(clientId)) return;
+
+                // Get item from player's inventory
+                var player = GetPlayerByClientId(clientId);
+                var playerBag = player.GetComponent<Bag>();
+                var item = ItemDatabase.GetById(itemId);
+
+                if (!playerBag.Contains(item, amount)) return;
+
+                // Transfer to shared
+                playerBag.Remove(item, amount);
+                m_SharedBag.Add(item, amount);
+
+                // Notify party
+                SharedInventoryChangedClientRpc();
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # EQUIPMENT SYNC
+  # ============================================
+  - id: "equipment-sync"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable per Equipment Slot + Visual Sync"
+      explanation: |
+        For equipment (weapons, armor):
+        1. NetworkVariable<int> per equipment slot (item ID or -1)
+        2. Server validates equip/unequip requests
+        3. Visual representation updates on all clients
+        4. Stats recalculated locally from equipment
+
+      code_example: |
+        public class NetworkEquipment : NetworkBehaviour
+        {
+            // Equipment slots as NetworkVariables
+            private NetworkVariable<int> m_WeaponId = new(-1);
+            private NetworkVariable<int> m_HelmetId = new(-1);
+            private NetworkVariable<int> m_ArmorId = new(-1);
+
+            public override void OnNetworkSpawn()
+            {
+                // Subscribe to equipment changes
+                m_WeaponId.OnValueChanged += OnWeaponChanged;
+                m_HelmetId.OnValueChanged += OnHelmetChanged;
+                m_ArmorId.OnValueChanged += OnArmorChanged;
+
+                // Apply initial equipment visuals
+                UpdateAllVisuals();
+            }
+
+            [ServerRpc]
+            public void EquipWeaponServerRpc(int itemId)
+            {
+                // Validate player has item in inventory
+                var bag = GetComponent<Bag>();
+                var item = ItemDatabase.GetById(itemId);
+
+                if (!item.IsWeapon) return;
+                if (!bag.Contains(item, 1)) return;
+
+                // Unequip current weapon (back to inventory)
+                if (m_WeaponId.Value >= 0)
+                {
+                    var currentWeapon = ItemDatabase.GetById(m_WeaponId.Value);
+                    bag.Add(currentWeapon, 1);
+                }
+
+                // Equip new weapon
+                bag.Remove(item, 1);
+                m_WeaponId.Value = itemId; // Syncs to all clients
+            }
+
+            private void OnWeaponChanged(int oldId, int newId)
+            {
+                // Update visual representation on all clients
+                UpdateWeaponVisual(newId);
+            }
+
+            private void UpdateWeaponVisual(int itemId)
+            {
+                if (itemId < 0)
+                {
+                    m_WeaponHolder.HideWeapon();
+                }
+                else
+                {
+                    var item = ItemDatabase.GetById(itemId);
+                    m_WeaponHolder.ShowWeapon(item.WeaponPrefab);
+                }
+            }
+        }
+
+      bandwidth_impact: "Very low - only sync item IDs (int)"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      references:
+        - file: "openspec/specs/network-synchronization/spec.md"
+          section: "NetworkVariable State Replication"
+
+  # ============================================
+  # CONTAINER SYNC
+  # ============================================
+  - id: "container-sync"
+    type: "question"
+    content: "Can multiple players access this container simultaneously?"
+    options:
+      - label: "Yes, shared access (party chest)"
+        description: "Multiple players can access at once"
+        next: "shared-container"
+
+      - label: "No, exclusive access (personal loot)"
+        description: "Only one player at a time, or per-player loot"
+        next: "exclusive-container"
+
+  - id: "shared-container"
+    type: "outcome"
+    outcome:
+      recommendation: "Server-Owned Container with Transaction Locking"
+      explanation: |
+        For shared containers:
+        1. Container is server-owned NetworkObject
+        2. Server tracks who has it open
+        3. Take/Put requests go through server
+        4. Server prevents race conditions
+        5. All viewers see real-time updates
+
+      code_example: |
+        public class NetworkContainer : NetworkBehaviour
+        {
+            private Bag m_ContainerBag;
+            private NetworkList<ulong> m_ViewingPlayers;
+
+            // Track pending transactions to prevent races
+            private HashSet<int> m_LockedSlots = new();
+
+            [ServerRpc(RequireOwnership = false)]
+            public void OpenContainerServerRpc(ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                // Validate distance
+                var player = GetPlayerByClientId(clientId);
+                if (Vector3.Distance(player.transform.position, transform.position) > 3f)
+                    return;
+
+                // Add to viewers
+                m_ViewingPlayers.Add(clientId);
+
+                // Send container contents
+                SendContainerContentsClientRpc(GetContents(),
+                    GetTargetRpcParams(clientId));
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void TakeItemServerRpc(int slotIndex, int amount,
+                ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                // Validate viewer
+                if (!m_ViewingPlayers.Contains(clientId)) return;
+
+                // Check slot not locked
+                if (m_LockedSlots.Contains(slotIndex))
+                {
+                    NotifySlotBusyClientRpc(clientId);
+                    return;
+                }
+
+                // Lock slot during transaction
+                m_LockedSlots.Add(slotIndex);
+
+                try
+                {
+                    // Validate and transfer
+                    var item = m_ContainerBag.GetItemAt(slotIndex);
+                    if (item == null) return;
+
+                    var playerBag = GetPlayerBag(clientId);
+                    if (!playerBag.CanAdd(item, amount)) return;
+
+                    m_ContainerBag.RemoveAt(slotIndex, amount);
+                    playerBag.Add(item, amount);
+
+                    // Notify all viewers
+                    ContainerUpdatedClientRpc();
+                }
+                finally
+                {
+                    m_LockedSlots.Remove(slotIndex);
+                }
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "exclusive-container"
+    type: "outcome"
+    outcome:
+      recommendation: "Per-Player Loot or Lock-Based Access"
+      explanation: |
+        For exclusive containers:
+        Option A: Per-player loot (different contents per player)
+        Option B: First-come lock (one player at a time)
+
+      code_example: |
+        // Option A: Per-player loot
+        public class PersonalLootContainer : NetworkBehaviour
+        {
+            // Each player gets their own loot (determined at open time)
+            private Dictionary<ulong, List<Item>> m_PlayerLoot = new();
+
+            [ServerRpc(RequireOwnership = false)]
+            public void OpenLootServerRpc(ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                // Generate loot for this player if not exists
+                if (!m_PlayerLoot.ContainsKey(clientId))
+                {
+                    m_PlayerLoot[clientId] = GenerateLoot(clientId);
+                }
+
+                // Send their personal loot
+                SendPersonalLootClientRpc(m_PlayerLoot[clientId],
+                    GetTargetRpcParams(clientId));
+            }
+        }
+
+        // Option B: Lock-based access
+        public class LockedContainer : NetworkBehaviour
+        {
+            private NetworkVariable<ulong> m_LockedByPlayer = new(0);
+
+            [ServerRpc(RequireOwnership = false)]
+            public void TryOpenServerRpc(ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                if (m_LockedByPlayer.Value != 0 && m_LockedByPlayer.Value != clientId)
+                {
+                    ContainerBusyClientRpc(GetTargetRpcParams(clientId));
+                    return;
+                }
+
+                m_LockedByPlayer.Value = clientId;
+                ContainerOpenedClientRpc(GetTargetRpcParams(clientId));
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            public void CloseContainerServerRpc(ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                if (m_LockedByPlayer.Value == clientId)
+                {
+                    m_LockedByPlayer.Value = 0;
+                }
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  # ============================================
+  # INVENTORY PERSISTENCE
+  # ============================================
+  - id: "inventory-persistence"
+    type: "question"
+    content: "When should inventory be saved?"
+    options:
+      - label: "On every change (real-time sync)"
+        description: "Each item change saved immediately"
+        next: "realtime-persistence"
+
+      - label: "Periodically (every N seconds)"
+        description: "Batch save at intervals"
+        next: "periodic-persistence"
+
+      - label: "On disconnect/logout only"
+        description: "Save when player leaves"
+        next: "disconnect-persistence"
+
+  - id: "realtime-persistence"
+    type: "outcome"
+    outcome:
+      recommendation: "NetworkVariable + Async Supabase Write"
+      explanation: |
+        For real-time persistence:
+        1. NetworkVariable for immediate multiplayer sync
+        2. Async Supabase write after each change
+        3. Don't block gameplay on DB write
+        4. Handle write failures gracefully
+
+      code_example: |
+        public class PersistentInventory : NetworkBehaviour
+        {
+            private Bag m_Bag;
+
+            void OnEnable()
+            {
+                // Listen for inventory changes
+                m_Bag.EventAdd += OnItemAdded;
+                m_Bag.EventRemove += OnItemRemoved;
+            }
+
+            private async void OnItemAdded(Item item, int amount)
+            {
+                if (!IsServer) return;
+
+                // Sync already handled by NetworkVariablesSync
+
+                // Persist to Supabase (async, non-blocking)
+                try
+                {
+                    await SupabaseManager.Instance.SaveInventory(
+                        OwnerClientId,
+                        GetInventoryData()
+                    );
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"Failed to persist inventory: {e.Message}");
+                    // Queue for retry
+                    m_PersistenceRetryQueue.Enqueue(GetInventoryData());
+                }
+            }
+        }
+
+      bandwidth_impact: "Low (NetworkVariable) + DB writes"
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: ".serena/memories/INTEGRATION/001_unity_knowledge_base.md"
+
+  - id: "periodic-persistence"
+    type: "outcome"
+    outcome:
+      recommendation: "Dirty Flag + Interval Save + Supabase"
+      explanation: |
+        For periodic persistence:
+        1. Track dirty flag when inventory changes
+        2. Save to Supabase every N seconds if dirty
+        3. Also save on disconnect
+        4. More efficient than per-change saves
+
+      code_example: |
+        public class PeriodicInventorySave : NetworkBehaviour
+        {
+            [SerializeField] private float m_SaveInterval = 30f;
+            private bool m_IsDirty = false;
+            private float m_NextSaveTime;
+
+            void Update()
+            {
+                if (!IsServer) return;
+
+                if (m_IsDirty && Time.time >= m_NextSaveTime)
+                {
+                    SaveInventoryAsync();
+                    m_IsDirty = false;
+                    m_NextSaveTime = Time.time + m_SaveInterval;
+                }
+            }
+
+            public void MarkDirty()
+            {
+                m_IsDirty = true;
+            }
+
+            public override void OnNetworkDespawn()
+            {
+                // Always save on despawn
+                if (IsServer && m_IsDirty)
+                {
+                    SaveInventorySync(); // Sync save on despawn
+                }
+            }
+
+            private async void SaveInventoryAsync()
+            {
+                await SupabaseManager.Instance.SaveInventory(
+                    OwnerClientId,
+                    GetInventoryData()
+                );
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "disconnect-persistence"
+    type: "outcome"
+    outcome:
+      recommendation: "OnNetworkDespawn + Supabase Save"
+      explanation: |
+        For disconnect-only persistence:
+        1. Keep inventory in NetworkVariables (multiplayer sync)
+        2. Save to Supabase only on player disconnect
+        3. Load from Supabase on player connect
+        4. Simplest approach, but data loss if server crashes
+
+      code_example: |
+        public class DisconnectSaveInventory : NetworkBehaviour
+        {
+            public override async void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                if (IsServer)
+                {
+                    // Load inventory from Supabase on spawn
+                    var savedData = await SupabaseManager.Instance.LoadInventory(OwnerClientId);
+                    if (savedData != null)
+                    {
+                        RestoreInventory(savedData);
+                    }
+                }
+            }
+
+            public override void OnNetworkDespawn()
+            {
+                base.OnNetworkDespawn();
+
+                if (IsServer)
+                {
+                    // Save inventory to Supabase on despawn
+                    _ = SupabaseManager.Instance.SaveInventory(
+                        OwnerClientId,
+                        GetInventoryData()
+                    );
+                }
+            }
+        }
+
+      warning: "Data loss possible if server crashes before save"
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # COMPLETE SETUP
+  # ============================================
+  - id: "complete-inventory-setup"
+    type: "outcome"
+    outcome:
+      recommendation: "Complete GameCreator Inventory Network Setup"
+      explanation: |
+        Full inventory networking setup:
+
+        1. COMPONENTS:
+           ✅ Bag (GameCreator Inventory)
+           ✅ NetworkVariablesSync (for GC variables)
+           ✅ NetworkInventoryManager (custom component)
+
+        2. SERVER AUTHORITY:
+           - All Add/Remove operations via ServerRpc
+           - Server validates all transactions
+           - Never trust client inventory state
+
+        3. SYNC STRATEGY:
+           - NetworkVariables for real-time sync
+           - Supabase for persistence (hybrid)
+
+        4. EQUIPMENT:
+           - NetworkVariable<int> per slot
+           - Visual sync via OnValueChanged
+
+      code_example: |
+        public class NetworkInventoryManager : NetworkBehaviour
+        {
+            private Bag m_Bag;
+
+            // Equipment slots
+            private NetworkVariable<int> m_WeaponSlot = new(-1);
+            private NetworkVariable<int> m_ArmorSlot = new(-1);
+
+            // Inventory sync (simplified - use NetworkVariablesSync for full GC integration)
+            private NetworkList<InventorySlot> m_InventorySlots;
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                if (IsServer)
+                {
+                    // Load from Supabase on spawn
+                    LoadInventoryAsync();
+                }
+
+                // Subscribe to equipment changes
+                m_WeaponSlot.OnValueChanged += OnWeaponChanged;
+                m_ArmorSlot.OnValueChanged += OnArmorChanged;
+            }
+
+            [ServerRpc]
+            public void AddItemServerRpc(int itemId, int amount)
+            {
+                var item = ItemDatabase.GetById(itemId);
+                if (item == null) return;
+                if (!m_Bag.CanAdd(item, amount)) return;
+
+                m_Bag.Add(item, amount);
+                SyncInventoryToClients();
+                PersistInventoryAsync();
+            }
+
+            [ServerRpc]
+            public void RemoveItemServerRpc(int itemId, int amount)
+            {
+                var item = ItemDatabase.GetById(itemId);
+                if (item == null) return;
+                if (!m_Bag.Contains(item, amount)) return;
+
+                m_Bag.Remove(item, amount);
+                SyncInventoryToClients();
+                PersistInventoryAsync();
+            }
+        }
+
+      checklist:
+        - "All inventory mutations through ServerRpc"
+        - "Server validates before applying changes"
+        - "NetworkVariables for equipment slots"
+        - "Supabase hybrid for persistence"
+        - "Late-join players receive current state"
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+      related_trees: ["gc-stats-sync", "host-client-architecture", "network-sync-method"]

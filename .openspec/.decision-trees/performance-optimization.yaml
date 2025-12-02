@@ -1,0 +1,447 @@
+# Decision Tree: Performance Optimization Workflow
+# Diagnose and fix performance issues
+# Version: 1.0.0
+
+id: "performance-optimization-workflow"
+title: "Performance Optimization Workflow"
+description: "Systematic approach to diagnosing and fixing multiplayer performance issues"
+category: "performance"
+difficulty: "intermediate"
+estimated_time: 15
+
+start_node: "identify-problem"
+
+nodes:
+  - id: "identify-problem"
+    type: "question"
+    content: "What performance problem are you experiencing?"
+    help: "Be specific - use Profiler to measure"
+    options:
+      - label: "Low FPS (< 30 FPS)"
+        next: "low-fps"
+      
+      - label: "High latency (lag, rubber-banding)"
+        next: "high-latency"
+      
+      - label: "High bandwidth usage"
+        next: "high-bandwidth"
+        see_also: "bandwidth-optimization decision tree"
+      
+      - label: "High memory usage / GC spikes"
+        next: "memory-issues"
+
+  - id: "low-fps"
+    type: "question"
+    content: "Check Unity Profiler: What's the main bottleneck?"
+    action:
+      type: "guide"
+      steps:
+        - "Open Unity Profiler (Ctrl+7)"
+        - "Run game and look at CPU Usage"
+        - "Identify heaviest function"
+    options:
+      - label: "NetworkBehaviour.Update() taking >5ms"
+        next: "network-update-heavy"
+      
+      - label: "Rendering (>15ms in PlayerLoop)"
+        next: "rendering-issue"
+      
+      - label: "Physics (>10ms in FixedUpdate)"
+        next: "physics-issue"
+      
+      - label: "GC.Collect spikes"
+        next: "gc-spikes"
+
+  - id: "network-update-heavy"
+    type: "question"
+    content: "How many NetworkObjects do you have spawned?"
+    options:
+      - label: ">1000 NetworkObjects"
+        next: "too-many-network-objects"
+      
+      - label: "100-1000 NetworkObjects"
+        next: "optimize-network-updates"
+      
+      - label: "<100 NetworkObjects (should be fine)"
+        next: "debug-specific-network-code"
+
+  - id: "too-many-network-objects"
+    type: "outcome"
+    outcome:
+      recommendation: "Reduce NetworkObject Count + Use Object Pooling"
+      explanation: |
+        >1000 NetworkObjects is too many!
+        Each NetworkObject has overhead.
+      
+      strategies:
+        reduce_count:
+          title: "Reduce NetworkObject count"
+          methods:
+            - "Use single NetworkObject for groups (e.g. 1 for 10 NPCs)"
+            - "Don't spawn pickup NetworkObjects, spawn on demand"
+            - "Destroy distant objects (respawn when player approaches)"
+        
+        use_pooling:
+          title: "Use Object Pooling"
+          savings: "Eliminates spawn/despawn overhead"
+          code: |
+            // Use NetworkObjectPool
+            NetworkObjectPool.Instance.GetObject(prefab, position, rotation);
+            
+            // Return to pool instead of destroying
+            NetworkObjectPool.Instance.ReturnObject(networkObject);
+      
+      target: "<500 concurrent NetworkObjects"
+      
+      references:
+        - file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Pooling/NetworkObjectPool.cs"
+
+  - id: "optimize-network-updates"
+    type: "outcome"
+    outcome:
+      recommendation: "Optimize NetworkBehaviour Update Logic"
+      explanation: |
+        NetworkBehaviours update every frame.
+        Reduce unnecessary work in Update/FixedUpdate.
+      
+      optimizations:
+        early_exit:
+          title: "Early exit if not needed"
+          code: |
+            void Update() {
+                // Skip if not spawned
+                if (!IsSpawned) return;
+                
+                // Skip if too far from any player
+                if (!IsRelevantToAnyPlayer()) return;
+                
+                // Do work...
+            }
+        
+        reduce_frequency:
+          title: "Reduce update frequency"
+          code: |
+            private float nextUpdateTime;
+            
+            void Update() {
+                if (Time.time < nextUpdateTime) return;
+                nextUpdateTime = Time.time + updateInterval;
+                
+                // Do work at reduced rate
+            }
+        
+        use_events:
+          title: "Use events instead of polling"
+          bad: |
+            // BAD: Checks every frame
+            void Update() {
+                if (health != lastHealth) {
+                    OnHealthChanged();
+                }
+            }
+          good: |
+            // GOOD: Event-driven
+            m_Health.OnValueChanged += (old, new) => OnHealthChanged();
+
+  - id: "debug-specific-network-code"
+    type: "outcome"
+    outcome:
+      recommendation: "Profile Specific NetworkBehaviour"
+      explanation: |
+        Use Unity Deep Profiler to find specific slow code.
+      
+      steps:
+        1: "Enable Deep Profile (Window → Analysis → Profiler → Deep Profile)"
+        2: "Run game and reproduce performance issue"
+        3: "Look for NetworkBehaviour methods taking >1ms"
+        4: "Optimize that specific code"
+      
+      common_issues:
+        - "Calling FindObjectOfType in Update"
+        - "Complex calculations in Update"
+        - "Unnecessary GetComponent calls"
+        - "Expensive Unity API calls (Physics.Raycast)"
+
+  - id: "rendering-issue"
+    type: "outcome"
+    outcome:
+      recommendation: "Not a networking issue - optimize rendering"
+      explanation: |
+        This is a rendering bottleneck, not networking.
+      
+      quick_fixes:
+        - "Reduce draw calls (batching)"
+        - "LOD for distant objects"
+        - "Occlusion culling"
+        - "Reduce shadow distance"
+        - "Simplify shaders"
+      
+      not_networking: true
+
+  - id: "physics-issue"
+    type: "outcome"
+    outcome:
+      recommendation: "Optimize physics simulation"
+      explanation: |
+        Physics is CPU intensive.
+      
+      fixes:
+        - "Reduce rigidbody count"
+        - "Simplify colliders (use primitives)"
+        - "Increase Fixed Timestep (Edit → Project Settings → Time)"
+        - "Use layers to reduce collision checks"
+      
+      networking_note: |
+        If using NetworkRigidbody, physics runs on server AND clients.
+        Consider server-only physics:
+        
+        ```csharp
+        if (!IsServer) {
+            rigidbody.isKinematic = true; // Client doesn't simulate
+        }
+        ```
+
+  - id: "high-latency"
+    type: "question"
+    content: "What is the average ping to server?"
+    help: "Check in game debug UI or Network Profiler"
+    options:
+      - label: "<50ms (good ping, issue elsewhere)"
+        next: "good-ping-high-latency"
+      
+      - label: "50-150ms (moderate, can optimize)"
+        next: "moderate-latency"
+      
+      - label: ">150ms (high ping, network issue)"
+        next: "high-ping"
+
+  - id: "good-ping-high-latency"
+    type: "outcome"
+    outcome:
+      recommendation: "Implement Client Prediction"
+      explanation: |
+        Low ping but still feels laggy = no client prediction.
+        Client waits for server response on every action.
+      
+      solution:
+        title: "Client-Side Prediction"
+        explanation: |
+          Client simulates actions locally immediately,
+          server corrects if prediction was wrong.
+        
+        code_example: |
+          // CLIENT: Predict immediately
+          void OnMoveInput(Vector3 direction) {
+              if (IsOwner) {
+                  // 1. Predict movement locally (instant feedback)
+                  Vector3 predicted = transform.position + direction * speed * Time.deltaTime;
+                  transform.position = predicted;
+                  
+                  // 2. Send to server for validation
+                  MoveServerRpc(direction, predictedPosition);
+              }
+          }
+          
+          // SERVER: Validate and correct if needed
+          [ServerRpc]
+          void MoveServerRpc(Vector3 direction, Vector3 clientPrediction) {
+              // Validate move
+              Vector3 serverPosition = SimulateMove(direction);
+              m_NetworkPosition.Value = serverPosition;
+              
+              // If prediction was wrong, client will auto-correct via NetworkVariable
+              float error = Vector3.Distance(clientPrediction, serverPosition);
+              if (error > 0.5f) {
+                  // Significant error, client will correct smoothly
+              }
+          }
+      
+      perceived_latency: "0ms (instant feedback)"
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/multiplayer-excellence/spec.md"
+          section: "Client Prediction"
+
+  - id: "moderate-latency"
+    type: "outcome"
+    outcome:
+      recommendation: "Dead Reckoning + Interpolation"
+      explanation: |
+        For moderate ping, use prediction AND interpolation.
+      
+      techniques:
+        dead_reckoning:
+          title: "Dead Reckoning (predict other players)"
+          explanation: "Predict where other players will be based on last known velocity"
+          code: |
+            // Predict position between server updates
+            Vector3 predictedPosition = lastServerPosition + lastVelocity * timeSinceUpdate;
+            transform.position = Vector3.Lerp(transform.position, predictedPosition, lerpSpeed);
+        
+        interpolation:
+          title: "Interpolation (smooth movement)"
+          explanation: "Smooth between server snapshots"
+          code: |
+            // Store recent positions
+            Queue<(float time, Vector3 pos)> positionBuffer;
+            
+            void Update() {
+                float renderTime = Time.time - interpolationDelay;
+                
+                // Find positions to interpolate between
+                var (pos1, pos2) = GetPositionsAtTime(renderTime);
+                transform.position = Vector3.Lerp(pos1, pos2, t);
+            }
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/multiplayer-excellence/spec.md"
+
+  - id: "high-ping"
+    type: "outcome"
+    outcome:
+      recommendation: "Server/Network Infrastructure Issue"
+      explanation: |
+        >150ms ping is a network/server location issue.
+      
+      solutions:
+        server_location:
+          problem: "Server too far from players"
+          solution: "Deploy servers closer to players (multi-region)"
+        
+        network_quality:
+          problem: "Poor network connection"
+          solution: "Can't fix from game code"
+        
+        reduce_frequency:
+          problem: "Sending too many messages"
+          solution: "Reduce update rate, use unreliable delivery"
+
+  - id: "memory-issues"
+    type: "question"
+    content: "What's causing memory spikes?"
+    help: "Check Memory Profiler"
+    options:
+      - label: "GC.Alloc from NetworkVariable OnValueChanged"
+        next: "network-variable-gc"
+      
+      - label: "GC.Alloc from RPC parameters"
+        next: "rpc-gc"
+      
+      - label: "Increasing memory over time (memory leak)"
+        next: "memory-leak"
+
+  - id: "network-variable-gc"
+    type: "outcome"
+    outcome:
+      recommendation: "Unsubscribe from NetworkVariable callbacks"
+      explanation: |
+        NetworkVariable callbacks can cause GC if not unsubscribed.
+      
+      code_example: |
+        // BAD: Subscribes but never unsubscribes
+        void Start() {
+            m_Health.OnValueChanged += OnHealthChanged;
+        }
+        
+        // GOOD: Unsubscribe on despawn
+        public override void OnNetworkSpawn() {
+            base.OnNetworkSpawn();
+            if (!IsServer) {
+                m_Health.OnValueChanged += OnHealthChanged;
+            }
+        }
+        
+        public override void OnNetworkDespawn() {
+            base.OnNetworkDespawn();
+            if (!IsServer) {
+                m_Health.OnValueChanged -= OnHealthChanged;
+            }
+        }
+      
+      gc_reduction: "Eliminates callback GC"
+
+  - id: "rpc-gc"
+    type: "outcome"
+    outcome:
+      recommendation: "Avoid allocations in RPC parameters"
+      explanation: |
+        Passing strings, arrays, or classes allocates memory.
+      
+      avoid:
+        strings: "Use FixedString32Bytes instead"
+        arrays: "Use NativeArray or stack-allocated buffers"
+        classes: "Use structs (value types)"
+      
+      code_example: |
+        // BAD: Allocates string every call
+        [ClientRpc]
+        void ShowMessageClientRpc(string message) { }
+        
+        // GOOD: No allocation
+        [ClientRpc]
+        void ShowMessageClientRpc(FixedString32Bytes message) { }
+        
+        // BAD: Allocates array
+        [ServerRpc]
+        void SendDataServerRpc(int[] data) { }
+        
+        // GOOD: Use struct
+        [ServerRpc]
+        void SendDataServerRpc(DataStruct data) { }
+
+  - id: "memory-leak"
+    type: "outcome"
+    outcome:
+      recommendation: "Find and fix memory leaks"
+      explanation: |
+        Memory increasing over time = leak.
+      
+      common_causes:
+        event_subscriptions:
+          problem: "Not unsubscribing from events"
+          fix: "Always unsubscribe in OnDestroy/OnNetworkDespawn"
+        
+        cached_references:
+          problem: "Keeping references to despawned objects"
+          fix: "Clear references when objects despawn"
+        
+        static_collections:
+          problem: "Static lists/dictionaries growing forever"
+          fix: "Remove items when no longer needed"
+      
+      debugging:
+        - "Use Memory Profiler (Window → Analysis → Memory Profiler)"
+        - "Take snapshot before and after gameplay session"
+        - "Compare snapshots to find growing allocations"
+      
+      references:
+        - unity_docs: "Memory Profiler documentation"
+
+  - id: "gc-spikes"
+    type: "outcome"
+    outcome:
+      recommendation: "Reduce Garbage Collection"
+      explanation: |
+        GC spikes cause frame drops.
+      
+      strategies:
+        object_pooling:
+          title: "Use Object Pooling"
+          savings: "Eliminates instantiate/destroy GC"
+          example: "NetworkObjectPool.Instance.GetObject()"
+        
+        avoid_allocations:
+          title: "Avoid allocations in hot paths"
+          examples:
+            - "Don't use 'new' in Update()"
+            - "Cache GetComponent calls"
+            - "Use structs instead of classes"
+            - "Avoid LINQ in Update()"
+        
+        use_value_types:
+          title: "Use value types (structs)"
+          benefit: "Stack allocated, no GC"
+          example: "Vector3, Quaternion, custom structs"
+      
+      target: "<50ms GC intervals"
+

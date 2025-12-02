@@ -1,0 +1,197 @@
+======================================================================
+GAMECREATOR BEHAVIOR MODULE - NETWORKED PERSONA SCHEMA
+======================================================================
+Generated: 2025-12-01 12:53
+Persona Slug: gc-behavior-networked
+Network Sync Component: NetworkBehaviorSync
+
+----------------------------------------------------------------------
+MODULE DESCRIPTION
+----------------------------------------------------------------------
+Behavior trees, state machines, action plans, utility AI, processors
+
+----------------------------------------------------------------------
+DEPENDENCIES (Required Modules)
+----------------------------------------------------------------------
+  * Variables
+  * Perception
+
+----------------------------------------------------------------------
+CORE CLASSES (30 found)
+----------------------------------------------------------------------
+  * ManipulatorBlackboardSort
+    Namespace: GameCreator.Editor.Behavior
+  * ValueBehaviorTreeCycles
+    Namespace: GameCreator.Runtime.Behavior
+  * GetStringParameter
+    Namespace: GameCreator.Runtime.Behavior
+  * NodeActionPlanPostConditionsDrawer
+    Namespace: GameCreator.Editor.Behavior
+  * NodeBehaviorTreeCompositeDrawer
+    Namespace: GameCreator.Editor.Behavior
+  * ConnectionTool
+    Namespace: GameCreator.Editor.Behavior
+  * NodeUtilityBoardTask
+    Namespace: GameCreator.Runtime.Behavior
+  * TPort
+    Namespace: GameCreator.Runtime.Behavior
+  * Graph
+    Namespace: GameCreator.Runtime.Behavior
+  * IconGridOn
+    Namespace: GameCreator.Runtime.Behavior
+  * Block
+    Namespace: GameCreator.Editor.Behavior
+  * OutputPortStateMachineSingle
+    Namespace: GameCreator.Runtime.Behavior
+  * IconGraphSolid
+    Namespace: GameCreator.Runtime.Behavior
+  * IconNodeArrowRight
+    Namespace: GameCreator.Runtime.Behavior
+  * Ports
+    Namespace: GameCreator.Runtime.Behavior
+  * TNodeUtilityBoard
+    Namespace: GameCreator.Runtime.Behavior
+  * SetNumberParameter
+    Namespace: GameCreator.Runtime.Behavior
+  * TInputPort
+    Namespace: GameCreator.Runtime.Behavior
+  * IconUtilityBoardSolid
+    Namespace: GameCreator.Runtime.Behavior
+  * GetDecimalParameter
+    Namespace: GameCreator.Runtime.Behavior
+  * ToolbarStateMachine
+    Namespace: GameCreator.Editor.Behavior
+  * SetTextureParameter
+    Namespace: GameCreator.Runtime.Behavior
+  * DecoratorInvert
+    Namespace: GameCreator.Runtime.Behavior
+  * InspectorUtilityBoard
+    Namespace: GameCreator.Editor.Behavior
+  * SetVector3Parameter
+    Namespace: GameCreator.Runtime.Behavior
+  * ThoughtsTool
+    Namespace: GameCreator.Editor.Behavior
+  * IconGridOff
+    Namespace: GameCreator.Runtime.Behavior
+  * PanelUtilityBoard
+    Namespace: GameCreator.Editor.Behavior
+  * TGraphTool
+    Namespace: GameCreator.Editor.Behavior
+  * ToolbarActionPlan
+    Namespace: GameCreator.Editor.Behavior
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - INSTRUCTIONS (3 found)
+----------------------------------------------------------------------
+Signature: protected override Task Run(Args args)
+WARNING: NO CancellationToken parameter!
+
+  * InstructionActionPlanRemoveGoal
+  * InstructionActionPlanAddGoal
+  * InstructionProcessorUpdate
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING - CONDITIONS (1 found)
+----------------------------------------------------------------------
+Signature: protected override bool Check(Args args)
+
+  * ConditionProcessorIsRunning
+
+----------------------------------------------------------------------
+KEY PROPERTIES (40 sampled)
+----------------------------------------------------------------------
+  * Allowance
+  * AllowInsertion
+  * ShowBody
+  * ShowInspectorTransitions
+  * Selection
+  * Title
+  * Title
+  * DrawInstructions
+  * DrawConditions
+  * Thoughts
+  * Id
+  * IsCancelled
+  * NodeTool
+  * Overlays
+  * Bytes
+  * CanMove
+  * CanDelete
+  * TypeId
+  * TypeName
+  * IsRunning
+  * PropertyNodes
+  * Processor
+  * IsDragging
+  * CurrentPage
+  * Gray
+
+----------------------------------------------------------------------
+KEY METHODS (40 sampled)
+----------------------------------------------------------------------
+  * Abort()
+  * Cancel()
+  * ClearNodes()
+  * CreateInputs()
+  * CreatePorts()
+  * CreatePropertyGUI()
+  * DisplayAsTargetBelow()
+  * Get()
+  * GetPortOffset()
+  * GetTitle()
+  * Meditate()
+  * MoveParameters()
+  * NewPage()
+  * OnChangePlayMode()
+  * OnEnable()
+  * OnMouseCaptureOut()
+  * Refresh()
+  * Run()
+  * RunBeforeSerialize()
+  * Set()
+  * SetPosition()
+  * Sort()
+  * ToString()
+  * Update()
+  * UpdateBehaviorTree()
+
+----------------------------------------------------------------------
+NETWORK SYNCHRONIZATION
+----------------------------------------------------------------------
+Primary Sync Class: NetworkBehaviorSync
+
+RPC Naming Convention:
+  * Server RPCs: Method names end with 'ServerRpc'
+  * Client RPCs: Method names end with 'ClientRpc'
+  * Custom structs: Must implement INetworkSerializable
+
+Authority Model:
+  * Server-authoritative for state changes
+  * Client prediction for immediate feedback (where applicable)
+  * Ownership check: if (character.IsNetworkOwner) { ... }
+
+----------------------------------------------------------------------
+CROSS-MODULE INTEGRATION PROPOSALS
+----------------------------------------------------------------------
+  [Perception-Driven Behavior]
+  Description: AI behaviors triggered by perception events (sight, noise)
+  Network: Server calculates perception, drives behavior, syncs result
+  Pattern: Server: Perception.Update -> Behavior.Evaluate -> SyncState
+
+  [Perception-Driven Behavior]
+  Description: AI behaviors triggered by perception events (sight, noise)
+  Network: Server calculates perception, drives behavior, syncs result
+  Pattern: Server: Perception.Update -> Behavior.Evaluate -> SyncState
+
+----------------------------------------------------------------------
+LIMITATIONS & CONSTRAINTS
+----------------------------------------------------------------------
+  1. AI decisions are server-authoritative only
+  2. Behavior tree traversal not synced - only final state
+  3. Complex blackboard data requires custom serialization
+  4. NPC coordination limited to 16 active behaviors per manager
+  5. State transitions batched per frame for network efficiency
+
+======================================================================
+END OF SCHEMA
+======================================================================

@@ -1,0 +1,308 @@
+# Decision Tree: State Management Architecture
+# Choose the right state management pattern
+# Version: 2.0.0 | Updated: 2025-12-01
+# Enhanced with KB integration and project constraints
+
+id: "state-management-architecture"
+title: "State Management Architecture"
+description: "Choose between Client Authority, Server Authority, or Hybrid patterns"
+category: "networking"
+difficulty: "advanced"
+estimated_time: 8
+
+# KB Integration
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "IsServer"
+    - "IsOwner"
+    - "ServerRpc"
+    - "authority"
+
+# Project constraints - MLcreator specific
+enforced_constraints:
+  - "server-authoritative"
+  - "no-network-transform"
+  - "invasive-integration"
+
+# Project context injection
+project_context:
+  default_pattern: "Server Authority (recommended for MLcreator)"
+  character_authority: "Use character.IsNetworkOwner for ownership checks"
+  network_transform_warning: "NetworkTransform is NOT used - use NetworkCharacterAdapter"
+
+start_node: "trust-level"
+
+nodes:
+  - id: "trust-level"
+    type: "question"
+    content: "How important is preventing cheating in your game?"
+    help: "Determines if clients can be trusted with game state"
+    options:
+      - label: "Critical (competitive, PvP, economy)"
+        description: "Cheating would ruin game balance"
+        examples: ["Battle Royale", "MMO", "Competitive FPS"]
+        next: "server-authority-required"
+      
+      - label: "Moderate (co-op, casual)"
+        description: "Cheating would annoy but not break game"
+        examples: ["Co-op adventure", "Casual multiplayer"]
+        next: "hybrid-consideration"
+      
+      - label: "Low (single-player with optional co-op)"
+        description: "Cheating mainly affects cheater"
+        examples: ["Co-op PvE", "Creative sandbox"]
+        next: "client-authority-ok"
+
+  - id: "server-authority-required"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Authority Pattern (Required)"
+      explanation: |
+        For competitive games, server MUST be authoritative.
+        Never trust client input without validation.
+      
+      architecture:
+        pattern: "Server Authority"
+        ownership: "Server owns all gameplay state"
+        client_role: "Send inputs, receive state updates"
+        validation: "Server validates all actions"
+      
+      code_example: |
+        // CLIENT: Send input only
+        [ServerRpc]
+        void RequestMoveServerRpc(Vector3 direction) {
+            // Client sends desired action
+        }
+        
+        // SERVER: Validate and execute
+        void RequestMoveServerRpc(Vector3 direction, ServerRpcParams rpcParams) {
+            // 1. Validate input
+            if (!IsValidMove(direction)) return;
+            
+            // 2. Check if player can move
+            if (IsStunned() || IsDead()) return;
+            
+            // 3. Apply move
+            transform.position += direction * moveSpeed * Time.deltaTime;
+            
+            // 4. Sync to clients via NetworkVariable
+            m_NetworkPosition.Value = transform.position;
+        }
+      
+      benefits:
+        - "✓ Cheat-proof"
+        - "✓ Authoritative game state"
+        - "✓ Server can enforce rules"
+      
+      drawbacks:
+        - "✗ Higher latency (round-trip)"
+        - "✗ Server CPU intensive"
+        - "✗ Requires client prediction for smoothness"
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/multiplayer-excellence/spec.md"
+          section: "Server Authority"
+        - file: "llm-patterns.txt"
+          section: "158-172"
+      
+      next_step: "Implement Client Prediction to hide latency"
+
+  - id: "hybrid-consideration"
+    type: "question"
+    content: "What type of actions does your game have?"
+    options:
+      - label: "Mix of critical and cosmetic actions"
+        description: "Combat is critical, movement is less so"
+        next: "hybrid-pattern"
+      
+      - label: "Mostly critical actions"
+        description: "Most actions affect game balance"
+        next: "server-authority-recommended"
+
+  - id: "hybrid-pattern"
+    type: "outcome"
+    outcome:
+      recommendation: "Hybrid Authority Pattern"
+      explanation: |
+        Server authority for critical, client authority for cosmetic.
+        Best balance of performance and security.
+      
+      architecture:
+        pattern: "Hybrid Authority"
+        critical_actions: "Server authoritative (combat, inventory)"
+        cosmetic_actions: "Client authoritative (movement, animations)"
+        validation: "Server validates critical, clients sync cosmetic"
+      
+      code_example: |
+        // CRITICAL: Server authority (health/damage)
+        [ServerRpc]
+        void TakeDamageServerRpc(int damage) {
+            // Server validates and applies
+            if (ValidateDamage(damage)) {
+                m_Health.Value -= damage;
+            }
+        }
+        
+        // COSMETIC: Client authority (movement)
+        void Update() {
+            if (IsOwner) {
+                // Client updates immediately
+                transform.position += input * speed * Time.deltaTime;
+                
+                // Periodically sync to server (lower frequency)
+                if (Time.time > nextSyncTime) {
+                    SyncPositionServerRpc(transform.position);
+                    nextSyncTime = Time.time + syncInterval;
+                }
+            }
+        }
+        
+        // Server stores position but doesn't validate every frame
+        [ServerRpc]
+        void SyncPositionServerRpc(Vector3 position) {
+            m_NetworkPosition.Value = position; // No validation, just sync
+        }
+      
+      decision_matrix:
+        server_authority:
+          - "Health/damage"
+          - "Inventory changes"
+          - "Score/currency"
+          - "Quest completion"
+        
+        client_authority:
+          - "Movement (with periodic sync)"
+          - "Camera/look direction"
+          - "Animation triggers"
+          - "Particle effects"
+      
+      benefits:
+        - "✓ Secure for critical actions"
+        - "✓ Low latency for movement"
+        - "✓ Good balance"
+      
+      references:
+        - file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Components/NetworkGameCreatorCharacter.cs"
+          topic: "Hybrid movement sync"
+
+  - id: "server-authority-recommended"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Authority Pattern (Recommended)"
+      explanation: |
+        Similar to required case, but you have some flexibility.
+        Still recommended for game integrity.
+      
+      see_also: "server-authority-required"
+
+  - id: "client-authority-ok"
+    type: "question"
+    content: "Do you need server-side game logic at all?"
+    options:
+      - label: "Yes, server should track game state"
+        description: "Server needs to know what's happening"
+        next: "client-authority-with-server"
+      
+      - label: "No, peer-to-peer sync is fine"
+        description: "No central authority needed"
+        next: "distributed-authority"
+
+  - id: "client-authority-with-server"
+    type: "outcome"
+    outcome:
+      recommendation: "Client Authority with Server Tracking"
+      explanation: |
+        Clients update their own state, server tracks passively.
+        Good for non-competitive co-op games.
+      
+      architecture:
+        pattern: "Client Authority"
+        ownership: "Owner client controls their objects"
+        server_role: "Tracks state, broadcasts to others"
+        validation: "Minimal or none"
+      
+      code_example: |
+        // Client directly updates their state
+        void Update() {
+            if (IsOwner) {
+                // Client has authority
+                transform.position += input * speed * Time.deltaTime;
+                m_Health.Value -= damageReceived; // Direct update
+                
+                // NetworkVariable auto-syncs to server & other clients
+            }
+        }
+        
+        // Optional: Server can still validate
+        private NetworkVariable<float> m_Health = new NetworkVariable<float>(
+            value: 100f,
+            writePerm: NetworkVariableWritePermission.Owner // Owner can write!
+        );
+      
+      benefits:
+        - "✓ Very low latency"
+        - "✓ Server CPU friendly"
+        - "✓ Simple implementation"
+      
+      drawbacks:
+        - "✗ Vulnerable to cheating"
+        - "✗ Clients can desync"
+        - "✗ No server validation"
+      
+      best_for:
+        - "Co-op PvE games"
+        - "Creative sandboxes"
+        - "Casual multiplayer"
+
+  - id: "distributed-authority"
+    type: "outcome"
+    outcome:
+      recommendation: "Distributed Authority (Netcode 2.7.0)"
+      explanation: |
+        No dedicated server needed!
+        Clients sync directly via Netcode's Distributed Authority mode.
+      
+      architecture:
+        pattern: "Distributed Authority"
+        ownership: "Each client owns their objects"
+        server_role: "No dedicated server"
+        sync: "Peer-to-peer via Unity Netcode DA"
+      
+      code_example: |
+        // Enable Distributed Authority in NetworkManager
+        networkManager.NetworkConfig.EnableDistributedAuthority = true;
+        
+        // Client spawns their own objects
+        GameObject obj = Instantiate(playerPrefab);
+        NetworkObject netObj = obj.GetComponent<NetworkObject>();
+        netObj.Spawn(); // Spawns with client as owner
+        
+        // Owner updates directly
+        if (IsOwner) {
+            transform.position += input * speed * Time.deltaTime;
+            // Auto-syncs to all other clients
+        }
+      
+      benefits:
+        - "✓ No dedicated server needed"
+        - "✓ Lowest latency"
+        - "✓ Peer-to-peer scalability"
+      
+      drawbacks:
+        - "✗ No anti-cheat"
+        - "✗ Host migration complexity"
+        - "✗ Network topology challenges"
+      
+      references:
+        - file: "claudedocs/NETCODE_2_7_0_MIGRATION_GUIDE.md"
+          section: "Distributed Authority"
+        - file: "Assets/Plugins/GameCreator_Multiplayer/Runtime/Objects/NetworkPickup.cs"
+          topic: "Distributed authority example"
+      
+      best_for:
+        - "Peer-to-peer co-op"
+        - "Local network games"
+        - "Prototypes"
+

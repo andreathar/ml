@@ -1,0 +1,367 @@
+# Decision Tree: Network Error Handling Patterns
+# How to handle network errors gracefully
+# Version: 1.0.0
+
+id: "network-error-handling"
+title: "Network Error Handling Patterns"
+description: "Choose the right strategy for handling network errors and edge cases"
+category: "networking"
+difficulty: "intermediate"
+estimated_time: 6
+
+start_node: "error-type"
+
+nodes:
+  - id: "error-type"
+    type: "question"
+    content: "What type of network error are you handling?"
+    options:
+      - label: "Connection loss (player disconnected)"
+        next: "connection-loss"
+      
+      - label: "Message delivery failure (packet loss)"
+        next: "delivery-failure"
+      
+      - label: "Server validation failure (cheating attempt)"
+        next: "validation-failure"
+      
+      - label: "State desync (clients out of sync)"
+        next: "state-desync"
+
+  - id: "connection-loss"
+    type: "question"
+    content: "Is this a dedicated server or peer-to-peer?"
+    options:
+      - label: "Dedicated server"
+        next: "client-disconnect-server"
+      
+      - label: "Peer-to-peer (one client is host)"
+        next: "host-migration"
+
+  - id: "client-disconnect-server"
+    type: "outcome"
+    outcome:
+      recommendation: "Graceful Disconnect Handling"
+      explanation: |
+        Handle client disconnect cleanly:
+        1. Detect disconnect via Netcode events
+        2. Clean up player state
+        3. Notify other players
+        4. Save player data to Supabase
+        5. Allow reconnection with resume
+      
+      code_example: |
+        // SERVER: Handle disconnect
+        void OnClientDisconnected(ulong clientId) {
+            // 1. Get player object
+            var playerObj = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
+            
+            // 2. Save player state to Supabase (before cleanup)
+            if (playerObj != null) {
+                var playerData = playerObj.GetComponent<NetworkPlayerData>();
+                await SupabaseManager.Instance.SavePlayerData(clientId, new {
+                    position = playerObj.transform.position,
+                    health = playerData.Health.Value,
+                    inventory = playerData.GetInventory()
+                });
+            }
+            
+            // 3. Notify other players
+            NotifyPlayerLeftClientRpc(clientId);
+            
+            // 4. Despawn player (with delay for reconnect window)
+            StartCoroutine(DelayedDespawn(playerObj, reconnectWindowSeconds: 60));
+        }
+        
+        // Allow reconnection
+        void OnClientReconnect(ulong clientId) {
+            // Load saved state from Supabase
+            var savedData = await SupabaseManager.Instance.LoadPlayerData(clientId);
+            
+            // Spawn player at saved position
+            var playerObj = SpawnPlayer(clientId, savedData.position);
+            
+            // Restore state
+            playerObj.GetComponent<NetworkPlayerData>().Restore(savedData);
+        }
+      
+      best_practices:
+        - "Save critical data immediately on disconnect"
+        - "Keep player object alive for 30-60s (reconnect window)"
+        - "Notify team members of disconnect"
+        - "Allow seamless reconnection"
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/supabase-deep-integration/spec.md"
+          section: "Disconnect handling"
+
+  - id: "host-migration"
+    type: "outcome"
+    outcome:
+      recommendation: "Host Migration Pattern"
+      explanation: |
+        When host disconnects in P2P, migrate to new host.
+        Complex but necessary for peer-to-peer games.
+      
+      strategy:
+        1: "Detect host disconnect"
+        2: "Elect new host (lowest ping or oldest client)"
+        3: "Transfer state to new host"
+        4: "Reconnect all clients to new host"
+      
+      code_example: |
+        // Detect host disconnect
+        void OnHostDisconnected() {
+            if (NetworkManager.Singleton.IsServer) return; // We're still host
+            
+            // Elect new host
+            ulong newHostId = ElectNewHost();
+            
+            if (NetworkManager.Singleton.LocalClientId == newHostId) {
+                // We are the new host!
+                BecomeHost();
+            } else {
+                // Reconnect to new host
+                ReconnectToNewHost(newHostId);
+            }
+        }
+        
+        void BecomeHost() {
+            // Start as host
+            NetworkManager.Singleton.StartHost();
+            
+            // Accept incoming connections
+            NetworkManager.Singleton.ConnectionApprovalCallback = ApproveReconnection;
+        }
+      
+      complexity: "High"
+      alternatives:
+        - "Use dedicated server (recommended)"
+        - "End session on host disconnect"
+      
+      references:
+        - unity_docs: "Unity Netcode Host Migration"
+
+  - id: "delivery-failure"
+    type: "question"
+    content: "Is this message critical for gameplay?"
+    options:
+      - label: "Yes, must be delivered (health, inventory)"
+        next: "critical-message"
+      
+      - label: "No, can be dropped (particle effects)"
+        next: "non-critical-message"
+
+  - id: "critical-message"
+    type: "outcome"
+    outcome:
+      recommendation: "Use Reliable RPCs or NetworkVariables"
+      explanation: |
+        For critical messages, use reliable delivery.
+        Netcode guarantees delivery with retries.
+      
+      code_example: |
+        // Reliable RPC (default)
+        [ServerRpc]
+        void TakeDamageServerRpc(int damage) {
+            // Guaranteed to be delivered in order
+            m_Health.Value -= damage;
+        }
+        
+        // Or use NetworkVariable (always reliable)
+        private NetworkVariable<int> m_Health = new NetworkVariable<int>();
+        
+        void ApplyDamage(int damage) {
+            if (IsServer) {
+                m_Health.Value -= damage; // Reliable sync
+            }
+        }
+      
+      guarantees:
+        - "✓ Delivery guaranteed"
+        - "✓ Ordered delivery"
+        - "✓ Automatic retries"
+      
+      trade_offs:
+        - "Higher latency (acknowledgment)"
+        - "Can cause lag spikes on packet loss"
+
+  - id: "non-critical-message"
+    type: "outcome"
+    outcome:
+      recommendation: "Use Unreliable RPCs (Accept Drops)"
+      explanation: |
+        For non-critical messages, use unreliable delivery.
+        Dropped packets are acceptable for cosmetic effects.
+      
+      code_example: |
+        // Unreliable RPC
+        [ClientRpc(Delivery = RpcDelivery.Unreliable)]
+        void PlayEffectClientRpc(Vector3 position) {
+            // May not arrive, but that's OK
+            ParticleSystem.Play(position);
+        }
+      
+      benefits:
+        - "✓ Low latency"
+        - "✓ High throughput"
+        - "✓ No lag spikes"
+      
+      acceptable_for:
+        - "Particle effects"
+        - "Sound effects"
+        - "Cosmetic animations"
+
+  - id: "validation-failure"
+    type: "question"
+    content: "Is this likely a cheat attempt or client bug?"
+    options:
+      - label: "Likely cheating (invalid action)"
+        next: "handle-cheat-attempt"
+      
+      - label: "Likely bug (edge case)"
+        next: "handle-bug-gracefully"
+
+  - id: "handle-cheat-attempt"
+    type: "outcome"
+    outcome:
+      recommendation: "Reject + Log + Potentially Ban"
+      explanation: |
+        When server detects invalid action:
+        1. Reject the action (don't apply)
+        2. Log the attempt with client ID
+        3. Increment violation counter
+        4. Kick/ban after threshold
+      
+      code_example: |
+        [ServerRpc]
+        void RequestMoveServerRpc(Vector3 position, ServerRpcParams rpcParams) {
+            ulong clientId = rpcParams.Receive.SenderClientId;
+            
+            // Validate move
+            if (!IsValidMove(position)) {
+                // Log violation
+                Debug.LogWarning($"Client {clientId} attempted invalid move to {position}");
+                
+                // Track violations
+                violationCounts[clientId]++;
+                
+                if (violationCounts[clientId] > MAX_VIOLATIONS) {
+                    // Kick player
+                    NetworkManager.Singleton.DisconnectClient(clientId);
+                    
+                    // Ban in Supabase
+                    await SupabaseManager.Instance.BanPlayer(clientId, "Cheating");
+                }
+                
+                // Send correction to client
+                CorrectPositionClientRpc(lastValidPosition);
+                return;
+            }
+            
+            // Valid move, apply it
+            transform.position = position;
+            m_NetworkPosition.Value = position;
+        }
+      
+      violation_threshold:
+        warning: 3
+        kick: 10
+        ban: 20
+
+  - id: "handle-bug-gracefully"
+    type: "outcome"
+    outcome:
+      recommendation: "Reject + Log + Recover Gracefully"
+      explanation: |
+        When client sends invalid data due to bug:
+        1. Reject the action
+        2. Log for debugging
+        3. Send correction to client
+        4. Don't punish player
+      
+      code_example: |
+        [ServerRpc]
+        void UpdateInventoryServerRpc(int itemId, ServerRpcParams rpcParams) {
+            // Validate
+            if (!IsValidItem(itemId)) {
+                Debug.LogError($"Invalid item {itemId} - possible client bug");
+                
+                // Send current server state to client (correction)
+                SyncInventoryClientRpc(GetServerInventory());
+                return;
+            }
+            
+            // Valid, apply
+            AddItemToInventory(itemId);
+        }
+      
+      best_practices:
+        - "Always validate input"
+        - "Send corrections, don't trust client"
+        - "Log for debugging"
+        - "Be lenient with players"
+
+  - id: "state-desync"
+    type: "outcome"
+    outcome:
+      recommendation: "Server Reconciliation Pattern"
+      explanation: |
+        When client and server are out of sync:
+        1. Server is authoritative
+        2. Send full state snapshot to client
+        3. Client applies correction
+        4. Smoothly interpolate to avoid jitter
+      
+      code_example: |
+        // SERVER: Detect desync
+        [ServerRpc]
+        void ReportPositionServerRpc(Vector3 clientPosition, ServerRpcParams rpcParams) {
+            Vector3 serverPosition = m_NetworkPosition.Value;
+            float distance = Vector3.Distance(clientPosition, serverPosition);
+            
+            // Desync detected
+            if (distance > DESYNC_THRESHOLD) {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+                
+                // Send correction
+                CorrectPositionClientRpc(
+                    serverPosition, 
+                    new ClientRpcParams { 
+                        Send = new ClientRpcSendParams { 
+                            TargetClientIds = new[] { clientId } 
+                        }
+                    }
+                );
+            }
+        }
+        
+        // CLIENT: Apply correction
+        [ClientRpc]
+        void CorrectPositionClientRpc(Vector3 serverPosition, ClientRpcParams rpcParams) {
+            if (!IsOwner) return;
+            
+            // Smoothly interpolate to correct position
+            StartCoroutine(SmoothCorrection(transform.position, serverPosition));
+        }
+        
+        IEnumerator SmoothCorrection(Vector3 from, Vector3 to) {
+            float elapsed = 0f;
+            while (elapsed < correctionDuration) {
+                transform.position = Vector3.Lerp(from, to, elapsed / correctionDuration);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            transform.position = to;
+        }
+      
+      best_practices:
+        - "Server is always right"
+        - "Smooth corrections (don't snap)"
+        - "Log desyncs for debugging"
+        - "Implement client prediction to reduce corrections"
+      
+      references:
+        - file: "openspec/changes/perfect-multiplayer-workflow/specs/multiplayer-excellence/spec.md"
+          section: "Server Reconciliation"
+

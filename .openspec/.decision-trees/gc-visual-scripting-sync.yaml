@@ -1,0 +1,1479 @@
+# Decision Tree: GameCreator Visual Scripting Multiplayer Synchronization
+# Comprehensive guide for network-aware Events, Instructions, Conditions, and Variables
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "gc-visual-scripting-sync"
+title: "GameCreator Visual Scripting Multiplayer Guide"
+description: "Complete guide for creating network-aware Triggers, Instructions, Conditions, and Variables for multiplayer visual scripting"
+category: "gamecreator"
+gc_module: "visual-scripting"
+difficulty: "intermediate"
+estimated_time: 15
+
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "Instruction"
+    - "Condition"
+    - "Trigger"
+    - "Args"
+    - "ServerRpc"
+
+enforced_constraints:
+  - "server-authoritative"
+  - "rpc-naming"
+  - "task-signature"
+
+# Visual Scripting specific constraints
+vs_constraints:
+  instruction_signature: "protected override Task Run(Args args)"
+  condition_signature: "protected override bool Check(Args args)"
+  no_cancellation_token: "GameCreator Instructions do NOT use CancellationToken"
+  namespace: "GameCreator.Multiplayer.Runtime.VisualScripting"
+
+start_node: "vs-entry"
+
+nodes:
+  # ============================================
+  # ENTRY
+  # ============================================
+  - id: "vs-entry"
+    type: "question"
+    content: "What visual scripting element do you need to create for multiplayer?"
+    help: "Select the type of visual scripting node you're implementing"
+    options:
+      - label: "Network Event/Trigger"
+        description: "Events that fire on network conditions (OnNPCInteract, OnPerception, OnPlayerJoined)"
+        next: "network-events"
+
+      - label: "Network Instruction"
+        description: "Actions that execute across network (AddToInventory, ChangeStat, SpawnObject)"
+        next: "network-instructions"
+
+      - label: "Network Condition"
+        description: "Checks for network state (IsFaction, IsLocalPlayer, HasAuthority)"
+        next: "network-conditions"
+
+      - label: "Network Variable Sync"
+        description: "Syncing GameCreator variables across network"
+        next: "network-variables"
+
+      - label: "Complete VS multiplayer setup"
+        description: "Full visual scripting multiplayer from scratch"
+        next: "complete-vs-setup"
+
+  # ============================================
+  # NETWORK EVENTS/TRIGGERS
+  # ============================================
+  - id: "network-events"
+    type: "question"
+    content: "What type of network event do you need?"
+    help: "Events fire when specific network conditions occur"
+    options:
+      - label: "NPC Interaction events"
+        description: "OnNPCInteract, OnDialogueStart, OnQuestGiven"
+        next: "npc-interaction-events"
+
+      - label: "Perception events"
+        description: "OnPerceptionEnter, OnPerceptionExit, OnPerceptionFeel"
+        next: "perception-events"
+
+      - label: "Player connection events"
+        description: "OnPlayerJoined, OnPlayerLeft, OnLocalPlayerSpawned"
+        next: "connection-events"
+
+      - label: "Combat/Damage events"
+        description: "OnDamageReceived, OnDeath, OnRevive"
+        next: "combat-events"
+
+      - label: "Inventory events"
+        description: "OnItemAdded, OnItemRemoved, OnEquipmentChanged"
+        next: "inventory-events"
+
+  - id: "npc-interaction-events"
+    type: "outcome"
+    outcome:
+      recommendation: "Network NPC Interaction Trigger Pattern"
+      explanation: |
+        For NPC interaction events like:
+        "On NPC from Faction Orcs interact → add 35 gold to LocalPlayer inventory"
+
+        Pattern:
+        1. Trigger fires on interacting player's client
+        2. Trigger validates interaction is valid
+        3. Server RPC executes the actual reward
+        4. Only server modifies inventory
+
+      example_use_case: |
+        Visual Script: "On NPC from Faction Orcs interact add 35 gold coins to Target(LocalPlayer) inventory bag"
+
+        Flow:
+        1. Player interacts with Orc NPC
+        2. OnNPCInteract trigger fires (client-side)
+        3. Condition checks: IsFaction(NPC, "Orcs")
+        4. Instruction: NetworkAddToInventory(LocalPlayer, "gold", 35)
+        5. Instruction sends ServerRpc to add gold
+
+      code_example: |
+        // Trigger: On NPC Interact (fires on interacting client)
+        [Title("On NPC Interact (Network)")]
+        [Category("Multiplayer/NPC")]
+        public class TriggerOnNPCInteractNetwork : Trigger
+        {
+            [SerializeField] private PropertyGetGameObject m_NPC;
+            [SerializeField] private PropertyGetString m_RequiredFaction;
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                // Subscribe to NPC interaction events
+                NPCInteractionManager.OnInteract += OnInteract;
+            }
+
+            protected override void OnDisable()
+            {
+                base.OnDisable();
+                NPCInteractionManager.OnInteract -= OnInteract;
+            }
+
+            private void OnInteract(GameObject npc, GameObject interactor)
+            {
+                // Only fire for local player interactions
+                var character = interactor.Get<Character>();
+                if (character == null || !character.IsNetworkOwner) return;
+
+                // Check NPC matches
+                GameObject targetNPC = m_NPC.Get(this.Args);
+                if (targetNPC != npc) return;
+
+                // Check faction if specified
+                string faction = m_RequiredFaction.Get(this.Args);
+                if (!string.IsNullOrEmpty(faction))
+                {
+                    var npcFaction = npc.Get<FactionMember>();
+                    if (npcFaction == null || npcFaction.Faction.Id != faction) return;
+                }
+
+                // Fire trigger with NPC and interactor in Args
+                Args args = new Args(npc, interactor);
+                _ = this.Execute(args);
+            }
+        }
+
+        // Companion Instruction: Add to Inventory (Network)
+        [Title("Add to Inventory (Network)")]
+        [Category("Multiplayer/Inventory")]
+        public class InstructionNetworkAddToInventory : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetItem m_Item;
+            [SerializeField] private PropertyGetInteger m_Amount;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                Item item = m_Item.Get(args);
+                int amount = m_Amount.Get(args);
+
+                if (target == null || item == null) return DefaultResult;
+
+                // Get network component and send to server
+                var networkInventory = target.Get<NetworkInventoryManager>();
+                if (networkInventory != null)
+                {
+                    networkInventory.AddItemServerRpc(item.Id, amount);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+      references:
+        - file: ".serena/memories/CRITICAL/004_visual_scripting_task_signatures.md"
+        - file: "openspec/.decision-trees/gc-inventory-sync.yaml"
+
+  - id: "perception-events"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Perception Trigger Pattern"
+      explanation: |
+        For perception events like:
+        "On LocalPlayer perception feel NPC from Faction Elfs → change LocalPlayer Stat Fear"
+
+        Pattern:
+        1. Perception system runs on owner client
+        2. Trigger fires when perception condition met
+        3. Stat changes via ServerRpc
+        4. Only server modifies stats
+
+      example_use_case: |
+        Visual Script: "On LocalPlayer perception feel NPC from Faction Elfs change Local Player Stat Fear +10"
+
+        Flow:
+        1. Player's perception system detects Elf NPC
+        2. OnPerceptionFeel trigger fires (owner client)
+        3. Condition checks: IsFaction(DetectedTarget, "Elfs")
+        4. Instruction: NetworkChangeStat(LocalPlayer, "Fear", +10)
+        5. Instruction sends ServerRpc to modify stat
+
+      code_example: |
+        // Trigger: On Perception Feel (Network)
+        [Title("On Perception Feel (Network)")]
+        [Category("Multiplayer/Perception")]
+        public class TriggerOnPerceptionFeelNetwork : Trigger
+        {
+            [SerializeField] private PropertyGetGameObject m_Observer;
+            [SerializeField] private PropertyGetString m_RequiredFaction;
+            [SerializeField] private PerceptionType m_PerceptionType = PerceptionType.Sight;
+
+            public enum PerceptionType { Sight, Hearing, Smell, All }
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                PerceptionManager.OnPerceptionEvent += OnPerception;
+            }
+
+            protected override void OnDisable()
+            {
+                base.OnDisable();
+                PerceptionManager.OnPerceptionEvent -= OnPerception;
+            }
+
+            private void OnPerception(PerceptionEvent evt)
+            {
+                // Only process for our observer
+                GameObject observer = m_Observer.Get(this.Args);
+                if (evt.Observer != observer) return;
+
+                // Only owner processes perception
+                var character = observer.Get<Character>();
+                if (character == null || !character.IsNetworkOwner) return;
+
+                // Check perception type
+                if (m_PerceptionType != PerceptionType.All && evt.Type != m_PerceptionType)
+                    return;
+
+                // Check faction filter
+                string faction = m_RequiredFaction.Get(this.Args);
+                if (!string.IsNullOrEmpty(faction))
+                {
+                    var targetFaction = evt.Target.Get<FactionMember>();
+                    if (targetFaction == null || targetFaction.Faction.Id != faction) return;
+                }
+
+                // Fire trigger
+                Args args = new Args(evt.Target, observer);
+                _ = this.Execute(args);
+            }
+        }
+
+        // Companion Instruction: Change Stat (Network)
+        [Title("Change Stat (Network)")]
+        [Category("Multiplayer/Stats")]
+        public class InstructionNetworkChangeStat : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_StatName;
+            [SerializeField] private PropertyGetDecimal m_Amount;
+            [SerializeField] private ChangeMode m_Mode = ChangeMode.Add;
+
+            public enum ChangeMode { Set, Add, Subtract, Multiply }
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string statName = m_StatName.Get(args);
+                float amount = (float)m_Amount.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(statName)) return DefaultResult;
+
+                // Get network stats and send to server
+                var networkStats = target.Get<NetworkGameCreatorStats>();
+                if (networkStats != null)
+                {
+                    networkStats.ChangeStatServerRpc(statName, amount, (int)m_Mode);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+      references:
+        - file: "openspec/.decision-trees/gc-stats-sync.yaml"
+
+  - id: "connection-events"
+    type: "outcome"
+    outcome:
+      recommendation: "Player Connection Event Triggers"
+      explanation: |
+        Connection events for:
+        - OnPlayerJoined: Any player joins
+        - OnPlayerLeft: Any player leaves
+        - OnLocalPlayerSpawned: Local player's character spawns
+        - OnRemotePlayerSpawned: Another player's character spawns
+
+      code_example: |
+        // Trigger: On Local Player Spawned
+        [Title("On Local Player Spawned")]
+        [Category("Multiplayer/Connection")]
+        public class TriggerOnLocalPlayerSpawned : Trigger
+        {
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                NetworkPlayerManager.OnLocalPlayerSpawned += OnSpawned;
+            }
+
+            protected override void OnDisable()
+            {
+                base.OnDisable();
+                NetworkPlayerManager.OnLocalPlayerSpawned -= OnSpawned;
+            }
+
+            private void OnSpawned(GameObject player)
+            {
+                Args args = new Args(player);
+                _ = this.Execute(args);
+            }
+        }
+
+        // Trigger: On Any Player Joined
+        [Title("On Player Joined")]
+        [Category("Multiplayer/Connection")]
+        public class TriggerOnPlayerJoined : Trigger
+        {
+            [SerializeField] private bool m_IncludeLocalPlayer = true;
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            }
+
+            protected override void OnDisable()
+            {
+                base.OnDisable();
+                if (NetworkManager.Singleton != null)
+                    NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            }
+
+            private void OnClientConnected(ulong clientId)
+            {
+                if (!m_IncludeLocalPlayer &&
+                    clientId == NetworkManager.Singleton.LocalClientId)
+                    return;
+
+                Args args = new Args(this.gameObject);
+                args.Set("ClientId", clientId);
+                _ = this.Execute(args);
+            }
+        }
+
+      respects_constraints: ["task-signature"]
+
+  - id: "combat-events"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Combat Event Triggers"
+      explanation: |
+        Combat events fire on the target (damaged entity):
+        - Server applies damage
+        - Server broadcasts event via ClientRpc
+        - Trigger fires on all clients (for VFX)
+        - Or fires only on victim's client (for UI)
+
+      code_example: |
+        // Trigger: On Damage Received (Network)
+        [Title("On Damage Received (Network)")]
+        [Category("Multiplayer/Combat")]
+        public class TriggerOnDamageReceivedNetwork : Trigger
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private bool m_OnlyOwner = true;
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                NetworkDamageEvents.OnDamageReceived += OnDamage;
+            }
+
+            protected override void OnDisable()
+            {
+                base.OnDisable();
+                NetworkDamageEvents.OnDamageReceived -= OnDamage;
+            }
+
+            private void OnDamage(DamageEvent evt)
+            {
+                GameObject target = m_Target.Get(this.Args);
+                if (evt.Target != target) return;
+
+                // Optionally filter to owner only
+                if (m_OnlyOwner)
+                {
+                    var netObj = target.GetComponent<NetworkObject>();
+                    if (netObj != null && !netObj.IsOwner) return;
+                }
+
+                Args args = new Args(evt.Target, evt.Attacker);
+                args.Set("Damage", evt.Damage);
+                args.Set("DamageType", evt.DamageType);
+                _ = this.Execute(args);
+            }
+        }
+
+        // Trigger: On Death (Network)
+        [Title("On Death (Network)")]
+        [Category("Multiplayer/Combat")]
+        public class TriggerOnDeathNetwork : Trigger
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                NetworkDamageEvents.OnDeath += OnDeath;
+            }
+
+            private void OnDeath(DeathEvent evt)
+            {
+                GameObject target = m_Target.Get(this.Args);
+                if (evt.Target != target) return;
+
+                Args args = new Args(evt.Target, evt.Killer);
+                _ = this.Execute(args);
+            }
+        }
+
+      respects_constraints: ["task-signature"]
+
+  - id: "inventory-events"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Inventory Event Triggers"
+      explanation: |
+        Inventory events fire after server confirms changes:
+        - Server modifies inventory
+        - Server broadcasts via ClientRpc
+        - Trigger fires on owner client (for UI)
+
+      code_example: |
+        // Trigger: On Item Added (Network)
+        [Title("On Item Added (Network)")]
+        [Category("Multiplayer/Inventory")]
+        public class TriggerOnItemAddedNetwork : Trigger
+        {
+            [SerializeField] private PropertyGetGameObject m_BagOwner;
+            [SerializeField] private PropertyGetItem m_FilterItem; // Optional filter
+
+            protected override void OnEnable()
+            {
+                base.OnEnable();
+                NetworkInventoryEvents.OnItemAdded += OnItemAdded;
+            }
+
+            private void OnItemAdded(InventoryChangeEvent evt)
+            {
+                GameObject owner = m_BagOwner.Get(this.Args);
+                if (evt.BagOwner != owner) return;
+
+                // Optional item filter
+                Item filter = m_FilterItem.Get(this.Args);
+                if (filter != null && evt.Item.Id != filter.Id) return;
+
+                // Only fire for owner
+                var character = owner.Get<Character>();
+                if (character != null && !character.IsNetworkOwner) return;
+
+                Args args = new Args(owner);
+                args.Set("Item", evt.Item);
+                args.Set("Amount", evt.Amount);
+                _ = this.Execute(args);
+            }
+        }
+
+      respects_constraints: ["task-signature"]
+
+  # ============================================
+  # NETWORK INSTRUCTIONS
+  # ============================================
+  - id: "network-instructions"
+    type: "question"
+    content: "What type of network instruction do you need?"
+    help: "Instructions execute actions that affect game state"
+    options:
+      - label: "Inventory instructions"
+        description: "Add/Remove items, transfer, equip"
+        next: "inventory-instructions"
+
+      - label: "Stats instructions"
+        description: "Change health, mana, attributes"
+        next: "stats-instructions"
+
+      - label: "Character instructions"
+        description: "Move, teleport, animate"
+        next: "character-instructions"
+
+      - label: "Spawn/Despawn instructions"
+        description: "Spawn NPCs, objects, effects"
+        next: "spawn-instructions"
+
+      - label: "RPC instructions"
+        description: "Generic RPC calls"
+        next: "rpc-instructions"
+
+  - id: "inventory-instructions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Inventory Instructions"
+      explanation: |
+        All inventory modifications MUST go through server.
+        Instructions send ServerRpc, server validates and applies.
+
+      code_example: |
+        // Instruction: Add Item to Inventory (Network)
+        [Title("Add to Inventory (Network)")]
+        [Category("Multiplayer/Inventory")]
+        [Description("Adds item to target's inventory via server")]
+        public class InstructionNetworkAddItem : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetItem m_Item;
+            [SerializeField] private PropertyGetInteger m_Amount = new PropertyGetInteger(1);
+
+            public override string Title => $"Add {m_Amount} {m_Item} to {m_Target} (Network)";
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                Item item = m_Item.Get(args);
+                int amount = m_Amount.Get(args);
+
+                if (target == null || item == null || amount <= 0)
+                    return DefaultResult;
+
+                var networkInventory = target.Get<NetworkInventoryManager>();
+                if (networkInventory != null)
+                {
+                    networkInventory.AddItemServerRpc(item.Id, amount);
+                }
+                else
+                {
+                    Debug.LogWarning($"No NetworkInventoryManager on {target.name}");
+                }
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Remove Item from Inventory (Network)
+        [Title("Remove from Inventory (Network)")]
+        [Category("Multiplayer/Inventory")]
+        public class InstructionNetworkRemoveItem : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetItem m_Item;
+            [SerializeField] private PropertyGetInteger m_Amount = new PropertyGetInteger(1);
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                Item item = m_Item.Get(args);
+                int amount = m_Amount.Get(args);
+
+                if (target == null || item == null || amount <= 0)
+                    return DefaultResult;
+
+                var networkInventory = target.Get<NetworkInventoryManager>();
+                networkInventory?.RemoveItemServerRpc(item.Id, amount);
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Transfer Item Between Players (Network)
+        [Title("Transfer Item (Network)")]
+        [Category("Multiplayer/Inventory")]
+        public class InstructionNetworkTransferItem : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_From;
+            [SerializeField] private PropertyGetGameObject m_To;
+            [SerializeField] private PropertyGetItem m_Item;
+            [SerializeField] private PropertyGetInteger m_Amount = new PropertyGetInteger(1);
+
+            protected override Task Run(Args args)
+            {
+                GameObject from = m_From.Get(args);
+                GameObject to = m_To.Get(args);
+                Item item = m_Item.Get(args);
+                int amount = m_Amount.Get(args);
+
+                if (from == null || to == null || item == null)
+                    return DefaultResult;
+
+                // Get network object IDs for server
+                var fromNetObj = from.GetComponent<NetworkObject>();
+                var toNetObj = to.GetComponent<NetworkObject>();
+
+                if (fromNetObj == null || toNetObj == null)
+                    return DefaultResult;
+
+                // Send transfer request to server
+                var transferManager = NetworkTransferManager.Instance;
+                transferManager?.TransferItemServerRpc(
+                    fromNetObj.NetworkObjectId,
+                    toNetObj.NetworkObjectId,
+                    item.Id,
+                    amount
+                );
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+  - id: "stats-instructions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Stats Instructions"
+      explanation: |
+        Stats modifications via server.
+        Supports Set, Add, Subtract, Multiply modes.
+
+      code_example: |
+        // Instruction: Change Stat (Network)
+        [Title("Change Stat (Network)")]
+        [Category("Multiplayer/Stats")]
+        [Description("Modifies target's stat via server")]
+        public class InstructionNetworkChangeStat : Instruction
+        {
+            public enum StatChangeMode { Set, Add, Subtract, Multiply }
+
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_StatId;
+            [SerializeField] private PropertyGetDecimal m_Value;
+            [SerializeField] private StatChangeMode m_Mode = StatChangeMode.Add;
+
+            public override string Title =>
+                $"{m_Mode} {m_Value} to {m_StatId} on {m_Target} (Network)";
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string statId = m_StatId.Get(args);
+                float value = (float)m_Value.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(statId))
+                    return DefaultResult;
+
+                var networkStats = target.Get<NetworkGameCreatorStats>();
+                if (networkStats != null)
+                {
+                    networkStats.ChangeStatServerRpc(statId, value, (int)m_Mode);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Apply Damage (Network)
+        [Title("Apply Damage (Network)")]
+        [Category("Multiplayer/Combat")]
+        [Description("Applies damage from attacker to target via server")]
+        public class InstructionNetworkApplyDamage : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetGameObject m_Attacker;
+            [SerializeField] private PropertyGetDecimal m_Damage;
+            [SerializeField] private PropertyGetString m_DamageType;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                GameObject attacker = m_Attacker.Get(args);
+                float damage = (float)m_Damage.Get(args);
+                string damageType = m_DamageType.Get(args);
+
+                if (target == null || damage <= 0)
+                    return DefaultResult;
+
+                // Get attacker's network ID (for kill attribution)
+                ulong attackerId = 0;
+                if (attacker != null)
+                {
+                    var attackerNetObj = attacker.GetComponent<NetworkObject>();
+                    if (attackerNetObj != null)
+                        attackerId = attackerNetObj.OwnerClientId;
+                }
+
+                var damageable = target.Get<NetworkDamageReceiver>();
+                damageable?.RequestDamageServerRpc(damage, attackerId, damageType);
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Heal (Network)
+        [Title("Heal (Network)")]
+        [Category("Multiplayer/Combat")]
+        public class InstructionNetworkHeal : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetDecimal m_Amount;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                float amount = (float)m_Amount.Get(args);
+
+                if (target == null || amount <= 0)
+                    return DefaultResult;
+
+                var networkStats = target.Get<NetworkGameCreatorStats>();
+                networkStats?.HealServerRpc(amount);
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+  - id: "character-instructions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Character Instructions"
+      explanation: |
+        Character actions respect ownership:
+        - Owner can request movement
+        - Server validates and executes
+        - All clients see result
+
+      code_example: |
+        // Instruction: Teleport Character (Network)
+        [Title("Teleport (Network)")]
+        [Category("Multiplayer/Character")]
+        public class InstructionNetworkTeleport : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetPosition m_Position;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                Vector3 position = m_Position.Get(args);
+
+                if (target == null) return DefaultResult;
+
+                // Only owner or server can teleport
+                var character = target.Get<Character>();
+                if (character != null)
+                {
+                    if (!character.IsNetworkOwner && !NetworkManager.Singleton.IsServer)
+                    {
+                        Debug.LogWarning("Cannot teleport character we don't own");
+                        return DefaultResult;
+                    }
+                }
+
+                var networkCharacter = target.Get<NetworkCharacterAdapter>();
+                if (networkCharacter != null)
+                {
+                    networkCharacter.TeleportServerRpc(position);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Play Animation (Network)
+        [Title("Play Animation (Network)")]
+        [Category("Multiplayer/Character")]
+        public class InstructionNetworkPlayAnimation : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_AnimationName;
+            [SerializeField] private PropertyGetDecimal m_CrossFade = new PropertyGetDecimal(0.2f);
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string animName = m_AnimationName.Get(args);
+                float crossFade = (float)m_CrossFade.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(animName))
+                    return DefaultResult;
+
+                var networkAnimator = target.Get<NetworkAnimatorSync>();
+                if (networkAnimator != null)
+                {
+                    networkAnimator.PlayAnimationServerRpc(animName, crossFade);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+      references:
+        - file: "openspec/.decision-trees/gc-character-sync.yaml"
+
+  - id: "spawn-instructions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Spawn Instructions"
+      explanation: |
+        Only server can spawn NetworkObjects.
+        Instructions request spawn via ServerRpc.
+
+      code_example: |
+        // Instruction: Spawn NPC (Network)
+        [Title("Spawn NPC (Network)")]
+        [Category("Multiplayer/Spawn")]
+        public class InstructionNetworkSpawnNPC : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Prefab;
+            [SerializeField] private PropertyGetPosition m_Position;
+            [SerializeField] private PropertyGetRotation m_Rotation;
+
+            protected override Task Run(Args args)
+            {
+                GameObject prefab = m_Prefab.Get(args);
+                Vector3 position = m_Position.Get(args);
+                Quaternion rotation = m_Rotation.Get(args);
+
+                if (prefab == null) return DefaultResult;
+
+                // Request server to spawn
+                NetworkSpawnManager.Instance?.SpawnNPCServerRpc(
+                    prefab.name, // Server looks up prefab by name
+                    position,
+                    rotation
+                );
+
+                return DefaultResult;
+            }
+        }
+
+        // Instruction: Spawn Effect (Network)
+        [Title("Spawn Effect (Network)")]
+        [Category("Multiplayer/Spawn")]
+        public class InstructionNetworkSpawnEffect : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_EffectPrefab;
+            [SerializeField] private PropertyGetPosition m_Position;
+            [SerializeField] private PropertyGetDecimal m_Duration = new PropertyGetDecimal(3f);
+
+            protected override Task Run(Args args)
+            {
+                GameObject prefab = m_EffectPrefab.Get(args);
+                Vector3 position = m_Position.Get(args);
+                float duration = (float)m_Duration.Get(args);
+
+                if (prefab == null) return DefaultResult;
+
+                // Effects can be spawned client-side for non-gameplay visuals
+                // Or server-side for synchronized effects
+                if (NetworkManager.Singleton.IsServer)
+                {
+                    NetworkSpawnManager.Instance?.SpawnEffectServerRpc(
+                        prefab.name, position, duration
+                    );
+                }
+                else
+                {
+                    // Request server to spawn synchronized effect
+                    NetworkSpawnManager.Instance?.RequestEffectServerRpc(
+                        prefab.name, position, duration
+                    );
+                }
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+  - id: "rpc-instructions"
+    type: "outcome"
+    outcome:
+      recommendation: "Generic RPC Instructions"
+      explanation: |
+        For custom RPCs not covered by specific instructions.
+        Wraps any ServerRpc or ClientRpc call.
+
+      code_example: |
+        // Instruction: Call Custom Server RPC
+        [Title("Call Server RPC")]
+        [Category("Multiplayer/RPC")]
+        public class InstructionCallServerRpc : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_MethodName;
+            [SerializeField] private PropertyGetString m_StringParam;
+            [SerializeField] private PropertyGetDecimal m_FloatParam;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string methodName = m_MethodName.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(methodName))
+                    return DefaultResult;
+
+                // Get network behaviour and invoke RPC by name
+                var networkBehaviour = target.GetComponent<NetworkBehaviour>();
+                if (networkBehaviour == null) return DefaultResult;
+
+                // Build parameters
+                string stringParam = m_StringParam.Get(args);
+                float floatParam = (float)m_FloatParam.Get(args);
+
+                // Use reflection to call RPC (or use a dispatcher pattern)
+                var dispatcher = target.Get<RPCDispatcher>();
+                dispatcher?.InvokeServerRpc(methodName, stringParam, floatParam);
+
+                return DefaultResult;
+            }
+        }
+
+      note: "Consider creating specific instructions instead of generic RPC calls for better type safety"
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+  # ============================================
+  # NETWORK CONDITIONS
+  # ============================================
+  - id: "network-conditions"
+    type: "question"
+    content: "What type of network condition do you need?"
+    help: "Conditions check state and return true/false"
+    options:
+      - label: "Role/Authority conditions"
+        description: "IsServer, IsClient, IsOwner, IsHost"
+        next: "role-conditions"
+
+      - label: "Faction conditions"
+        description: "IsFaction, IsSameFaction, IsEnemyFaction"
+        next: "faction-conditions"
+
+      - label: "Player conditions"
+        description: "IsLocalPlayer, IsPlayerConnected"
+        next: "player-conditions"
+
+      - label: "State conditions"
+        description: "IsSpawned, HasAuthority, IsNetworked"
+        next: "state-conditions"
+
+  - id: "role-conditions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network Role Conditions"
+      explanation: |
+        Check network role for branching logic.
+
+      code_example: |
+        // Condition: Is Server
+        [Title("Is Server")]
+        [Category("Multiplayer/Role")]
+        public class ConditionIsServer : Condition
+        {
+            protected override bool Check(Args args)
+            {
+                return NetworkManager.Singleton != null &&
+                       NetworkManager.Singleton.IsServer;
+            }
+        }
+
+        // Condition: Is Client
+        [Title("Is Client")]
+        [Category("Multiplayer/Role")]
+        public class ConditionIsClient : Condition
+        {
+            protected override bool Check(Args args)
+            {
+                return NetworkManager.Singleton != null &&
+                       NetworkManager.Singleton.IsClient;
+            }
+        }
+
+        // Condition: Is Host
+        [Title("Is Host")]
+        [Category("Multiplayer/Role")]
+        public class ConditionIsHost : Condition
+        {
+            protected override bool Check(Args args)
+            {
+                return NetworkManager.Singleton != null &&
+                       NetworkManager.Singleton.IsHost;
+            }
+        }
+
+        // Condition: Is Owner of Target
+        [Title("Is Owner")]
+        [Category("Multiplayer/Role")]
+        public class ConditionIsOwner : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                if (target == null) return false;
+
+                // Check GameCreator Character ownership
+                var character = target.Get<Character>();
+                if (character != null)
+                    return character.IsNetworkOwner;
+
+                // Check NetworkObject ownership
+                var netObj = target.GetComponent<NetworkObject>();
+                if (netObj != null)
+                    return netObj.IsOwner;
+
+                return false;
+            }
+        }
+
+      respects_constraints: []
+
+  - id: "faction-conditions"
+    type: "outcome"
+    outcome:
+      recommendation: "Faction Check Conditions"
+      explanation: |
+        Check NPC/character faction for branching.
+        Used with perception and interaction triggers.
+
+      code_example: |
+        // Condition: Is Faction
+        [Title("Is Faction")]
+        [Category("Multiplayer/Faction")]
+        [Description("Check if target belongs to specified faction")]
+        public class ConditionIsFaction : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_FactionId;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string factionId = m_FactionId.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(factionId))
+                    return false;
+
+                var factionMember = target.Get<FactionMember>();
+                if (factionMember == null) return false;
+
+                return factionMember.Faction.Id == factionId;
+            }
+        }
+
+        // Condition: Is Same Faction
+        [Title("Is Same Faction")]
+        [Category("Multiplayer/Faction")]
+        public class ConditionIsSameFaction : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_TargetA;
+            [SerializeField] private PropertyGetGameObject m_TargetB;
+
+            protected override bool Check(Args args)
+            {
+                GameObject a = m_TargetA.Get(args);
+                GameObject b = m_TargetB.Get(args);
+
+                if (a == null || b == null) return false;
+
+                var factionA = a.Get<FactionMember>();
+                var factionB = b.Get<FactionMember>();
+
+                if (factionA == null || factionB == null) return false;
+
+                return factionA.Faction.Id == factionB.Faction.Id;
+            }
+        }
+
+        // Condition: Is Enemy Faction
+        [Title("Is Enemy Faction")]
+        [Category("Multiplayer/Faction")]
+        public class ConditionIsEnemyFaction : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetGameObject m_RelativeTo;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                GameObject relativeTo = m_RelativeTo.Get(args);
+
+                if (target == null || relativeTo == null) return false;
+
+                var targetFaction = target.Get<FactionMember>();
+                var relativeFaction = relativeTo.Get<FactionMember>();
+
+                if (targetFaction == null || relativeFaction == null) return false;
+
+                // Check faction relationship (assumes FactionManager exists)
+                return FactionManager.Instance.AreEnemies(
+                    targetFaction.Faction,
+                    relativeFaction.Faction
+                );
+            }
+        }
+
+      respects_constraints: []
+
+  - id: "player-conditions"
+    type: "outcome"
+    outcome:
+      recommendation: "Player Check Conditions"
+      explanation: |
+        Check if target is local player or specific player.
+
+      code_example: |
+        // Condition: Is Local Player
+        [Title("Is Local Player")]
+        [Category("Multiplayer/Player")]
+        public class ConditionIsLocalPlayer : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                if (target == null) return false;
+
+                // Check via Character
+                var character = target.Get<Character>();
+                if (character != null)
+                    return character.IsNetworkOwner;
+
+                // Check via NetworkObject
+                var netObj = target.GetComponent<NetworkObject>();
+                if (netObj != null)
+                    return netObj.IsLocalPlayer;
+
+                return false;
+            }
+        }
+
+        // Condition: Is Player Connected
+        [Title("Is Player Connected")]
+        [Category("Multiplayer/Player")]
+        public class ConditionIsPlayerConnected : Condition
+        {
+            [SerializeField] private PropertyGetInteger m_ClientId;
+
+            protected override bool Check(Args args)
+            {
+                int clientId = m_ClientId.Get(args);
+
+                if (NetworkManager.Singleton == null) return false;
+
+                return NetworkManager.Singleton.ConnectedClients.ContainsKey((ulong)clientId);
+            }
+        }
+
+      respects_constraints: []
+
+  - id: "state-conditions"
+    type: "outcome"
+    outcome:
+      recommendation: "Network State Conditions"
+      explanation: |
+        Check network state of objects.
+
+      code_example: |
+        // Condition: Is Network Spawned
+        [Title("Is Network Spawned")]
+        [Category("Multiplayer/State")]
+        public class ConditionIsNetworkSpawned : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                if (target == null) return false;
+
+                var netObj = target.GetComponent<NetworkObject>();
+                return netObj != null && netObj.IsSpawned;
+            }
+        }
+
+        // Condition: Is Character Network Spawned
+        [Title("Is Character Networked")]
+        [Category("Multiplayer/State")]
+        public class ConditionIsCharacterNetworked : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                if (target == null) return false;
+
+                var character = target.Get<Character>();
+                return character != null && character.IsNetworkSpawned;
+            }
+        }
+
+        // Condition: Has Network Authority
+        [Title("Has Network Authority")]
+        [Category("Multiplayer/State")]
+        public class ConditionHasNetworkAuthority : Condition
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+
+            protected override bool Check(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                if (target == null) return false;
+
+                var netObj = target.GetComponent<NetworkObject>();
+                if (netObj == null) return false;
+
+                // Owner or server has authority
+                return netObj.IsOwner || NetworkManager.Singleton.IsServer;
+            }
+        }
+
+      respects_constraints: []
+
+  # ============================================
+  # NETWORK VARIABLES
+  # ============================================
+  - id: "network-variables"
+    type: "outcome"
+    outcome:
+      recommendation: "GameCreator Variable Network Sync Pattern"
+      explanation: |
+        Sync GameCreator Local Variables across network:
+        1. Use NetworkVariablesSync component
+        2. Configure which variables to sync
+        3. Server owns variable values
+        4. Changes propagate to all clients
+
+        Visual Script Access:
+        - Get/Set Local Variable instructions work normally
+        - Changes auto-sync if configured
+
+      code_example: |
+        // Component: Network Variables Sync
+        public class NetworkVariablesSync : NetworkBehaviour
+        {
+            [SerializeField] private string[] m_SyncedVariables;
+            [SerializeField] private SyncMode m_SyncMode = SyncMode.Everyone;
+
+            public enum SyncMode { Everyone, OwnerOnly, ServerOnly }
+
+            private LocalVariables m_LocalVariables;
+            private Dictionary<string, NetworkVariable<float>> m_NetworkFloats = new();
+            private Dictionary<string, NetworkVariable<int>> m_NetworkInts = new();
+            private Dictionary<string, NetworkVariable<bool>> m_NetworkBools = new();
+
+            void Awake()
+            {
+                m_LocalVariables = GetComponent<LocalVariables>();
+                InitializeNetworkVariables();
+            }
+
+            private void InitializeNetworkVariables()
+            {
+                foreach (var varName in m_SyncedVariables)
+                {
+                    var variable = m_LocalVariables.Get(varName);
+                    if (variable == null) continue;
+
+                    // Create appropriate NetworkVariable based on type
+                    switch (variable.Type)
+                    {
+                        case VariableType.Float:
+                            m_NetworkFloats[varName] = new NetworkVariable<float>(
+                                (float)variable.Value,
+                                GetReadPerm(),
+                                NetworkVariableWritePermission.Server
+                            );
+                            m_NetworkFloats[varName].OnValueChanged += (old, @new) =>
+                                OnNetworkVariableChanged(varName, @new);
+                            break;
+                        // ... similar for int, bool, etc.
+                    }
+                }
+            }
+
+            // Called when local script changes variable
+            public void OnLocalVariableChanged(string varName, object value)
+            {
+                if (!IsServer) return; // Only server can change
+
+                if (m_NetworkFloats.TryGetValue(varName, out var netFloat))
+                {
+                    netFloat.Value = (float)value;
+                }
+                // ... similar for other types
+            }
+
+            // Called when network variable changes
+            private void OnNetworkVariableChanged(string varName, object newValue)
+            {
+                // Update local GameCreator variable
+                m_LocalVariables.Set(varName, newValue);
+            }
+        }
+
+        // Instruction: Set Local Variable (Network)
+        [Title("Set Variable (Network)")]
+        [Category("Multiplayer/Variables")]
+        public class InstructionNetworkSetVariable : Instruction
+        {
+            [SerializeField] private PropertyGetGameObject m_Target;
+            [SerializeField] private PropertyGetString m_VariableName;
+            [SerializeField] private PropertyGetDecimal m_Value;
+
+            protected override Task Run(Args args)
+            {
+                GameObject target = m_Target.Get(args);
+                string varName = m_VariableName.Get(args);
+                float value = (float)m_Value.Get(args);
+
+                if (target == null || string.IsNullOrEmpty(varName))
+                    return DefaultResult;
+
+                var networkVars = target.Get<NetworkVariablesSync>();
+                if (networkVars != null)
+                {
+                    networkVars.SetVariableServerRpc(varName, value);
+                }
+                else
+                {
+                    // Fallback to local only
+                    var localVars = target.Get<LocalVariables>();
+                    localVars?.Set(varName, value);
+                }
+
+                return DefaultResult;
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+      references:
+        - file: "openspec/specs/network-synchronization/spec.md"
+          section: "GameCreator Variable Sync"
+
+  # ============================================
+  # COMPLETE SETUP
+  # ============================================
+  - id: "complete-vs-setup"
+    type: "outcome"
+    outcome:
+      recommendation: "Complete Visual Scripting Multiplayer Setup"
+      explanation: |
+        Full visual scripting multiplayer setup:
+
+        1. TRIGGERS (Events):
+           - Fire on owner client
+           - Use conditions to filter
+           - Pass context via Args
+
+        2. INSTRUCTIONS (Actions):
+           - Send to server via ServerRpc
+           - Server validates and executes
+           - Return DefaultResult synchronously
+
+        3. CONDITIONS (Checks):
+           - Return bool immediately
+           - Check network state
+           - Use for branching
+
+        4. VARIABLES:
+           - Sync via NetworkVariablesSync
+           - Server owns values
+           - Auto-propagate to clients
+
+        Example Complete Flow:
+        ```
+        Trigger: On NPC Interact (Network)
+          └─ Condition: Is Faction "Orcs"
+              └─ Condition: Is Local Player (interactor)
+                  └─ Instruction: Add to Inventory (Network)
+                      Target: LocalPlayer
+                      Item: Gold
+                      Amount: 35
+        ```
+
+      code_example: |
+        // Example: Complete NPC Reward System
+
+        // 1. Create the trigger
+        [Title("On NPC Interact")]
+        [Category("Multiplayer/NPC")]
+        public class TriggerOnNPCInteract : Trigger
+        {
+            // ... (see npc-interaction-events)
+        }
+
+        // 2. Create faction condition
+        [Title("Is Faction")]
+        [Category("Multiplayer/Faction")]
+        public class ConditionIsFaction : Condition
+        {
+            // ... (see faction-conditions)
+        }
+
+        // 3. Create reward instruction
+        [Title("Add to Inventory (Network)")]
+        [Category("Multiplayer/Inventory")]
+        public class InstructionNetworkAddItem : Instruction
+        {
+            // ... (see inventory-instructions)
+        }
+
+        // Visual Script (configured in Unity Editor):
+        // 1. Add TriggerOnNPCInteract to NPC
+        // 2. Set faction filter to "Orcs"
+        // 3. Add ConditionIsFaction check
+        // 4. Add InstructionNetworkAddItem
+        //    - Target: Invoker (the player)
+        //    - Item: Gold Coin
+        //    - Amount: 35
+
+      namespace_example: |
+        using GameCreator.Runtime.Common;
+        using GameCreator.Runtime.Characters;
+        using GameCreator.Runtime.VisualScripting;
+        using GameCreator.Runtime.Inventory;
+        using Unity.Netcode;
+        using System.Threading.Tasks;
+        using UnityEngine;
+
+        namespace GameCreator.Multiplayer.Runtime.VisualScripting
+        {
+            // Your Instructions, Conditions, and Triggers here
+        }
+
+      checklist:
+        - "All Instructions use Task Run(Args args) signature"
+        - "All Conditions use bool Check(Args args) signature"
+        - "Network actions send via ServerRpc"
+        - "Triggers fire on owner client only"
+        - "Faction/role checks use Conditions"
+        - "Variables sync via NetworkVariablesSync"
+
+      respects_constraints: ["server-authoritative", "rpc-naming", "task-signature"]
+
+      related_trees:
+        - "gc-character-sync"
+        - "gc-inventory-sync"
+        - "gc-stats-sync"
+        - "gc-shooter-sync"
+        - "host-client-architecture"

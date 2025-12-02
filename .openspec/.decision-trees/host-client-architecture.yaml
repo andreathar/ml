@@ -1,0 +1,636 @@
+# Decision Tree: Host/Client Network Architecture
+# KB-Enhanced guidance for choosing and implementing network topology
+# Version: 2.0.0 | Schema: 2.0.0
+
+id: "host-client-architecture"
+title: "Host/Client Network Architecture"
+description: "Guide for choosing between Host (listen server), Dedicated Server, and Distributed Authority patterns for your multiplayer game"
+category: "networking"
+difficulty: "advanced"
+estimated_time: 15
+
+kb_config:
+  endpoint: "http://localhost:6333"
+  collection: "unity_project_kb"
+  pre_search:
+    - "NetworkManager"
+    - "IsServer"
+    - "IsHost"
+    - "IsClient"
+
+enforced_constraints:
+  - "server-authoritative"
+  - "no-network-transform"
+  - "invasive-integration"
+
+start_node: "architecture-entry"
+
+nodes:
+  # ============================================
+  # ENTRY
+  # ============================================
+  - id: "architecture-entry"
+    type: "question"
+    content: "What type of multiplayer experience are you building?"
+    help: "This determines the fundamental network architecture"
+    options:
+      - label: "Competitive (PvP, ranked, eSports)"
+        description: "Cheating prevention is critical"
+        next: "competitive-requirements"
+
+      - label: "Cooperative (PvE, co-op campaign)"
+        description: "Players work together, trust is higher"
+        next: "cooperative-requirements"
+
+      - label: "Casual/Social (sandbox, creative)"
+        description: "Fun over competition, relaxed rules"
+        next: "casual-requirements"
+
+      - label: "Hybrid (PvE with PvP elements)"
+        description: "Mix of cooperative and competitive"
+        next: "hybrid-requirements"
+
+  # ============================================
+  # COMPETITIVE PATH
+  # ============================================
+  - id: "competitive-requirements"
+    type: "outcome"
+    outcome:
+      recommendation: "Dedicated Server Architecture (REQUIRED)"
+      explanation: |
+        For competitive games, you MUST use a dedicated server:
+
+        Why Dedicated Server:
+        1. No player has server advantage (host advantage)
+        2. Server can't be manipulated by players
+        3. Anti-cheat can run server-side
+        4. Fair ping for all players
+        5. Required for ranked/eSports
+
+        Architecture:
+        - Separate server process (no player on server)
+        - All game logic runs on server
+        - Clients send inputs, receive state
+        - Server validates everything
+
+      architecture:
+        pattern: "Dedicated Server"
+        is_server: "Headless Unity build or cloud server"
+        is_client: "All players are clients"
+        authority: "Server has 100% authority"
+
+      code_example: |
+        // Server startup (headless build)
+        public class DedicatedServerBootstrap : MonoBehaviour
+        {
+            void Start()
+            {
+                // Check if running as server
+                if (Application.isBatchMode || IsServerBuild())
+                {
+                    StartDedicatedServer();
+                }
+            }
+
+            void StartDedicatedServer()
+            {
+                // Configure for headless operation
+                Application.targetFrameRate = 60;
+                QualitySettings.vSyncCount = 0;
+
+                // Start as server only (not host)
+                NetworkManager.Singleton.StartServer();
+
+                Debug.Log("Dedicated server started");
+            }
+        }
+
+        // Client connection
+        public class ClientConnector : MonoBehaviour
+        {
+            public void ConnectToServer(string ipAddress, ushort port)
+            {
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                transport.SetConnectionData(ipAddress, port);
+
+                NetworkManager.Singleton.StartClient();
+            }
+        }
+
+      hosting_options:
+        - "Unity Game Server Hosting (Multiplay)"
+        - "AWS GameLift"
+        - "Azure PlayFab"
+        - "Self-hosted dedicated servers"
+
+      respects_constraints: ["server-authoritative"]
+
+      references:
+        - file: "openspec/specs/network-synchronization/spec.md"
+        - file: ".serena/memories/CRITICAL/003_multiplayer_rpc_patterns.md"
+
+      related_trees: ["gc-shooter-sync", "gc-stats-sync"]
+
+  # ============================================
+  # COOPERATIVE PATH
+  # ============================================
+  - id: "cooperative-requirements"
+    type: "question"
+    content: "How many players do you need to support?"
+    options:
+      - label: "Small groups (2-4 players)"
+        description: "Friends playing together"
+        next: "small-coop"
+
+      - label: "Medium groups (5-16 players)"
+        description: "Raid groups, larger parties"
+        next: "medium-coop"
+
+      - label: "Large scale (16+ players)"
+        description: "MMO-style, many concurrent players"
+        next: "large-scale"
+
+  - id: "small-coop"
+    type: "outcome"
+    outcome:
+      recommendation: "Host (Listen Server) Architecture"
+      explanation: |
+        For small co-op groups, Host architecture is ideal:
+
+        Benefits:
+        - No dedicated server cost
+        - Easy to set up (one player hosts)
+        - Good for friend groups
+        - Lower infrastructure complexity
+
+        Trade-offs:
+        - Host has latency advantage
+        - Game ends if host leaves (unless host migration)
+        - Host's machine runs server + client
+
+      architecture:
+        pattern: "Host (Listen Server)"
+        is_server: "Host player's machine"
+        is_client: "Host is also a client"
+        authority: "Host has authority, but plays fairly"
+
+      code_example: |
+        // Host starts game
+        public class HostManager : MonoBehaviour
+        {
+            public void HostGame()
+            {
+                // Start as host (server + client)
+                NetworkManager.Singleton.StartHost();
+                Debug.Log("Hosting game as server + client");
+            }
+
+            public void JoinGame(string hostIp, ushort port)
+            {
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                transport.SetConnectionData(hostIp, port);
+
+                // Start as client only
+                NetworkManager.Singleton.StartClient();
+            }
+        }
+
+        // In NetworkBehaviour, check roles
+        public class GameLogic : NetworkBehaviour
+        {
+            void Update()
+            {
+                if (IsHost)
+                {
+                    // This player is both server and client
+                    // They run server logic AND play the game
+                }
+                else if (IsServer && !IsClient)
+                {
+                    // Dedicated server (no local player)
+                }
+                else if (IsClient && !IsServer)
+                {
+                    // Pure client (connected to host)
+                }
+            }
+        }
+
+      host_migration:
+        supported: "Possible but complex"
+        recommendation: "Implement if game sessions are long"
+
+      respects_constraints: ["server-authoritative", "invasive-integration"]
+
+      references:
+        - file: ".serena/memories/CRITICAL/001_gamecreator_invasive_integration.md"
+
+  - id: "medium-coop"
+    type: "outcome"
+    outcome:
+      recommendation: "Host Architecture with Relay Service"
+      explanation: |
+        For medium groups (5-16 players):
+
+        Use Unity Relay to handle NAT traversal and improve host stability.
+
+        Architecture:
+        - One player hosts (listen server)
+        - Unity Relay handles connections
+        - No port forwarding needed
+        - Better connection reliability
+
+      code_example: |
+        // Host with Relay
+        public class RelayHostManager : MonoBehaviour
+        {
+            public async Task HostWithRelay(int maxPlayers)
+            {
+                // Allocate relay server
+                Allocation allocation = await RelayService.Instance.CreateAllocationAsync(maxPlayers);
+
+                // Get join code to share
+                string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+                Debug.Log($"Share this code: {joinCode}");
+
+                // Configure transport with relay
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                transport.SetRelayServerData(
+                    allocation.RelayServer.IpV4,
+                    (ushort)allocation.RelayServer.Port,
+                    allocation.AllocationIdBytes,
+                    allocation.Key,
+                    allocation.ConnectionData
+                );
+
+                NetworkManager.Singleton.StartHost();
+            }
+
+            public async Task JoinWithRelay(string joinCode)
+            {
+                // Join using code
+                JoinAllocation allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+                var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                transport.SetRelayServerData(
+                    allocation.RelayServer.IpV4,
+                    (ushort)allocation.RelayServer.Port,
+                    allocation.AllocationIdBytes,
+                    allocation.Key,
+                    allocation.ConnectionData,
+                    allocation.HostConnectionData
+                );
+
+                NetworkManager.Singleton.StartClient();
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  - id: "large-scale"
+    type: "outcome"
+    outcome:
+      recommendation: "Dedicated Server Architecture"
+      explanation: |
+        For large scale (16+ players), you need dedicated servers:
+
+        Reasons:
+        - Host machine can't handle 16+ clients
+        - Need professional hosting infrastructure
+        - Scalability requirements
+        - Reliability requirements
+
+        See competitive-requirements for dedicated server setup.
+
+      see_also: "competitive-requirements"
+
+  # ============================================
+  # CASUAL PATH
+  # ============================================
+  - id: "casual-requirements"
+    type: "question"
+    content: "Do you need persistent state (saves, progress)?"
+    options:
+      - label: "Yes, players have persistent progress"
+        description: "Saves, unlocks, persistent world"
+        next: "casual-with-persistence"
+
+      - label: "No, each session is independent"
+        description: "Drop-in/drop-out, no saves"
+        next: "casual-no-persistence"
+
+  - id: "casual-with-persistence"
+    type: "outcome"
+    outcome:
+      recommendation: "Host Architecture + Supabase Persistence"
+      explanation: |
+        For casual games with persistence:
+
+        Architecture:
+        - Host (listen server) for real-time gameplay
+        - Supabase for persistent storage
+        - Player progress saved to database
+        - World state optionally persisted
+
+      code_example: |
+        public class PersistentCasualGame : NetworkBehaviour
+        {
+            public override async void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                if (IsServer)
+                {
+                    // Load player data from Supabase
+                    var playerData = await SupabaseManager.Instance.LoadPlayerData(OwnerClientId);
+                    if (playerData != null)
+                    {
+                        RestorePlayerState(playerData);
+                    }
+                }
+            }
+
+            public override void OnNetworkDespawn()
+            {
+                base.OnNetworkDespawn();
+
+                if (IsServer)
+                {
+                    // Save player data to Supabase
+                    _ = SupabaseManager.Instance.SavePlayerData(OwnerClientId, GetPlayerState());
+                }
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+      related_trees: ["gc-inventory-sync", "gc-stats-sync"]
+
+  - id: "casual-no-persistence"
+    type: "question"
+    content: "Do you want to try Distributed Authority (experimental)?"
+    help: "Netcode 2.0+ feature - no dedicated server needed"
+    options:
+      - label: "Yes, try Distributed Authority"
+        description: "Experimental, peer-to-peer style"
+        next: "distributed-authority"
+
+      - label: "No, stick with Host architecture"
+        description: "Traditional, well-tested approach"
+        next: "small-coop"
+
+  - id: "distributed-authority"
+    type: "outcome"
+    outcome:
+      recommendation: "Distributed Authority (Experimental)"
+      explanation: |
+        Distributed Authority is a Netcode 2.0+ experimental feature:
+
+        How it works:
+        - No dedicated server or host
+        - Each client owns their own objects
+        - Ownership can transfer dynamically
+        - Built-in interest management
+
+        Cautions:
+        - Still experimental
+        - No anti-cheat (trust all clients)
+        - Complex ownership scenarios
+        - Not for competitive games
+
+      code_example: |
+        // Enable Distributed Authority
+        public class DistributedAuthoritySetup : MonoBehaviour
+        {
+            void Start()
+            {
+                // Enable in NetworkManager config
+                var config = NetworkManager.Singleton.NetworkConfig;
+                config.NetworkTopology = NetworkTopologyTypes.DistributedAuthority;
+
+                // Start as client (no server needed!)
+                NetworkManager.Singleton.StartClient();
+            }
+        }
+
+        // Objects spawn with client ownership
+        public class PlayerSpawner : MonoBehaviour
+        {
+            public void SpawnMyPlayer()
+            {
+                var player = Instantiate(playerPrefab);
+                var netObj = player.GetComponent<NetworkObject>();
+
+                // Spawn with local ownership
+                netObj.SpawnWithOwnership(NetworkManager.Singleton.LocalClientId);
+            }
+        }
+
+      best_for:
+        - "Casual sandbox games"
+        - "Creative multiplayer"
+        - "Prototypes"
+        - "Non-competitive experiences"
+
+      avoid_for:
+        - "Competitive games"
+        - "Games with economy"
+        - "Production games (until stable)"
+
+      respects_constraints: []
+
+      references:
+        - file: "openspec/.decision-trees/state-management.yaml"
+          section: "distributed-authority"
+
+  # ============================================
+  # HYBRID PATH
+  # ============================================
+  - id: "hybrid-requirements"
+    type: "outcome"
+    outcome:
+      recommendation: "Dedicated Server with PvE Instances"
+      explanation: |
+        For hybrid PvE/PvP games:
+
+        Architecture:
+        - Dedicated server for PvP zones/matches
+        - Can use host for private PvE instances
+        - Or dedicated servers for everything (safer)
+
+        Decision factors:
+        - If PvP affects progression → Dedicated everywhere
+        - If PvP is optional side content → Host for PvE OK
+        - If economy involved → Dedicated everywhere
+
+      code_example: |
+        public class HybridGameManager : MonoBehaviour
+        {
+            public async void EnterPvPZone()
+            {
+                // Always use dedicated server for PvP
+                await ConnectToMatchmakingServer();
+            }
+
+            public void HostPrivatePvESession()
+            {
+                // Can use host for private PvE
+                NetworkManager.Singleton.StartHost();
+            }
+
+            public void EnterPublicPvEWorld()
+            {
+                // Public areas should use dedicated for fairness
+                await ConnectToDedicatedServer("pve-world-1");
+            }
+        }
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # COMMON PATTERNS
+  # ============================================
+  - id: "late-join-handling"
+    type: "outcome"
+    outcome:
+      recommendation: "Late-Join State Synchronization Pattern"
+      explanation: |
+        When players join mid-session, they need full state sync:
+
+        1. NetworkObjects auto-sync via Netcode
+        2. NetworkVariables send current values
+        3. Custom state needs manual sync
+        4. Use OnNetworkSpawn for initialization
+
+      code_example: |
+        public class LateJoinSync : NetworkBehaviour
+        {
+            private NetworkVariable<GameState> m_GameState = new();
+
+            public override void OnNetworkSpawn()
+            {
+                base.OnNetworkSpawn();
+
+                if (IsClient && !IsServer)
+                {
+                    // Client joined - request full state
+                    RequestFullStateServerRpc();
+                }
+            }
+
+            [ServerRpc(RequireOwnership = false)]
+            private void RequestFullStateServerRpc(ServerRpcParams rpcParams = default)
+            {
+                ulong clientId = rpcParams.Receive.SenderClientId;
+
+                // Send custom state to this client
+                SendFullStateClientRpc(GetFullGameState(),
+                    GetTargetRpcParams(clientId));
+            }
+
+            [ClientRpc]
+            private void SendFullStateClientRpc(FullGameState state, ClientRpcParams rpcParams = default)
+            {
+                // Apply full state on joining client
+                ApplyFullState(state);
+            }
+        }
+
+      respects_constraints: ["server-authoritative", "rpc-naming"]
+
+  - id: "host-migration"
+    type: "outcome"
+    outcome:
+      recommendation: "Host Migration Pattern (Complex)"
+      explanation: |
+        When host leaves, migrate to new host:
+
+        Steps:
+        1. Detect host disconnect
+        2. Elect new host (lowest latency or predetermined)
+        3. New host starts as server
+        4. Other clients reconnect to new host
+        5. State transfers to new host
+
+        Warning: Complex to implement correctly!
+
+      code_example: |
+        public class HostMigrationManager : MonoBehaviour
+        {
+            private List<ulong> m_ClientPriority = new(); // Ordered by migration priority
+
+            void Start()
+            {
+                NetworkManager.Singleton.OnServerStopped += OnServerStopped;
+            }
+
+            private void OnServerStopped(bool wasHost)
+            {
+                if (!wasHost) return; // We weren't the host
+
+                // Host left - we need to migrate
+                ulong newHostId = DetermineNewHost();
+
+                if (newHostId == NetworkManager.Singleton.LocalClientId)
+                {
+                    // We are the new host
+                    BecomeNewHost();
+                }
+                else
+                {
+                    // Wait for new host to be ready, then reconnect
+                    StartCoroutine(WaitAndReconnect(newHostId));
+                }
+            }
+
+            private void BecomeNewHost()
+            {
+                // Start as new host
+                NetworkManager.Singleton.StartHost();
+
+                // Restore game state
+                RestoreGameState();
+
+                // Accept reconnections
+                NetworkManager.Singleton.ConnectionApprovalCallback = ApproveReconnection;
+            }
+        }
+
+      complexity: "Very High"
+      alternative: "Use dedicated servers to avoid this complexity"
+
+      respects_constraints: ["server-authoritative"]
+
+  # ============================================
+  # DECISION SUMMARY
+  # ============================================
+  - id: "architecture-summary"
+    type: "outcome"
+    outcome:
+      recommendation: "Architecture Decision Summary"
+      explanation: |
+        Quick reference for architecture choice:
+
+        | Game Type | Recommended | Why |
+        |-----------|-------------|-----|
+        | Competitive PvP | Dedicated Server | Anti-cheat, fairness |
+        | Small Co-op (2-4) | Host | Simple, free |
+        | Medium Co-op (5-16) | Host + Relay | NAT traversal |
+        | Large Scale (16+) | Dedicated | Performance |
+        | Casual with Saves | Host + Supabase | Persistence |
+        | Casual, No Saves | Host or DA | Simplicity |
+        | Hybrid PvE/PvP | Dedicated | Security |
+
+        MLcreator Project Default:
+        - Use Host architecture for development
+        - Consider dedicated servers for production
+        - Always maintain server authority patterns
+
+      project_default:
+        development: "Host (StartHost())"
+        production: "Evaluate based on game type"
+        authority: "Always server-authoritative"
+
+      respects_constraints: ["server-authoritative", "invasive-integration", "no-network-transform"]
+
+      related_trees: ["gc-character-sync", "gc-inventory-sync", "gc-stats-sync", "gc-shooter-sync"]

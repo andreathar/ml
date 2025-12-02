@@ -42,3 +42,14 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Virtual environment
+.venv/
+env/
+
+# Package files
+*.zip
+/Packages/
+
+# AI
+.claude/
