@@ -1,0 +1,44 @@
+# Logs
+Logs/
+log*.txt
+
+# Temp files
+Temp/
+obj/
+bin/
+
+# Library
+Library/
+
+# User Settings
+UserSettings/
+
+# Build results
+Build/
+Builds/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.csproj
+*.sln
+*.unityproj
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor temp files
+*.swp
+*.swo
+*~
+
+# IDE specific files
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python cache (if using Python tools)
+__pycache__/
+*.py[cod]
+*$py.class
