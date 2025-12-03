@@ -17,5 +17,19 @@
         "--client-transport=stdio"
       ]
     }
+    ,
+    "serena-mcp": {
+      "type": "stdio",
+      "command": "D:/UnityWorkspaces/ml/.venv/Scripts/python.exe",
+      "args": [
+        "-m", "uvx",
+        "--from", "git+https://github.com/oraios/serena",
+        "serena", "start-mcp-server"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "cwd": "D:/UnityWorkspaces/ml"
+    }
   }
 }

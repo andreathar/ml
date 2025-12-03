@@ -3668,9 +3668,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6780603008925302200}
-  - component: {fileID: 2664185161582372163}
+  - component: {fileID: 3932898596355802267}
   - component: {fileID: 1420291136657417544}
   - component: {fileID: 3793564438786958296}
+  - component: {fileID: -3973143642862724343}
   m_Layer: 0
   m_Name: Player_Network
   m_TagString: Untagged
@@ -3696,7 +3697,7 @@ Transform:
   - {fileID: 3311754220607275677}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2664185161582372163
+--- !u!114 &3932898596355802267
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3705,95 +3706,46 @@ MonoBehaviour:
   m_GameObject: {fileID: 8230587750230797869}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 48e4aa7a58d404413af1c9111cdcd3f1, type: 3}
+  m_Script: {fileID: 11500000, guid: 53e0eee68ea66cd4db57108153c41e2c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: GameCreator.Netcode.Runtime::GameCreator.Netcode.Runtime.NetworkCharacter
   m_IsPlayer: 1
   m_Time:
     m_UpdateTime: 0
   m_Kernel:
-    rid: 5243232769837892264
+    rid: 1083509421220299068
   m_InverseKinematics:
     m_RigLayers:
-      m_Rigs:
-      - rid: 5243232769837892265
-      - rid: 5243232769837892266
-      - rid: 5243232769837892267
+      m_Rigs: []
   m_Footsteps:
     m_Feet:
-    - rid: 5243232769837892268
-    - rid: 5243232769837892269
+    - rid: 1083509421220299069
+    - rid: 1083509421220299070
     m_FootstepSounds:
-      m_SoundsAsset: {fileID: 11400000, guid: 8f22790c8b04e44378551f6e60b19fa3, type: 2}
+      m_SoundsAsset: {fileID: 0}
     m_FootstepDetector:
-      rid: 5238883852773752888
+      rid: 1083509421220299071
   m_Ragdoll:
     m_Ragdoll:
-      rid: 5243232769837892280
+      rid: 1083509421220299072
+  m_IsNetworkSpawned: 0
   references:
     version: 2
     RefIds:
-    - rid: 5238883852773752888
-      type: {class: FootstepDetectorFulcrum, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_Fulcrum: -0.85
-    - rid: 5243232769837892264
+    - rid: 1083509421220299068
       type: {class: CharacterKernel, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Player:
-          rid: 5243232769837892271
+          rid: 1083509421220299073
         m_Motion:
-          rid: 5243232769837892272
+          rid: 1083509421220299074
         m_Driver:
-          rid: 5243232769837892273
+          rid: 1083509421220299075
         m_Facing:
-          rid: 5243232769837892274
+          rid: 1083509421220299076
         m_Animim:
-          rid: 5243232769837892275
-    - rid: 5243232769837892265
-      type: {class: RigLookTo, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_TrackSpeed: 270
-        m_MaxAngle: 120
-        m_Sections:
-        - m_Bone: 8
-          m_Euler: {x: 0, y: 0, z: 0}
-          m_Weight: 1
-        - m_Bone: 9
-          m_Euler: {x: 0, y: 0, z: 0}
-          m_Weight: 3
-        - m_Bone: 10
-          m_Euler: {x: 0, y: 0, z: 0}
-          m_Weight: 3
-    - rid: 5243232769837892266
-      type: {class: RigFeetPlant, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_FootOffset: 0
-        m_FootMask:
-          serializedVersion: 2
-          m_Bits: 4294967295
-        m_SmoothTime: 0.25
-    - rid: 5243232769837892267
-      type: {class: RigLean, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_InclineSpine: 5
-        m_InclineLowerChest: 10
-        m_InclineUpperChest: 5
-        m_DeclineSpine: -10
-        m_DeclineLowerChest: -5
-        m_DeclineUpperChest: 5
-        m_RollSpine: 5
-        m_RollLowerChest: 5
-        m_RollUpperChest: 10
-    - rid: 5243232769837892268
+          rid: 1083509421220299077
+    - rid: 1083509421220299069
       type: {class: Footstep, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Breakpoint: 0
@@ -3802,7 +3754,7 @@ MonoBehaviour:
           m_Type: 1
           m_Human: 5
           m_Path: 
-    - rid: 5243232769837892269
+    - rid: 1083509421220299070
       type: {class: Footstep, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Breakpoint: 0
@@ -3811,21 +3763,29 @@ MonoBehaviour:
           m_Type: 1
           m_Human: 6
           m_Path: 
-    - rid: 5243232769837892271
+    - rid: 1083509421220299071
+      type: {class: FootstepDetectorAnimationCurves, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+    - rid: 1083509421220299072
+      type: {class: RagdollNone, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
+      data: 
+    - rid: 1083509421220299073
       type: {class: UnitPlayerDirectional, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_IsControllable: 1
         m_InputMove:
           m_Input:
-            rid: 5243232769837892276
-    - rid: 5243232769837892272
+            rid: 1083509421220299078
+    - rid: 1083509421220299074
       type: {class: UnitMotionController, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Interaction:
           m_Radius: 2
           m_Focus:
             m_InteractionMode:
-              rid: 5243232769837892277
+              rid: 1083509421220299079
         m_Speed: 4
         m_Rotation:
           m_IsEnabled: 1
@@ -3842,14 +3802,14 @@ MonoBehaviour:
           m_Deceleration: 4
         m_Jump:
           m_CanJump: 1
-          m_AirJumps: 1
+          m_AirJumps: 0
           m_JumpForce: 5
-          m_JumpCooldown: 0.1
+          m_JumpCooldown: 0.5
         m_Dash:
           m_InSuccession: 0
           m_DashInAir: 0
           m_Cooldown: 1
-    - rid: 5243232769837892273
+    - rid: 1083509421220299075
       type: {class: UnitDriverController, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_SkinWidth: 0.08
@@ -3858,46 +3818,38 @@ MonoBehaviour:
         m_StepHeight: 0.3
         m_Axonometry:
           m_Axonometry:
-            rid: 5243232769837892278
-    - rid: 5243232769837892274
+            rid: 1083509421220299080
+    - rid: 1083509421220299076
       type: {class: UnitFacingPivot, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_DirectionFrom: 0
         m_Axonometry:
           m_Axonometry:
-            rid: 5243232769837892279
-    - rid: 5243232769837892275
+            rid: 1083509421220299081
+    - rid: 1083509421220299077
       type: {class: UnitAnimimKinematic, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Position: {x: 0, y: 0, z: 0}
         m_Rotation: {x: 0, y: 0, z: 0}
         m_Scale: {x: 1, y: 1, z: 1}
         m_SmoothTime: 0.5
-        m_Mannequin: {fileID: 5175400815595345358}
-        m_Animator: {fileID: 5513080447165554280}
-        m_StartState: {fileID: 11400000, guid: dbd6d6c3d984c4a279cbf4bc5404fd16, type: 2}
+        m_Mannequin: {fileID: 0}
+        m_Animator: {fileID: 0}
+        m_StartState: {fileID: 0}
         m_Reaction: {fileID: 0}
-    - rid: 5243232769837892276
+    - rid: 1083509421220299078
       type: {class: InputValueVector2MotionPrimary, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data: 
-    - rid: 5243232769837892277
+    - rid: 1083509421220299079
       type: {class: InteractionModeNearCharacter, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Offset: {x: 0, y: 0, z: 1}
-    - rid: 5243232769837892278
+    - rid: 1083509421220299080
       type: {class: AxonometryNone, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data: 
-    - rid: 5243232769837892279
+    - rid: 1083509421220299081
       type: {class: AxonometryNone, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data: 
-    - rid: 5243232769837892280
-      type: {class: RagdollDefault, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
-      data:
-        m_BoneRack:
-          m_Skeleton: {fileID: 11400000, guid: 5809449d43408435db32108bd69aa82c, type: 2}
-        m_TransitionDuration: 0.2
-        m_RecoverFaceDown: {fileID: 7400000, guid: 2c2d14e293e6f4e41a81ca7f99e84058, type: 2}
-        m_RecoverFaceUp: {fileID: 7400000, guid: 194b77c6fa7d4417088d9e34c980a5aa, type: 2}
 --- !u!114 &1420291136657417544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3910,7 +3862,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 0
+  GlobalObjectIdHash: 915772852
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -3938,6 +3890,19 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   TransitionStateInfoList: []
   m_Animator: {fileID: 5513080447165554280}
+--- !u!114 &-3973143642862724343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8230587750230797869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e3fcc944b9eb314a86d505726361e35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameCreator.Netcode.Runtime::GameCreator.Netcode.Runtime.NetworkCharacterAdapter
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &8324245983732157449
 GameObject:
   m_ObjectHideFlags: 0

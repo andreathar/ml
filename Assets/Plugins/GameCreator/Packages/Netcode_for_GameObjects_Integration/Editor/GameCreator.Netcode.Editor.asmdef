@@ -1,15 +1,13 @@
 {
-    "name": "GameCreator.Editor.Core",
-    "rootNamespace": "GameCreator.Editor.Core",
+    "name": "GameCreator.Netcode.Editor",
+    "rootNamespace": "GameCreator.Netcode.Editor",
     "references": [
-        "Unity.InputSystem",
-        "GameCreator.Runtime.Core",
-        "Unity.TextMeshPro.Editor",
-        "Unity.TextMeshPro",
-        "GameCreator.Netcode.Editor",
+        "GameCreator.Netcode.Runtime",
         "Unity.Netcode.Runtime",
-        "Unity.Networking.Editor",
-        "Unity.Networking.Transport"
+        "Unity.Netcode.Editor",
+        "GameCreator.Editor.Core",
+        "GameCreator.Runtime.Core",
+        "Unity.Collections"
     ],
     "includePlatforms": [
         "Editor"
