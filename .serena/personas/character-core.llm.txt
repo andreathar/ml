@@ -1,260 +1,135 @@
 ======================================================================
-GAMECREATOR CHARACTER CORE MODULE - NETWORKED PERSONA SCHEMA
+GAMECREATOR CORE - CHARACTER MODULE SCHEMA
 ======================================================================
-Generated: 2025-12-01 12:53
-Persona Slug: gc-character-core
-Network Sync Component: NetworkCharacterAdapter
+Project: ML - GameCreator Core + Netcode
+Generated: 2025-12-03
+Assembly: GameCreator.Runtime.Core
 
 ----------------------------------------------------------------------
-MODULE DESCRIPTION
+OVERVIEW
 ----------------------------------------------------------------------
-GameCreator Character component architecture, CharacterController, Transform interpolation, Mannequin system, FBX models, Animations, Animator, Input System integration, IK, Skeleton, Bone rigging
+
+The Character module is the foundation of GameCreator. It provides:
+- Character component with movement, animation, states
+- IsPlayer flag for local player identification
+- Args system for passing context to Instructions/Conditions
+- Visual Scripting base classes
 
 ----------------------------------------------------------------------
-CORE CLASSES (30 found)
+KEY CLASSES
 ----------------------------------------------------------------------
-  * LookTargets
-    Namespace: GameCreator.Runtime.Characters.IK
-  * GizmosExtension
-    Namespace: GameCreator.Runtime.Common
-  * IconBug
-    Namespace: GameCreator.Runtime.Common
-  * GetDirectionWorldValue
-    Namespace: GameCreator.Runtime.Common
-  * SetNumberReflectionFieldFloat
-    Namespace: GameCreator.Runtime.Common
-  * PropertySetAnimation
-    Namespace: GameCreator.Runtime.Common
-  * UpdateRegistryFirstLater
-    Namespace: GameCreator.Runtime.Common
-  * CharacterEditor
-    Namespace: GameCreator.Editor.Characters
-  * GetDecimalMathModulus
-    Namespace: GameCreator.Runtime.Common
-  * ReflectionFieldVector2Drawer
-    Namespace: GameCreator.Editor.Common
-  * LookSectionDrawer
-    Namespace: GameCreator.Editor.Characters
-  * GetSceneActive
-    Namespace: GameCreator.Runtime.Common
-  * PropertyElement
-    Namespace: GameCreator.Editor.Common
-  * IconRefresh
-    Namespace: GameCreator.Runtime.Common
-  * SetPickInsertLast
-    Namespace: GameCreator.Runtime.Variables
-  * Scenes
-    Namespace: GameCreator.Runtime.Common.SaveSystem
-  * MaterialSoundsDataDrawer
-    Namespace: GameCreator.Editor.Common
-  * AssetRelease
-    Namespace: GameCreator.Editor.Common.Versions
-  * PropertySetGameObject
-    Namespace: GameCreator.Runtime.Common
-  * SceneReferenceDrawer
-    Namespace: GameCreator.Editor.Common
-  * GetStringEmpty
-    Namespace: GameCreator.Runtime.Common
-  * SetSpriteLocalName
-    Namespace: GameCreator.Runtime.Variables
-  * TriggerEditor
-    Namespace: GameCreator.Editor.VisualScripting
-  * RigBreathing
-    Namespace: GameCreator.Runtime.Characters.IK
-  * DropdownPropertyInteger
-    Namespace: GameCreator.Runtime.Common.UnityUI
-  * IconCircleOutline
-    Namespace: GameCreator.Runtime.Common
-  * UpdateRegistryFirstEarlier
-    Namespace: GameCreator.Runtime.Common
-  * StorageJsonFile
-    Namespace: GameCreator.Runtime.Common.SaveSystem
-  * CollectorListVariable
-    Namespace: GameCreator.Runtime.Variables
-  * MemoryIsActive
-    Namespace: GameCreator.Runtime.Common
+
+Character (Component)
+├── IsPlayer: bool - True if this is the local player
+├── IsAlive: bool - Character alive state
+├── Busy: bool - Character is busy
+├── Motion - Movement subsystem
+├── Animim - Animation subsystem
+└── States - State machine
+
+Args (Context Container)
+├── Self: GameObject - The object running the action
+├── Target: GameObject - The target of the action
+├── ComponentFromTarget<T>() - Get component from target
+└── Clone() - Create a copy of args
+
+Instruction (Visual Scripting Base)
+├── protected override Task Run(Args args)
+├── NO CancellationToken parameter!
+└── Return DefaultResult for synchronous completion
+
+Condition (Visual Scripting Base)
+├── protected override bool Check(Args args)
+└── Return true/false
+
+Trigger (Event System)
+├── EventRunner for executing instructions
+├── Various event sources (OnStart, OnUpdate, etc.)
+└── Conditions for filtering
 
 ----------------------------------------------------------------------
-VISUAL SCRIPTING - INSTRUCTIONS (50 found)
+VISUAL SCRIPTING SIGNATURES
 ----------------------------------------------------------------------
-Signature: protected override Task Run(Args args)
-WARNING: NO CancellationToken parameter!
 
-  * InstructionCharacterPropertyAngularSpeed
-  * InstructionGeometrySetDirection
-  * InstructionCharacterPropertyGravity
-  * InstructionDebugGizmosLine
-  * InstructionCommonDebugText
-  * InstructionCharacterRevive
-  * InstructionRendererChangeMaterialTexture
-  * InstructionTransformChangeScale
-  * InstructionCommonAudioMixerParameter
-  * InstructionCharacterPropertyTimeMode
-  * InstructionUIChangeRectWidth
-  * InstructionShotFirstPersonSmoothTime
-  * InstructionCharacterStopGesture
-  * InstructionCommonAudioSpeechStopGameObject
-  * InstructionAnimatorSetBoolean
-  * InstructionCommonAudioVolumeUI
-  * InstructionArithmeticClampNumber
-  * InstructionCameraShotChange
-  * InstructionCharacterPropertyMannequinRotation
-  * InstructionTextReplace
-  * InstructionArithmeticIncrementNumber
-  * InstructionCameraCullingMask
-  * InstructionCharacterPlayer
-  * InstructionCharacterAttachProp
-  * InstructionCommonAudioSFXStop
-  * InstructionCharacterNavigationJump
-  * InstructionLogicStopActions
-  * InstructionGeometrySetVectorX
-  * InstructionUIUnfocus
-  * InstructionCharacterPropertyCanJump
-  * InstructionShotFirstPersonTarget
-  * InstructionPhysics3DExplosion
-  * InstructionGeometryAddDirections
-  * InstructionArithmeticSubtractNumbers
-  * InstructionPhysics2DGravityScale
-  * InstructionShotThirdPersonMaxPitch
-  * InstructionCommonAudioVolumeAmbient
-  * InstructionUICanvasGroupInteractable
-  * InstructionUIFocus
-  * InstructionRendererChangeMaterial
-  * InstructionGameObjectSetActive
-  * InstructionCharacterGesture
-  * InstructionArithmeticSetNumber
-  * InstructionGameObjectPoolDestroy
-  * InstructionPhysics2DChangeVelocity
-  * InstructionVariablesSortDistance
-  * InstructionCommonResetGame
-  * InstructionAnimatorLayer
-  * InstructionTester
-  * InstructionCommonDebugNumber
+INSTRUCTION:
+```csharp
+using GameCreator.Runtime.Common;
+using GameCreator.Runtime.VisualScripting;
+
+[Title("My Instruction")]
+[Category("Custom")]
+public class InstructionMyAction : Instruction
+{
+    protected override Task Run(Args args)
+    {
+        // Your logic here
+        return DefaultResult;
+    }
+}
+```
+
+CONDITION:
+```csharp
+using GameCreator.Runtime.Common;
+using GameCreator.Runtime.VisualScripting;
+
+[Title("My Condition")]
+[Category("Custom")]
+public class ConditionMyCheck : Condition
+{
+    protected override bool Check(Args args)
+    {
+        return someCondition;
+    }
+}
+```
 
 ----------------------------------------------------------------------
-VISUAL SCRIPTING - CONDITIONS (30 found)
+CHARACTER ACCESS PATTERNS
 ----------------------------------------------------------------------
-Signature: protected override bool Check(Args args)
 
-  * ConditionCharacterIsGrounded
-  * ConditionAudioIsPlayUI
-  * ConditionCharacterBusyRightLeg
-  * ConditionHasSave
-  * ConditionDisablePlaymodeAttribute
-  * ConditionCharacterIsHumanoid
-  * ConditionMathCompareBooleans
-  * ConditionDrawer
-  * ConditionCharacterBusyLeftLeg
-  * ConditionCharacterCanInteract
-  * ConditionCharacterIsDead
-  * ConditionVisualScriptingConditionsOR
-  * ConditionMathCompareDecimals
-  * ConditionPhysicsCheckCapsule
-  * ConditionAudioIsPlayMusic
-  * ConditionVariablesListEmpty
-  * ConditionPhysicsRaycast3D
-  * ConditionCharacterBusyArms
-  * ConditionPlatformIsMobile
-  * ConditionPhysicsCharacter3DFits
-  * ConditionMathComparePoints
-  * ConditionCharacterCompareGravity
-  * ConditionAudioIsPlayAmbient
-  * ConditionInputIsKeyPress
-  * ConditionGameObjectComponentExists
-  * ConditionCharacterIsMoving
-  * ConditionCharacterBusyLeftArm
-  * ConditionPhysicsCheckSphere
-  * ConditionHideDrawer
-  * ConditionGameObjectCompare
+Getting Character from Args:
+```csharp
+Character character = args.Target?.GetComponent<Character>();
+if (character != null && character.IsPlayer)
+{
+    // This is the local player
+}
+```
+
+Character Properties:
+```csharp
+character.IsPlayer  // True if local player
+character.IsAlive   // True if alive
+character.Busy      // True if busy
+```
 
 ----------------------------------------------------------------------
-KEY PROPERTIES (40 sampled)
+INTEGRATION WITH NETCODE
 ----------------------------------------------------------------------
-  * Bytes
-  * Title
-  * IsComplete
-  * Summary
-  * Maximum
-  * Description
-  * HasSkeleton
-  * HasObstacle
-  * SystemID
-  * CachePayload
-  * String
-  * SmoothTimePosition
-  * PropertyArrayName
-  * Duration
-  * ControlA
-  * Create
-  * Pitch
-  * Axonometry
-  * TypeSelector
-  * Delay
-  * JumpForce
-  * Name
-  * NameList
-  * LastPropDetachedPrefab
-  * AllowDisable
+
+When used with GameCreator.Netcode.Runtime:
+
+1. NetworkCharacter extends Character with:
+   - IsNetworkSpawned: bool
+   - BecomeLocalPlayer()
+   - BecomeRemotePlayer()
+
+2. NetworkCharacterAdapter bridges Character ↔ NetworkBehaviour
+
+3. Ownership check pattern:
+   ```csharp
+   var adapter = character.GetComponent<NetworkCharacterAdapter>();
+   if (adapter.IsOwner)
+   {
+       // This client owns this character
+   }
+   ```
 
 ----------------------------------------------------------------------
-KEY METHODS (40 sampled)
+RELATED FILES
 ----------------------------------------------------------------------
-  * Cancel()
-  * ChangeWidth()
-  * Clone()
-  * Create()
-  * Direction()
-  * Get()
-  * HandleButton()
-  * OnBeforeStart()
-  * OnChangeDeadState()
-  * OnCreate()
-  * OnDisable()
-  * OnDodge()
-  * OnDragLeave()
-  * OnDrawGizmos()
-  * OnGUI()
-  * OnRagdoll()
-  * OnSelect()
-  * OnUpdate()
-  * Quaternion ()
-  * RegisterUpdateSelected()
-  * Run()
-  * Start()
-  * StopInterval()
-  * Unregister()
-  * e()
-     ()
 
-----------------------------------------------------------------------
-NETWORK SYNCHRONIZATION
-----------------------------------------------------------------------
-Primary Sync Class: NetworkCharacterAdapter
-
-RPC Naming Convention:
-  * Server RPCs: Method names end with 'ServerRpc'
-  * Client RPCs: Method names end with 'ClientRpc'
-  * Custom structs: Must implement INetworkSerializable
-
-Authority Model:
-  * Server-authoritative for state changes
-  * Client prediction for immediate feedback (where applicable)
-  * Ownership check: if (character.IsNetworkOwner) { ... }
-
-----------------------------------------------------------------------
-LIMITATIONS & CONSTRAINTS
-----------------------------------------------------------------------
-  1. CharacterController requires ground detection - use GroundChecker component
-  2. Transform interpolation handled by Motion system, not direct Transform manipulation
-  3. Mannequin is the visual representation - separate from Character logic
-  4. FBX import requires proper rig configuration (Humanoid/Generic)
-  5. Animation states managed through State assets, not direct Animator control
-  6. Input system uses InputValue wrappers - never raw Input class
-  7. IK targets must be set through Character.IK system, not direct bone manipulation
-  8. Skeleton building requires proper bone mapping in Mannequin settings
-  9. State transitions use blending - abrupt changes cause visual artifacts
-  10. Driver system (NavMesh/CharacterController) determines movement authority
-
-======================================================================
-END OF SCHEMA
-======================================================================
+- .serena/personas/netcode-core.llm.txt (Network integration)
+- .serena/memories/critical_rules.md (Patterns reference)
+- openspec/specs/character-system/spec.md (Requirements)

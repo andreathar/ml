@@ -1,185 +1,94 @@
 {
-  "generated_at": "2025-11-23T23:30:00Z",
-  "project_name": "MLCreator",
-  "unity_version": "6000.2.13f1",
-  "assemblies": [
-    {
-      "name": "GameCreator.Runtime.Core",
-      "category": "gamecreator-core",
-      "path": "Assets/Plugins/GameCreator/Runtime/Core",
-      "csproj": "GameCreator.Runtime.Core.csproj",
-      "namespaces": ["GameCreator.Runtime.Characters", "GameCreator.Runtime.Common", "GameCreator.Runtime.Variables", "GameCreator.Runtime.VisualScripting"],
-      "key_types": ["Character", "Args", "Instruction", "Condition", "PropertyGet", "PropertySet"]
+  "project": "ML",
+  "generated": "2025-12-03",
+  "description": "GameCreator Core + Netcode Integration for Unity",
+  "assemblies": {
+    "gamecreator": {
+      "GameCreator.Runtime.Core": {
+        "namespace": "GameCreator.Runtime.Core",
+        "path": "Assets/Plugins/GameCreator/Packages/Core/Runtime",
+        "type": "runtime",
+        "dependencies": [
+          "Unity.InputSystem",
+          "Unity.TextMeshPro",
+          "Unity.Collections",
+          "Unity.Mathematics"
+        ],
+        "key_types": [
+          "Character",
+          "Args",
+          "Instruction",
+          "Condition",
+          "Trigger"
+        ]
+      },
+      "GameCreator.Editor.Core": {
+        "namespace": "GameCreator.Editor.Core",
+        "path": "Assets/Plugins/GameCreator/Packages/Core/Editor",
+        "type": "editor",
+        "dependencies": [
+          "GameCreator.Runtime.Core"
+        ]
+      },
+      "GameCreator.Netcode.Runtime": {
+        "namespace": "GameCreator.Netcode.Runtime",
+        "path": "Assets/Plugins/GameCreator/Packages/Netcode_for_GameObjects_Integration/Runtime",
+        "type": "runtime",
+        "dependencies": [
+          "GameCreator.Runtime.Core",
+          "Unity.Netcode.Runtime",
+          "Unity.Collections"
+        ],
+        "defines": [
+          "UNITY_NETCODE_2"
+        ],
+        "key_types": [
+          "NetworkCharacterAdapter",
+          "NetworkCharacter",
+          "NetworkCharacterRegistry",
+          "NetworkVariablesSync",
+          "NetworkCharacterMotion",
+          "NetworkUnitDriverController",
+          "NetworkSyncMode",
+          "SyncedVariableConfig",
+          "NetworkString64"
+        ]
+      },
+      "GameCreator.Netcode.Editor": {
+        "namespace": "GameCreator.Netcode.Editor",
+        "path": "Assets/Plugins/GameCreator/Packages/Netcode_for_GameObjects_Integration/Editor",
+        "type": "editor",
+        "dependencies": [
+          "GameCreator.Netcode.Runtime",
+          "GameCreator.Editor.Core"
+        ]
+      }
     },
-    {
-      "name": "GameCreator.Editor.Core",
-      "category": "gamecreator-core",
-      "path": "Assets/Plugins/GameCreator/Editor/Core",
-      "csproj": "GameCreator.Editor.Core.csproj",
-      "namespaces": ["GameCreator.Editor.Characters", "GameCreator.Editor.Common", "GameCreator.Editor.VisualScripting"],
-      "key_types": ["InstructionEditor", "ConditionEditor", "PropertyDrawer"]
-    },
-    {
-      "name": "GameCreator.Runtime.Inventory",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Inventory/Runtime",
-      "csproj": "GameCreator.Runtime.Inventory.csproj",
-      "namespaces": ["GameCreator.Runtime.Inventory"],
-      "key_types": ["Bag", "Item", "ItemData"]
-    },
-    {
-      "name": "GameCreator.Editor.Inventory",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Inventory/Editor",
-      "csproj": "GameCreator.Editor.Inventory.csproj",
-      "namespaces": ["GameCreator.Editor.Inventory"],
-      "key_types": []
-    },
-    {
-      "name": "GameCreator.Runtime.Stats",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Stats/Runtime",
-      "csproj": "GameCreator.Runtime.Stats.csproj",
-      "namespaces": ["GameCreator.Runtime.Stats"],
-      "key_types": ["Traits", "Attribute", "Stat"]
-    },
-    {
-      "name": "GameCreator.Editor.Stats",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Stats/Editor",
-      "csproj": "GameCreator.Editor.Stats.csproj",
-      "namespaces": ["GameCreator.Editor.Stats"],
-      "key_types": []
-    },
-    {
-      "name": "GameCreator.Runtime.Shooter",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Shooter/Runtime",
-      "csproj": "GameCreator.Runtime.Shooter.csproj",
-      "namespaces": ["GameCreator.Runtime.Shooter"],
-      "key_types": ["Weapon", "ShootMode", "Ammunition"]
-    },
-    {
-      "name": "GameCreator.Editor.Shooter",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Shooter/Editor",
-      "csproj": "GameCreator.Editor.Shooter.csproj",
-      "namespaces": ["GameCreator.Editor.Shooter"],
-      "key_types": []
-    },
-    {
-      "name": "GameCreator.Runtime.Quests",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Quests/Runtime",
-      "csproj": "GameCreator.Runtime.Quests.csproj",
-      "namespaces": ["GameCreator.Runtime.Quests"],
-      "key_types": ["Quest", "Task", "Objective"]
-    },
-    {
-      "name": "GameCreator.Runtime.Dialogue",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Dialogue/Runtime",
-      "csproj": "GameCreator.Runtime.Dialogue.csproj",
-      "namespaces": ["GameCreator.Runtime.Dialogue"],
-      "key_types": ["Story", "DialogueTree", "DialogueNode"]
-    },
-    {
-      "name": "GameCreator.Runtime.Behavior",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Behavior/Runtime",
-      "csproj": "GameCreator.Runtime.Behavior.csproj",
-      "namespaces": ["GameCreator.Runtime.Behavior"],
-      "key_types": ["Graph", "Node", "BehaviorTree"]
-    },
-    {
-      "name": "GameCreator.Multiplayer.Runtime",
-      "category": "multiplayer",
-      "path": "Assets/Plugins/GameCreator_Multiplayer/Runtime",
-      "csproj": "GameCreator.Multiplayer.Runtime.csproj",
-      "namespaces": ["GameCreator.Multiplayer.Runtime", "GameCreator.Multiplayer.Runtime.Character", "GameCreator.Multiplayer.Runtime.Player", "GameCreator.Multiplayer.Runtime.Networking"],
-      "key_types": ["NetworkCharacterAdapter", "NetworkManager", "Player_Network"]
-    },
-    {
-      "name": "GameCreator.Multiplayer.Editor",
-      "category": "multiplayer",
-      "path": "Assets/Plugins/GameCreator_Multiplayer/Editor",
-      "csproj": "GameCreator.Multiplayer.Editor.csproj",
-      "namespaces": ["GameCreator.Multiplayer.Editor"],
-      "key_types": []
-    },
-    {
-      "name": "NinjutsuGames.Runtime.Factions",
-      "category": "gamecreator-module",
-      "path": "Assets/Plugins/GameCreator/Modules/Factions/Runtime",
-      "csproj": "NinjutsuGames.Runtime.Factions.csproj",
-      "namespaces": ["NinjutsuGames.Factions"],
-      "key_types": ["Faction", "FactionManager"]
-    },
-    {
-      "name": "undream.llmunity.Runtime",
-      "category": "ai-integration",
-      "path": "Assets/Plugins/LLMUnity/Runtime",
-      "csproj": "undream.llmunity.Runtime.csproj",
-      "namespaces": ["undream.llmunity"],
-      "key_types": ["LLM", "LLMCharacter"]
-    },
-    {
-      "name": "MLCreator.Core",
-      "category": "project-core",
-      "path": "Assets/_Project/Core",
-      "csproj": "MLCreator.Core.csproj",
-      "namespaces": ["MLCreator.Core"],
-      "key_types": []
-    },
-    {
-      "name": "MLCreator.AI.Integration",
-      "category": "project-ai",
-      "path": "Assets/_Project/AI",
-      "csproj": "MLCreator.AI.Integration.csproj",
-      "namespaces": ["MLCreator.AI"],
-      "key_types": []
-    },
-    {
-      "name": "MLCreator.Framework",
-      "category": "project-framework",
-      "path": "Assets/_Project/Framework",
-      "csproj": "MLCreator.Framework.csproj",
-      "namespaces": ["MLCreator.Framework"],
-      "key_types": []
-    },
-    {
-      "name": "MLCreator.Tests",
-      "category": "testing",
-      "path": "Assets/Tests/Runtime",
-      "csproj": "MLCreator.Tests.csproj",
-      "namespaces": ["MLCreator.Tests"],
-      "key_types": []
-    }
-  ],
-  "categories": {
-    "gamecreator-core": {
-      "description": "Core GameCreator framework assemblies",
-      "assemblies": ["GameCreator.Runtime.Core", "GameCreator.Editor.Core"]
-    },
-    "gamecreator-module": {
-      "description": "GameCreator optional modules",
-      "assemblies": ["GameCreator.Runtime.Inventory", "GameCreator.Runtime.Stats", "GameCreator.Runtime.Shooter", "GameCreator.Runtime.Quests", "GameCreator.Runtime.Dialogue", "GameCreator.Runtime.Behavior", "NinjutsuGames.Runtime.Factions"]
-    },
-    "multiplayer": {
-      "description": "Unity Netcode multiplayer integration",
-      "assemblies": ["GameCreator.Multiplayer.Runtime", "GameCreator.Multiplayer.Editor"]
-    },
-    "ai-integration": {
-      "description": "LLM and AI integration assemblies",
-      "assemblies": ["undream.llmunity.Runtime", "MLCreator.AI.Integration"]
-    },
-    "project-core": {
-      "description": "Project-specific core functionality",
-      "assemblies": ["MLCreator.Core", "MLCreator.Framework"]
-    },
-    "testing": {
-      "description": "Test assemblies",
-      "assemblies": ["MLCreator.Tests", "GameCreator.Tests.Core"]
+    "unity": {
+      "Unity.Netcode.Runtime": {
+        "description": "Unity Netcode for GameObjects runtime",
+        "key_types": [
+          "NetworkBehaviour",
+          "NetworkObject",
+          "NetworkVariable",
+          "NetworkList",
+          "RpcAttribute",
+          "ServerRpcAttribute",
+          "ClientRpcAttribute"
+        ]
+      },
+      "Unity.InputSystem": {
+        "description": "Unity Input System"
+      },
+      "Unity.TextMeshPro": {
+        "description": "TextMesh Pro text rendering"
+      },
+      "Unity.Collections": {
+        "description": "Native collections (FixedString, NativeArray, etc.)"
+      },
+      "Unity.Mathematics": {
+        "description": "High-performance math library"
+      }
     }
   }
 }

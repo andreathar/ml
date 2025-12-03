@@ -196,7 +196,7 @@ namespace GameCreator.Netcode.Runtime
 
         // RPCs: ----------------------------------------------------------------------------------
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void RequestOwnershipRpc(RpcParams rpcParams = default)
         {
             ulong requestingClientId = rpcParams.Receive.SenderClientId;

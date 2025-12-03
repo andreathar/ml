@@ -277,7 +277,7 @@ namespace GameCreator.Netcode.Runtime
 
         // RPCs: ----------------------------------------------------------------------------------
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void SetVariableRpc(
             string variableName,
             NetworkString64 value,

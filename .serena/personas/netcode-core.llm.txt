@@ -1,247 +1,227 @@
 ======================================================================
-GAMECREATOR NETCODE CORE MODULE - NETWORKED PERSONA SCHEMA
+GAMECREATOR NETCODE - NETWORK MODULE SCHEMA
 ======================================================================
-Generated: 2025-12-01 12:53
-Persona Slug: unity-netcode-core
-Network Sync Component: N/A
+Project: ML - GameCreator Core + Netcode
+Generated: 2025-12-03
+Assembly: GameCreator.Netcode.Runtime
+Namespace: GameCreator.Netcode.Runtime
 
 ----------------------------------------------------------------------
-MODULE DESCRIPTION
+OVERVIEW
 ----------------------------------------------------------------------
-Unity Netcode for GameObjects, NetworkBehaviour, NetworkVariable, NetworkList, RPCs, Unity Transport, WebSocket/WebGL, Spawning, Pooling, Ownership, Authority, Host/Client architecture, Hotspot interactions, Player targeting
+
+The Netcode module bridges GameCreator with Unity Netcode for GameObjects.
+It provides:
+- NetworkCharacterAdapter: Character ↔ NetworkBehaviour bridge
+- NetworkCharacter: Extended Character with network properties
+- NetworkVariablesSync: Variable synchronization
+- Visual Scripting components for network operations
 
 ----------------------------------------------------------------------
-CORE CLASSES (30 found)
+KEY COMPONENTS
 ----------------------------------------------------------------------
-  * MemoryPool
-    Namespace: MLCreator.Core.Pooling
-  * NetworkVariablesSync
-    Namespace: MLCreator_Multiplayer.Runtime.Modules
-  * VisualScriptingRPCManager
-    Namespace: MLCreator_Multiplayer.Runtime.RPC
-  * CharacterSpawnFixer
-    Namespace: MLCreator.Core.Networking
-  * LocalPlayerSpawnedEvent
-    Namespace: MLCreator_Multiplayer.Core
-  *         {
-   
-    Namespace: MLCreator.Core.Memory
-  * ComponentHarmonizer
-    Namespace: GameCreator.Multiplayer.Runtime.Components
-  * PersistentCache
-    Namespace: MLCreator.Core.Caching
-  * NetworkHotspotExtension
-    Namespace: MLCreator_Multiplayer.Runtime.Interactions
-  * RPCVariableSyncReceiver
-    Namespace: MLCreator_Multiplayer.Runtime.RPC
-  * EventOnNPCDespawned
-    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.NPC
-  * NetworkObjectPool
-    Namespace: MLCreator.Core.Pooling
-  * NetworkPickup
-    Namespace: MLCreator_Multiplayer.Runtime.Objects
-  * PickupPrefabConfig
-    Namespace: MLCreator_Multiplayer.Runtime.Objects
-  * BehaviorTreeSync
-    Namespace: MLCreator_Multiplayer.Runtime.Behavior
-  * EventOnClientDisconnected
-    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Connection
-  * NetworkModuleSyncBase
-    Namespace: MLCreator_Multiplayer.Runtime.Modules
-  * PowerSource
-    Namespace: MLCreator_Multiplayer.Runtime.PowerGrid
-  * NetworkActionAuthority
-    Namespace: MLCreator_Multiplayer.Runtime.Components
-  * ObjectPool
-    Namespace: MLCreator.Core.Pooling
-  * NetworkTrafficManager
-    Namespace: MLCreator_Multiplayer.Runtime.CityVehicles
-  * 
-        {
-   
-    Namespace: MLCreator.Core.Memory
-  * NetworkSpawnPointIntegration
-    Namespace: MLCreator_Multiplayer.Runtime.Components
-  * RPCMetric
-    Namespace: MLCreator_Multiplayer.Runtime.RPC
-  * NetworkTraitsAdapter
-    Namespace: MLCreator_Multiplayer.Runtime.Components
-  * EventOnRPCReceived
-    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Network
-  * MultiplayerCameraManager
-    Namespace: MLCreator_Multiplayer.Runtime.Managers
-  * EventOnServerStopped
-    Namespace: MLCreator_Multiplayer.Runtime.VisualScripting.Events.Connection
-  * GetGameObjectLocalNetworkPlayer
-    Namespace: MLCreator_Multiplayer.Runtime.Properties
-  * NPCSpawnConfig
-    Namespace: MLCreator_Multiplayer.Runtime.Characters
+
+NetworkCharacterAdapter : NetworkBehaviour
+├── Character Character - The GC Character component
+├── NetworkCharacter NetworkCharacter - Extended character (if present)
+├── bool IsLocalPlayer - IsOwner && Character.IsPlayer
+├── OnNetworkSpawn() - Called when spawned on network
+├── OnNetworkDespawn() - Called when despawned
+├── RequestOwnership() - Request ownership from server
+├── TransferOwnership(ulong clientId) - Server transfers ownership
+└── Events: EventNetworkSpawned, EventNetworkDespawned, EventOwnershipChanged
+
+NetworkCharacter : Character
+├── bool IsNetworkSpawned - True when network spawned
+├── BecomeLocalPlayer() - Set up as local player
+└── BecomeRemotePlayer() - Set up as remote player
+
+NetworkVariablesSync : NetworkBehaviour
+├── SetVariable(string name, string value)
+├── GetVariable(string name) → string
+├── SetFloat/GetFloat, SetInt/GetInt, SetBool/GetBool
+├── NetworkSyncMode: Everyone, OwnerOnly, ServerOnly
+└── Event: EventVariableChanged
 
 ----------------------------------------------------------------------
-VISUAL SCRIPTING - INSTRUCTIONS (43 found)
+SPAWN LIFECYCLE
 ----------------------------------------------------------------------
-Signature: protected override Task Run(Args args)
-WARNING: NO CancellationToken parameter!
 
-  * InstructionNetworkExecuteGesture
-  * InstructionPlayGesture
-  * InstructionNetworkShutdown
-  * InstructionActivateGameObjectSequence
-  * InstructionPowerDeviceTurnOff
-  * InstructionExecuteRPCOnHost
-  * InstructionPowerConsumerDisconnect
-  * InstructionNetworkExecuteInputAction
-  * InstructionNetworkSetVariable
-  * InstructionNetworkChangeActive
-  * InstructionNetworkDamage
-  * InstructionNetworkAddItem
-  * InstructionSetNetworkAwareness
-  * InstructionDeactivateAllExcept
-  * InstructionActivateOnCondition
-  * InstructionNetworkStartHost
-  * InstructionRetryUntilSuccess
-  * InstructionEnableLocalPlayerControl
-  * InstructionNetworkInstantiate
-  * InstructionNetworkSendRPC
-  * InstructionRPCToNearby
-  * InstructionNetworkSendMessage
-  * InstructionStartRPCTracking
-  * InstructionNetworkDebugLog
-  * InstructionNetworkSpawnPlayer
-  * InstructionNetworkStartClient
-  * InstructionNetworkSpawnHostPlayer
-  * InstructionInitializeSceneForMultiplayer
-  * InstructionWaitForLocalPlayer
-  * InstructionPowerConsumerConnect
-  * InstructionLLMChat
-  * InstructionNetworkSpawnClientPlayer
-  * InstructionIsHostPlayer
-  * InstructionNetworkSpawnPickup
-  * InstructionNetworkChangePosition
-  * InstructionPowerDeviceTurnOn
-  * InstructionNetworkSpawnNPC
-  * InstructionNetworkSyncVariable
-  * InstructionNetworkEmitSignal
-  * InstructionNetworkDestroy
-  * InstructionRPCToServer
-  * InstructionNetworkSpawnAllPlayers
-  * InstructionPowerDeviceToggle
+```csharp
+public override void OnNetworkSpawn()
+{
+    base.OnNetworkSpawn();
+    
+    // NetworkCharacter flag is set automatically
+    // networkCharacter.IsNetworkSpawned = true;
+    
+    if (IsOwner)
+    {
+        // LOCAL PLAYER
+        networkCharacter.BecomeLocalPlayer();
+        // Sets IsPlayer = true
+    }
+    else
+    {
+        // REMOTE PLAYER
+        networkCharacter.BecomeRemotePlayer();
+    }
+}
+
+public override void OnNetworkDespawn()
+{
+    // Cleanup
+    // networkCharacter.IsNetworkSpawned = false;
+    base.OnNetworkDespawn();
+}
+```
 
 ----------------------------------------------------------------------
-VISUAL SCRIPTING - CONDITIONS (29 found)
+RPC PATTERNS (NETCODE 2.x)
 ----------------------------------------------------------------------
-Signature: protected override bool Check(Args args)
 
-  * ConditionRPCCanReach
-  * ConditionIsClient
-  * ConditionIsClientPlayer
-  * ConditionPowerDeviceHasPower
-  * ConditionSpecificPlayerCount
-  * ConditionIsServer
-  * ConditionIsHost
-  * ConditionRPCManagerReady
-  * ConditionPowerConsumerIsPowered
-  * ConditionTransportConnected
-  * ConditionIsOwner
-  * ConditionAllClientsLoaded
-  * ConditionIsHostPlayer
-  * ConditionNetworkHealthBelow
-  * ConditionIsLocallyOwned
-  * ConditionPlayerWithinRange
-  * ConditionNetworkAwarenessStage
-  * ConditionRPCIsTargetType
-  * ConditionLocalPlayerExists
-  * ConditionHasSavedServerChoice
-  * ConditionNetworkIsSpawned
-  * ConditionMaxPlayersReached
-  * ConditionApprovalCallbackRegistered
-  * ConditionIsGesturePlaying
-  * ConditionPowerDeviceIsOperational
-  * ConditionIsLocalPlayer
-  * ConditionObjectNearPlayer
-  * ConditionPowerConsumerIsConnected
-  * ConditionNetworkHasItem
+NEW SYNTAX (PREFERRED):
+```csharp
+// Client → Server
+[Rpc(SendTo.Server)]
+private void DoActionServerRpc() { }
+
+// Server → All Clients
+[Rpc(SendTo.Everyone)]
+private void NotifyClientsRpc() { }
+
+// With sender info (non-owner can call)
+[Rpc(SendTo.Server, RequireOwnership = false)]
+private void RequestRpc(RpcParams rpcParams = default)
+{
+    ulong senderId = rpcParams.Receive.SenderClientId;
+}
+```
+
+AVAILABLE SendTo OPTIONS:
+- SendTo.Server - Client → Server
+- SendTo.Everyone - Server → All Clients
+- SendTo.Owner - Server → Owner only
+- SendTo.NotOwner - Server → Non-owners
+- SendTo.ClientsAndHost - Server → Clients + Host
+- SendTo.Me - Self only
 
 ----------------------------------------------------------------------
-KEY PROPERTIES (40 sampled)
+NETWORKVARIABLESSYNC USAGE
 ----------------------------------------------------------------------
-  * IsInteracting
-  * IsInitialized
-  * LookInput
-  * Loop
-  * Summary
-  * Summary
-  * antity =
-  * jectCount =
-  * PerceptionSync
-  * @Look
-  * Icon
-  * String
-  * Title
-  * LastSenderId
-  * LastReply
-  * LoadPercentage
-  * IsDirty
-  * Instance
-  * Instance
-  * PrimaryInteractor
-  * Username
-  * UseWebSocket
-  * Default
-  * @Click
-  * EstimatedSize
+
+```csharp
+// Configuration in Inspector
+[Serializable]
+public class SyncedVariableConfig
+{
+    public string variableName;
+    public NetworkSyncMode syncMode = NetworkSyncMode.Everyone;
+    public float syncRate = 10f; // Hz
+}
+
+// Runtime usage
+networkVariablesSync.SetFloat("health", 100f);
+networkVariablesSync.SetInt("score", 50);
+networkVariablesSync.SetBool("isReady", true);
+
+float health = networkVariablesSync.GetFloat("health", defaultValue);
+
+// Subscribe to changes
+networkVariablesSync.EventVariableChanged += (name, value) =>
+{
+    Debug.Log($"{name} changed to {value}");
+};
+```
 
 ----------------------------------------------------------------------
-KEY METHODS (40 sampled)
+VISUAL SCRIPTING COMPONENTS
 ----------------------------------------------------------------------
-  *            m_IsC()
-  *      {
-         ()
-  *   {
-         ()
-  * CreatePayloadForNearby()
-  * CreateWebSocketConnection()
-  * DebugAwarenessCortex()
-  * DebugInventory()
-  * Equals()
-  * ExecuteOnServerServerRpc()
-  * GetSaveFilePath()
-  * Heal()
-  * IsHostile()
-  * IsNetworkSerializable()
-  * LogDebug()
-  * MarkDirty()
-  * OnCrouchPerformed()
-  * OnDestroy()
-  * ProcessMessage()
-  * RegisterHandler()
-  * RequestValidatedTriggerServerRpc()
-  * Run()
-  * SetMaxHealth()
-  * ar()
-()
-  * sterScriptableObject(Scr()
-  * ts()
-        {
-    ()
+
+INSTRUCTIONS:
+├── InstructionNetworkStartHost - Start as host
+├── InstructionNetworkStartClient - Connect as client
+├── InstructionNetworkSpawnPlayer - Spawn player character
+├── InstructionNetworkDespawn - Despawn network object
+├── InstructionNetworkChangeOwnership - Transfer ownership
+└── InstructionNetworkDisconnect - Disconnect from network
+
+CONDITIONS:
+├── ConditionNetworkIsHost - True if host
+├── ConditionNetworkIsClient - True if client
+├── ConditionNetworkIsServer - True if server
+├── ConditionNetworkIsOwner - True if owner of object
+├── ConditionNetworkIsLocalPlayer - True if local player
+├── ConditionNetworkIsConnected - True if connected
+└── ConditionNetworkIsSpawned - True if network spawned
+
+TRIGGERS:
+├── EventNetworkOnClientConnected - Client connected
+├── EventNetworkOnClientDisconnected - Client disconnected
+├── EventNetworkOnLocalPlayerSpawned - Local player spawned
+├── EventNetworkOnNetworkSpawn - Object spawned
+├── EventNetworkOnNetworkDespawn - Object despawned
+└── EventNetworkOnOwnershipChanged - Ownership changed
+
+PROPERTIES:
+├── GetGameObjectNetworkLocalPlayer - Get local player GO
+└── GetGameObjectNetworkPlayerByClientId - Get player by ID
 
 ----------------------------------------------------------------------
-LIMITATIONS & CONSTRAINTS
+OWNERSHIP PATTERNS
 ----------------------------------------------------------------------
-  1. NetworkBehaviour requires NetworkObject component on same or parent GameObject
-  2. NetworkVariables only sync from server to clients (owner can write with permissions)
-  3. RPCs have naming convention: ServerRpc suffix for client->server, ClientRpc for server->clients
-  4. WebGL requires WebSocket transport - UDP not supported in browsers
-  5. Spawning must use NetworkManager.Singleton.SpawnManager for proper registration
-  6. Object pooling requires INetworkPrefabInstanceHandler implementation
-  7. Ownership transfer uses ChangeOwnership() - only server can transfer
-  8. Host is both server AND client - check IsServer/IsClient/IsHost appropriately
-  9. Hotspot interactions require ownership validation before execution
-  10. Player targeting uses NetworkObjectId or ClientId - never direct references across network
-  11. NPC spawning uses server-authoritative spawn with client visual sync
-  12. Late joiners receive full state sync via NetworkVariable OnValueChanged
-  13. Connection approval can filter clients before full connection
 
-======================================================================
-END OF SCHEMA
-======================================================================
+```csharp
+// Check ownership
+if (IsOwner)
+{
+    // This client owns this object
+}
+
+if (IsServer)
+{
+    // This is the server
+}
+
+if (IsHost)
+{
+    // This is the host (server + client)
+}
+
+// Request ownership (from client)
+networkCharacterAdapter.RequestOwnership();
+
+// Transfer ownership (server only)
+if (IsServer)
+{
+    networkCharacterAdapter.TransferOwnership(newOwnerClientId);
+}
+```
+
+----------------------------------------------------------------------
+NETWORK STRING FOR LISTS
+----------------------------------------------------------------------
+
+```csharp
+// NetworkString64 for NetworkList compatibility
+public struct NetworkString64 : INetworkSerializable
+{
+    private FixedString64Bytes m_Value;
+    
+    public NetworkString64(string value) { ... }
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) { ... }
+    public override string ToString() => m_Value.ToString();
+}
+
+// Usage in NetworkList
+private NetworkList<NetworkString64> m_Values;
+```
+
+----------------------------------------------------------------------
+RELATED FILES
+----------------------------------------------------------------------
+
+- .serena/personas/character-core.llm.txt (Core Character)
+- .serena/memories/critical_rules.md (Patterns reference)
+- openspec/specs/network-synchronization/spec.md (Requirements)
+- openspec/.decision-trees/gc-character-sync.yaml (Decision tree)

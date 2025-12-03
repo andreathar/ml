@@ -3672,6 +3672,8 @@ GameObject:
   - component: {fileID: 1420291136657417544}
   - component: {fileID: 3793564438786958296}
   - component: {fileID: -3973143642862724343}
+  - component: {fileID: -7500956404896953787}
+  - component: {fileID: -4704167418427787172}
   m_Layer: 0
   m_Name: Player_Network
   m_TagString: Untagged
@@ -3729,6 +3731,7 @@ MonoBehaviour:
     m_Ragdoll:
       rid: 1083509421220299072
   m_IsNetworkSpawned: 0
+  m_DisableInputForRemote: 1
   references:
     version: 2
     RefIds:
@@ -3903,6 +3906,111 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameCreator.Netcode.Runtime::GameCreator.Netcode.Runtime.NetworkCharacterAdapter
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &-7500956404896953787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8230587750230797869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 222b5d39f1cd34261ad5c21d422080af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameCreator.Runtime.Core::GameCreator.Runtime.Common.Remember
+  m_SaveUniqueID:
+    m_Save:
+      m_Save: 1
+    m_UniqueID:
+      m_SerializedID:
+        m_String: ff58ca4c-3a42-4be2-9be9-6508de976209
+  m_Memories:
+    m_Memories:
+    - rid: 1083509424920461495
+    - rid: 1083509424920461496
+    - rid: 1083509424920461497
+  references:
+    version: 2
+    RefIds:
+    - rid: 1083509424920461495
+      type: {class: MemoryPosition, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+    - rid: 1083509424920461496
+      type: {class: MemoryRotation, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+    - rid: 1083509424920461497
+      type: {class: MemoryScale, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+--- !u!114 &-4704167418427787172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8230587750230797869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fe2b16044a04efba6795e323236dc60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameCreator.Runtime.Core::GameCreator.Runtime.Variables.LocalNameVariables
+  m_SaveUniqueID:
+    m_Save:
+      m_Save: 0
+    m_UniqueID:
+      m_SerializedID:
+        m_String: 98f70615-e326-4076-900e-3e6faf63f0c2
+  m_Runtime:
+    rid: 1083509424920461521
+  references:
+    version: 2
+    RefIds:
+    - rid: 1083509424920461521
+      type: {class: NameVariableRuntime, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_List:
+          rid: 1083509424920461522
+    - rid: 1083509424920461522
+      type: {class: NameList, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_Source:
+        - rid: 1083509424920461548
+        - rid: 1083509424920461551
+    - rid: 1083509424920461548
+      type: {class: NameVariable, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+        m_Value:
+          rid: 1083509424920461550
+        m_Name:
+          m_String: player_id
+    - rid: 1083509424920461550
+      type: {class: ValueString, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+        m_Value: 
+    - rid: 1083509424920461551
+      type: {class: NameVariable, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+        m_Value:
+          rid: 1083509424920461552
+        m_Name:
+          m_String: player_name
+    - rid: 1083509424920461552
+      type: {class: ValueString, ns: GameCreator.Runtime.Variables, asm: GameCreator.Runtime.Core}
+      data:
+        m_Breakpoint: 0
+        m_IsEnabled: 1
+        m_Value: 
 --- !u!1 &8324245983732157449
 GameObject:
   m_ObjectHideFlags: 0

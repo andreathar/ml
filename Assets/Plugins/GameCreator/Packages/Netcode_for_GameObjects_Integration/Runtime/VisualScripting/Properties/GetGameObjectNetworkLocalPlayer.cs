@@ -1,7 +1,6 @@
 using System;
 using GameCreator.Runtime.Characters;
 using GameCreator.Runtime.Common;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace GameCreator.Netcode.Runtime.VisualScripting
@@ -27,26 +26,17 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private static GameObject GetLocalPlayer()
         {
-            // First try ShortcutPlayer (most efficient)
+            // Use registry for efficient cached lookup
+            var localPlayer = NetworkCharacterRegistry.LocalPlayer;
+            if (localPlayer != null)
+            {
+                return localPlayer.gameObject;
+            }
+
+            // Fallback to ShortcutPlayer for single-player or editor preview
             if (ShortcutPlayer.Instance != null)
             {
                 return ShortcutPlayer.Instance;
-            }
-
-            // Fallback: Find the NetworkCharacter owned by local client
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsClient)
-            {
-                return null;
-            }
-
-            // Search for local player's NetworkCharacter
-            NetworkCharacter[] networkCharacters = UnityEngine.Object.FindObjectsByType<NetworkCharacter>(FindObjectsSortMode.None);
-            foreach (NetworkCharacter character in networkCharacters)
-            {
-                if (character.IsLocalOwner && character.IsNetworkSpawned)
-                {
-                    return character.gameObject;
-                }
             }
 
             return null;

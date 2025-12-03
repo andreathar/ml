@@ -1,112 +1,146 @@
 ======================================================================
-GAMECREATOR NETWORKED MODULES - MASTER INDEX
+GAMECREATOR CORE + NETCODE - MODULE INDEX
 ======================================================================
-Generated: 2025-12-01 12:53
-Total Modules: 13
-KB Symbols: 77914
+Project: ML - Clean Multiplayer Integration
+Generated: 2025-12-03
+Total Modules: 2 (Core + Netcode)
 
 ----------------------------------------------------------------------
 MODULE OVERVIEW
 ----------------------------------------------------------------------
 
-[Inventory] (gc-inventory-networked)
-  Sync: NetworkInventorySync
-  Symbols: 175 (Classes: 30, Instructions: 37, Conditions: 28)
-  Dependencies: Variables, Stats
+[Core] (gc-core)
+  Assembly: GameCreator.Runtime.Core
+  Namespace: GameCreator.Runtime.Core
+  Components: Character, Args, Instructions, Conditions, Triggers
+  Dependencies: InputSystem, TextMeshPro, Collections, Mathematics
 
-[Stats] (gc-stats-networked)
-  Sync: NetworkStatsSync
-  Symbols: 134 (Classes: 30, Instructions: 16, Conditions: 8)
-  Dependencies: Variables
+[Netcode] (gc-netcode)
+  Assembly: GameCreator.Netcode.Runtime
+  Namespace: GameCreator.Netcode.Runtime
+  Components: NetworkCharacterAdapter, NetworkCharacter, NetworkVariablesSync
+  Dependencies: GameCreator.Runtime.Core, Unity.Netcode.Runtime
 
-[Character] (gc-character-networked)
-  Sync: NetworkCharacterAdapter
-  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
-  Dependencies: None
+----------------------------------------------------------------------
+NETCODE INTEGRATION COMPONENTS
+----------------------------------------------------------------------
 
-[Perception] (gc-perception-networked)
-  Sync: NetworkPerceptionSync
-  Symbols: 132 (Classes: 30, Instructions: 13, Conditions: 9)
-  Dependencies: Character, Behavior
+Components/
+├── NetworkCharacter.cs
+│   └── Extended Character with network properties
+├── NetworkCharacterAdapter.cs
+│   └── Bridge: Character ↔ NetworkBehaviour
+└── NetworkCharacterRegistry.cs
+    └── Tracks all network characters
 
-[Variables] (gc-variables-networked)
-  Sync: NetworkVariablesSync
-  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
-  Dependencies: None
+Driver/
+└── NetworkUnitDriverController.cs
+    └── Network-aware movement driver
 
-[Behavior] (gc-behavior-networked)
-  Sync: NetworkBehaviorSync
-  Symbols: 114 (Classes: 30, Instructions: 3, Conditions: 1)
-  Dependencies: Variables, Perception
+Motion/
+└── NetworkCharacterMotion.cs
+    └── Synced character motion
 
-[Mailbox] (gc-mailbox-networked)
-  Sync: NetworkMailboxSync
-  Symbols: 128 (Classes: 30, Instructions: 9, Conditions: 9)
-  Dependencies: Variables
+Sync/
+└── NetworkVariablesSync.cs
+    └── GameCreator Variables ↔ NetworkVariables
 
-[Factions] (gc-factions-networked)
-  Sync: NetworkFactionsSync
-  Symbols: 125 (Classes: 30, Instructions: 11, Conditions: 4)
-  Dependencies: Variables, Perception
-
-[Tactile] (gc-tactile-networked)
-  Sync: NetworkTactileSync
-  Symbols: 181 (Classes: 30, Instructions: 50, Conditions: 21)
-  Dependencies: Variables
-
-[Quests] (gc-quests-networked)
-  Sync: NetworkQuestsSync
-  Symbols: 133 (Classes: 30, Instructions: 10, Conditions: 13)
-  Dependencies: Variables, Inventory
-
-[Dialogue] (gc-dialogue-networked)
-  Sync: NetworkDialogueSync
-  Symbols: 116 (Classes: 30, Instructions: 4, Conditions: 2)
-  Dependencies: Variables, Character
-
-[Character Core] (gc-character-core)
-  Sync: NetworkCharacterAdapter
-  Symbols: 190 (Classes: 30, Instructions: 50, Conditions: 30)
-  Dependencies: None
-
-[Netcode Core] (unity-netcode-core)
-  Sync: N/A
-  Symbols: 182 (Classes: 30, Instructions: 43, Conditions: 29)
-  Dependencies: None
+VisualScripting/
+├── Instructions/
+│   ├── InstructionNetworkStartHost
+│   ├── InstructionNetworkStartClient
+│   ├── InstructionNetworkSpawnPlayer
+│   ├── InstructionNetworkDespawn
+│   ├── InstructionNetworkChangeOwnership
+│   └── InstructionNetworkDisconnect
+├── Conditions/
+│   ├── ConditionNetworkIsHost
+│   ├── ConditionNetworkIsClient
+│   ├── ConditionNetworkIsServer
+│   ├── ConditionNetworkIsOwner
+│   ├── ConditionNetworkIsLocalPlayer
+│   ├── ConditionNetworkIsConnected
+│   └── ConditionNetworkIsSpawned
+├── Triggers/
+│   ├── EventNetworkOnClientConnected
+│   ├── EventNetworkOnClientDisconnected
+│   ├── EventNetworkOnLocalPlayerSpawned
+│   ├── EventNetworkOnNetworkSpawn
+│   ├── EventNetworkOnNetworkDespawn
+│   └── EventNetworkOnOwnershipChanged
+└── Properties/
+    ├── GetGameObjectNetworkLocalPlayer
+    └── GetGameObjectNetworkPlayerByClientId
 
 ----------------------------------------------------------------------
 DEPENDENCY GRAPH
 ----------------------------------------------------------------------
 
-Variables <- FOUNDATIONAL (all modules depend on this)
+Unity.Netcode.Runtime <- FOUNDATION
     |
-    +-- Stats
-    |     +-- Inventory, Character
+    +-- GameCreator.Runtime.Core <- CHARACTER SYSTEM
+    |     +-- Character, Args, Instructions, Conditions
     |
-    +-- Behavior
-    |     +-- Perception
-    |           +-- Factions
-    |
-    +-- Quests
-    |     +-- Dialogue
-    |
-    +-- Mailbox (decoupled messaging)
-    |
-    +-- Tactile (input layer)
+    +-- GameCreator.Netcode.Runtime <- NETWORK BRIDGE
+          +-- NetworkCharacterAdapter (bridges both)
+          +-- NetworkVariablesSync
+          +-- All network VS components
 
-Character <- CORE (owns NetworkCharacterAdapter)
-    +-- All gameplay modules attach to Character
+----------------------------------------------------------------------
+KEY PATTERNS
+----------------------------------------------------------------------
+
+NetworkCharacterAdapter Lifecycle:
+├── OnNetworkSpawn() - Character spawns on network
+│   ├── IsOwner: BecomeLocalPlayer()
+│   └── !IsOwner: BecomeRemotePlayer()
+├── OnNetworkDespawn() - Character leaves network
+├── OnGainedOwnership() - Ownership transferred to us
+└── OnLostOwnership() - Ownership transferred away
+
+RPC Pattern (Netcode 2.x):
+├── [Rpc(SendTo.Server)] - Client → Server
+├── [Rpc(SendTo.Everyone)] - Server → All clients
+├── [Rpc(SendTo.Owner)] - Server → Owner only
+└── RpcParams rpcParams = default for sender info
+
+Variables Sync:
+├── NetworkSyncMode.Everyone - All clients read
+├── NetworkSyncMode.OwnerOnly - Owner read/write
+└── NetworkSyncMode.ServerOnly - Server only
 
 ----------------------------------------------------------------------
 USAGE INSTRUCTIONS
 ----------------------------------------------------------------------
 
 1. Load persona schema before working on module:
-   .serena/personas/{module}.llm.txt
+   .serena/personas/character-core.llm.txt
+   .serena/personas/netcode-core.llm.txt
 
-2. Check cross-integration proposals when adding features
-   that span multiple modules
+2. Check OpenSpec for existing specs and proposals:
+   openspec list --specs
+   openspec list
 
-3. Respect limitations - they document real network constraints
+3. Use decision trees for networking decisions:
+   openspec/.decision-trees/network-sync-method.yaml
+   openspec/.decision-trees/gc-character-sync.yaml
 
-4. Use dependency graph for understanding module relationships
+4. Reference GameCreator.Netcode.Runtime namespace for all
+   network-related GameCreator code
+
+----------------------------------------------------------------------
+OPENSPEC INTEGRATION
+----------------------------------------------------------------------
+
+Active Specs (check with: openspec list --specs):
+├── character-system/spec.md
+├── network-synchronization/spec.md
+├── spawn-system/spec.md
+└── visual-scripting/spec.md
+
+Decision Trees:
+├── network-sync-method.yaml
+├── gc-character-sync.yaml
+└── schema.yaml (KB-enhanced schema)
+
+Cross-reference: .serena/memories/TOOLS/008_openspec_serena_integration.md

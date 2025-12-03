@@ -1,6 +1,5 @@
 using System;
 using GameCreator.Runtime.Common;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace GameCreator.Netcode.Runtime.VisualScripting
@@ -8,7 +7,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Title("Network Player by Client ID")]
     [Category("Network/Network Player by Client ID")]
 
-    [Description("Returns a NetworkCharacter by their Client ID")]
+    [Description("Returns a NetworkCharacter by their Client ID (0 = Host, 1+ = Clients)")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Yellow)]
 
     [Serializable]
@@ -31,25 +30,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private static GameObject GetPlayerByClientId(ulong clientId)
         {
-            if (NetworkManager.Singleton == null)
-            {
-                return null;
-            }
-
-            // Search for NetworkCharacter with matching owner client ID
-            NetworkCharacter[] networkCharacters = UnityEngine.Object.FindObjectsByType<NetworkCharacter>(FindObjectsSortMode.None);
-            foreach (NetworkCharacter character in networkCharacters)
-            {
-                NetworkObject networkObject = character.GetComponent<NetworkObject>();
-                if (networkObject != null &&
-                    networkObject.IsSpawned &&
-                    networkObject.OwnerClientId == clientId)
-                {
-                    return character.gameObject;
-                }
-            }
-
-            return null;
+            // Use registry for efficient cached lookup
+            var character = NetworkCharacterRegistry.GetByClientId(clientId);
+            return character != null ? character.gameObject : null;
         }
 
         public static PropertyGetGameObject Create(int clientId = 0)

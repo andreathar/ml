@@ -1,133 +1,114 @@
 {
-  "generated_at": "2025-11-23T23:30:00Z",
-  "modules": [
-    {
-      "id": "core",
+  "project": "ML",
+  "generated": "2025-12-03",
+  "description": "GameCreator modules installed in this project",
+  "installed_modules": {
+    "core": {
       "name": "GameCreator Core",
-      "category": "framework",
-      "runtime_assembly": "GameCreator.Runtime.Core",
-      "editor_assembly": "GameCreator.Editor.Core",
-      "path": "Assets/Plugins/GameCreator",
-      "description": "Core framework providing Characters, Visual Scripting, Variables",
-      "key_features": ["Character system", "Visual scripting", "Variable management", "Save system"],
-      "dependencies": []
+      "assembly": "GameCreator.Runtime.Core",
+      "namespace": "GameCreator.Runtime.Core",
+      "path": "Assets/Plugins/GameCreator/Packages/Core",
+      "status": "active",
+      "components": {
+        "character": {
+          "class": "Character",
+          "description": "Main character component with movement, animation, states",
+          "properties": ["IsPlayer", "IsAlive", "Busy", "Motion", "Animim", "States"]
+        },
+        "args": {
+          "class": "Args",
+          "description": "Context container for visual scripting",
+          "properties": ["Self", "Target", "Clone()"]
+        }
+      },
+      "visual_scripting": {
+        "instruction_base": "Instruction",
+        "condition_base": "Condition",
+        "trigger_base": "Trigger",
+        "signature_instruction": "protected override Task Run(Args args)",
+        "signature_condition": "protected override bool Check(Args args)"
+      }
     },
-    {
-      "id": "inventory",
-      "name": "Inventory Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Inventory",
-      "editor_assembly": "GameCreator.Editor.Inventory",
-      "path": "Assets/Plugins/GameCreator/Modules/Inventory",
-      "description": "Complete inventory and item management system",
-      "key_features": ["Item database", "Bag containers", "Equipment slots", "Crafting system"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "stats",
-      "name": "Stats Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Stats",
-      "editor_assembly": "GameCreator.Editor.Stats",
-      "path": "Assets/Plugins/GameCreator/Modules/Stats",
-      "description": "Character attributes, stats, and progression",
-      "key_features": ["Attributes", "Stats", "Status effects", "Level progression"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "shooter",
-      "name": "Shooter Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Shooter",
-      "editor_assembly": "GameCreator.Editor.Shooter",
-      "path": "Assets/Plugins/GameCreator/Modules/Shooter",
-      "description": "Weapon and combat system for shooting mechanics",
-      "key_features": ["Weapons", "Ammunition", "Shooting mechanics", "Recoil system"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "quests",
-      "name": "Quests Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Quests",
-      "editor_assembly": "GameCreator.Editor.Quests",
-      "path": "Assets/Plugins/GameCreator/Modules/Quests",
-      "description": "Quest and objective system",
-      "key_features": ["Quest database", "Tasks", "Objectives", "Quest tracking"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "dialogue",
-      "name": "Dialogue Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Dialogue",
-      "editor_assembly": "GameCreator.Editor.Dialogue",
-      "path": "Assets/Plugins/GameCreator/Modules/Dialogue",
-      "description": "Branching dialogue and story system",
-      "key_features": ["Dialogue trees", "Branching conversations", "Story nodes", "Choice system"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "behavior",
-      "name": "Behavior Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Behavior",
-      "editor_assembly": "GameCreator.Editor.Behavior",
-      "path": "Assets/Plugins/GameCreator/Modules/Behavior",
-      "description": "AI behavior trees and state machines",
-      "key_features": ["Behavior trees", "State machines", "AI navigation", "Decision making"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "perception",
-      "name": "Perception Module",
-      "category": "module",
-      "runtime_assembly": "GameCreator.Runtime.Perception",
-      "editor_assembly": "GameCreator.Editor.Perception",
-      "path": "Assets/Plugins/GameCreator/Modules/Perception",
-      "description": "Sensory awareness system for AI",
-      "key_features": ["Vision", "Hearing", "Awareness", "Threat detection"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "factions",
-      "name": "Factions Module",
-      "category": "module",
-      "runtime_assembly": "NinjutsuGames.Runtime.Factions",
-      "editor_assembly": "NinjutsuGames.Editor.Factions",
-      "path": "Assets/Plugins/GameCreator/Modules/Factions",
-      "description": "Faction and relationship system",
-      "key_features": ["Faction management", "Reputation", "Relationships", "Alliance system"],
-      "dependencies": ["core"]
-    },
-    {
-      "id": "multiplayer",
-      "name": "Multiplayer Module (Custom)",
-      "category": "custom",
-      "runtime_assembly": "GameCreator.Multiplayer.Runtime",
-      "editor_assembly": "GameCreator.Multiplayer.Editor",
-      "path": "Assets/Plugins/GameCreator_Multiplayer",
-      "description": "Unity Netcode integration for GameCreator",
-      "key_features": ["Character networking", "RPC patterns", "Network sync", "Server authority"],
-      "dependencies": ["core"],
-      "custom_integration": {
-        "invasive": true,
-        "modifies_core": ["Character", "CharacterController"],
-        "adds_components": ["NetworkCharacterAdapter"],
-        "adds_properties": ["IsNetworkOwner", "IsNetworkSpawned"]
+    "netcode": {
+      "name": "Netcode for GameObjects Integration",
+      "assembly": "GameCreator.Netcode.Runtime",
+      "namespace": "GameCreator.Netcode.Runtime",
+      "path": "Assets/Plugins/GameCreator/Packages/Netcode_for_GameObjects_Integration",
+      "status": "active",
+      "requires": ["core"],
+      "unity_dependency": "Unity.Netcode.Runtime",
+      "components": {
+        "network_character_adapter": {
+          "class": "NetworkCharacterAdapter",
+          "base": "NetworkBehaviour",
+          "description": "Bridges Character with NetworkBehaviour",
+          "properties": ["Character", "NetworkCharacter", "IsLocalPlayer"],
+          "events": ["EventNetworkSpawned", "EventNetworkDespawned", "EventOwnershipChanged"],
+          "methods": ["RequestOwnership()", "TransferOwnership(ulong)"]
+        },
+        "network_character": {
+          "class": "NetworkCharacter",
+          "base": "Character",
+          "description": "Extended Character with network properties",
+          "properties": ["IsNetworkSpawned"],
+          "methods": ["BecomeLocalPlayer()", "BecomeRemotePlayer()"]
+        },
+        "network_variables_sync": {
+          "class": "NetworkVariablesSync",
+          "base": "NetworkBehaviour",
+          "description": "Synchronizes GameCreator variables over network",
+          "methods": ["SetVariable", "GetVariable", "SetFloat", "GetFloat", "SetInt", "GetInt", "SetBool", "GetBool"],
+          "events": ["EventVariableChanged"]
+        }
+      },
+      "visual_scripting": {
+        "instructions": [
+          "InstructionNetworkStartHost",
+          "InstructionNetworkStartClient",
+          "InstructionNetworkSpawnPlayer",
+          "InstructionNetworkDespawn",
+          "InstructionNetworkChangeOwnership",
+          "InstructionNetworkDisconnect"
+        ],
+        "conditions": [
+          "ConditionNetworkIsHost",
+          "ConditionNetworkIsClient",
+          "ConditionNetworkIsServer",
+          "ConditionNetworkIsOwner",
+          "ConditionNetworkIsLocalPlayer",
+          "ConditionNetworkIsConnected",
+          "ConditionNetworkIsSpawned"
+        ],
+        "triggers": [
+          "EventNetworkOnClientConnected",
+          "EventNetworkOnClientDisconnected",
+          "EventNetworkOnLocalPlayerSpawned",
+          "EventNetworkOnNetworkSpawn",
+          "EventNetworkOnNetworkDespawn",
+          "EventNetworkOnOwnershipChanged"
+        ],
+        "properties": [
+          "GetGameObjectNetworkLocalPlayer",
+          "GetGameObjectNetworkPlayerByClientId"
+        ]
+      },
+      "sync_patterns": {
+        "rpc_new": "[Rpc(SendTo.Server|Everyone|Owner|NotOwner)]",
+        "rpc_legacy": "[ServerRpc] / [ClientRpc]",
+        "variables": "NetworkVariablesSync with NetworkSyncMode"
       }
     }
-  ],
-  "dependency_graph": {
-    "core": [],
-    "inventory": ["core"],
-    "stats": ["core"],
-    "shooter": ["core"],
-    "quests": ["core"],
-    "dialogue": ["core"],
-    "behavior": ["core"],
-    "perception": ["core"],
-    "factions": ["core"],
-    "multiplayer": ["core"]
-  }
+  },
+  "not_installed": [
+    "Inventory",
+    "Stats",
+    "Quests",
+    "Dialogue",
+    "Perception",
+    "Behavior",
+    "Shooter",
+    "Melee",
+    "Factions",
+    "Mailbox"
+  ]
 }

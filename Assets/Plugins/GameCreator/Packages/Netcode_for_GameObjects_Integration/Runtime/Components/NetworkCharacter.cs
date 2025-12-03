@@ -12,9 +12,16 @@ namespace GameCreator.Netcode.Runtime
     /// - IsNetworkSpawned flag prevents CharacterController conflicts with NetworkTransform
     /// - Properly handles initialization for network-spawned characters
     /// - Disables input control for non-owner remote characters
+    /// - Registers with NetworkCharacterRegistry for efficient lookup
+    ///
+    /// Host vs Client topology:
+    /// - Host (ClientId 0): IsHost=true, IsServer=true, IsClient=true
+    /// - Client (ClientId 1+): IsHost=false, IsServer=false, IsClient=true
+    /// Both have a "local player" - the character they own (IsOwner=true)
     /// </summary>
     [AddComponentMenu("Game Creator/Characters/Network Character")]
     [Icon(RuntimePaths.GIZMOS + "GizmoCharacter.png")]
+    [RequireComponent(typeof(NetworkObject))]
     public class NetworkCharacter : Character
     {
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
@@ -41,6 +48,9 @@ namespace GameCreator.Netcode.Runtime
         [NonSerialized]
         private bool m_WasPlayerBeforeNetwork;
 
+        [NonSerialized]
+        private bool m_IsRegistered;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         /// <summary>
@@ -65,6 +75,7 @@ namespace GameCreator.Netcode.Runtime
 
         /// <summary>
         /// Returns true if this character is owned by the local client.
+        /// Works for both Host (ClientId 0) and Client (ClientId 1+).
         /// </summary>
         public bool IsLocalOwner
         {
@@ -73,6 +84,20 @@ namespace GameCreator.Netcode.Runtime
                 if (this.m_NetworkObject == null)
                     return true; // Not networked, treat as local
                 return this.m_NetworkObject.IsOwner;
+            }
+        }
+
+        /// <summary>
+        /// The ClientId of the owner of this character.
+        /// 0 for Host, 1+ for Clients.
+        /// </summary>
+        public ulong OwnerClientId
+        {
+            get
+            {
+                if (this.m_NetworkObject == null)
+                    return 0;
+                return this.m_NetworkObject.OwnerClientId;
             }
         }
 
@@ -90,6 +115,11 @@ namespace GameCreator.Netcode.Runtime
                 return this.IsLocalOwner;
             }
         }
+
+        /// <summary>
+        /// The underlying NetworkObject component.
+        /// </summary>
+        public NetworkObject NetworkObject => this.m_NetworkObject;
 
         // EVENTS: --------------------------------------------------------------------------------
 
@@ -114,6 +144,12 @@ namespace GameCreator.Netcode.Runtime
         protected override void OnEnable()
         {
             base.OnEnable();
+
+            // Ensure NetworkCharacterSync component exists for network callbacks
+            if (GetComponent<NetworkCharacterSync>() == null)
+            {
+                gameObject.AddComponent<NetworkCharacterSync>();
+            }
         }
 
         protected override void OnDisable()
@@ -123,7 +159,88 @@ namespace GameCreator.Netcode.Runtime
 
         protected override void OnDestroy()
         {
+            // Unregister from registry
+            if (this.m_IsRegistered)
+            {
+                NetworkCharacterRegistry.Unregister(this);
+                this.m_IsRegistered = false;
+            }
+
             base.OnDestroy();
+        }
+
+        // NETWORK CALLBACKS: ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Called when this NetworkObject is spawned on the network.
+        /// Registers with NetworkCharacterRegistry for efficient lookup.
+        /// </summary>
+        public void OnNetworkSpawn()
+        {
+            this.m_IsNetworkSpawned = true;
+
+            // Register with the registry
+            NetworkCharacterRegistry.Register(this);
+            this.m_IsRegistered = true;
+
+            // Set up local vs remote player
+            if (this.IsLocalOwner)
+            {
+                this.BecomeLocalPlayer();
+            }
+            else
+            {
+                this.BecomeRemotePlayer();
+            }
+
+            Debug.Log(
+                $"[NetworkCharacter] {gameObject.name} spawned on network "
+                    + $"(ClientId: {this.OwnerClientId}, IsLocalOwner: {this.IsLocalOwner}, "
+                    + $"IsHost: {NetworkCharacterRegistry.IsHost})"
+            );
+        }
+
+        /// <summary>
+        /// Called when this NetworkObject is despawned from the network.
+        /// Unregisters from NetworkCharacterRegistry.
+        /// </summary>
+        public void OnNetworkDespawn()
+        {
+            // Unregister from the registry
+            if (this.m_IsRegistered)
+            {
+                NetworkCharacterRegistry.Unregister(this);
+                this.m_IsRegistered = false;
+            }
+
+            this.m_IsNetworkSpawned = false;
+
+            Debug.Log($"[NetworkCharacter] {gameObject.name} despawned from network");
+        }
+
+        /// <summary>
+        /// Called by NetworkCharacterSync when ownership of this NetworkObject changes.
+        /// Updates registry mapping and local player state.
+        /// </summary>
+        public void HandleOwnershipChanged(ulong previousOwner, ulong newOwner)
+        {
+            // Update the registry mapping
+            NetworkCharacterRegistry.UpdateClientIdMapping(this, newOwner);
+
+            // Update local vs remote player state
+            if (this.IsLocalOwner)
+            {
+                this.BecomeLocalPlayer();
+            }
+            else
+            {
+                this.BecomeRemotePlayer();
+            }
+
+            Debug.Log(
+                $"[NetworkCharacter] {gameObject.name} ownership changed: "
+                    + $"{previousOwner} -> {newOwner} (IsLocalOwner: {this.IsLocalOwner})"
+            );
         }
 
         // UPDATE METHODS: ------------------------------------------------------------------------

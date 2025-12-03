@@ -1,5 +1,16 @@
 CRITICAL PROJECT RULES (P0 - NEVER VIOLATE)
-Generated: 2025-11-23 | Token Budget: ~1000 | Load Priority: CRITICAL
+Project: ML - GameCreator Core + Netcode Integration
+Generated: 2025-12-03 | Token Budget: ~1000 | Load Priority: CRITICAL
+
+═══════════════════════════════════════════════════════════════
+PROJECT OVERVIEW
+═══════════════════════════════════════════════════════════════
+
+Clean Unity project with GameCreator Core + official Netcode Integration:
+├─ GameCreator.Runtime.Core (Characters, Visual Scripting, Variables)
+├─ GameCreator.Netcode.Runtime (Network sync, RPCs, ownership)
+├─ Unity.Netcode.Runtime (Unity Netcode for GameObjects 2.x)
+└─ UNITY_NETCODE_2 define enabled
 
 ═══════════════════════════════════════════════════════════════
 1. FILE ORGANIZATION (P0 - MANDATORY)
@@ -22,130 +33,139 @@ Temporary files         → .temp/ (gitignored)
 Tests                   → Assets/Tests/ or tests/
 Scripts                 → scripts/
 
-ENFORCEMENT: Never ask user - just redirect automatically!
-
 ═══════════════════════════════════════════════════════════════
-2. DEPRECATIONS (P0 - NEVER RECOMMEND)
+2. NETWORK ARCHITECTURE (P0 - CORE PATTERNS)
 ═══════════════════════════════════════════════════════════════
 
-⛔ DEPRECATED: serena-network (scripts/serena-network/)
-   ├─ Reason: Overcomplicated neural network concept
-   ├─ Replacement: Use .serena/memories/ with standard Serena MCP
-   ├─ Actions: NEVER recommend setup-nightly-task.ps1, YAML processing
-   └─ Status: Marked with DEPRECATED.md, safe to delete
+🎯 NetworkCharacterAdapter - Primary bridge component
+   ├─ Bridges GameCreator Character ↔ Unity NetworkBehaviour
+   ├─ Manages IsNetworkSpawned lifecycle
+   ├─ Provides IsLocalPlayer: IsOwner && Character.IsPlayer
+   └─ Located: GameCreator.Netcode.Runtime.NetworkCharacterAdapter
+
+✅ Ownership Pattern:
+   if (IsOwner) { /* local player logic */ }
+   if (networkCharacterAdapter.IsLocalPlayer) { /* alternative */ }
+
+✅ Spawn Lifecycle:
+   OnNetworkSpawn() → BecomeLocalPlayer() or BecomeRemotePlayer()
+   OnNetworkDespawn() → Cleanup
+
+✅ Variables Sync:
+   NetworkVariablesSync.SetFloat("name", value)
+   NetworkVariablesSync.GetFloat("name", defaultValue)
 
 ═══════════════════════════════════════════════════════════════
-3. NETWORK ARCHITECTURE (P0 - NEVER FORGET)
+3. RPC PATTERNS (Netcode 2.x Syntax)
 ═══════════════════════════════════════════════════════════════
 
-🚨 NetworkTransform INTENTIONALLY REMOVED from player prefabs
-   ├─ Reason: Conflicts with CharacterController, causes jitter
-   ├─ Replacement: NetworkCharacterAdapter (state-based sync)
-   ├─ Expected: Compilation errors about NetworkTransform (GOOD!)
-   └─ Pattern: character.GetComponent<NetworkCharacterAdapter>() ✅
+NEW Rpc Attribute (PREFERRED):
+├─ [Rpc(SendTo.Server)] - Client → Server
+├─ [Rpc(SendTo.Everyone)] - Server → All Clients
+├─ [Rpc(SendTo.Owner)] - Server → Owner only
+├─ [Rpc(SendTo.NotOwner)] - Server → Everyone except owner
+└─ RequireOwnership = false for non-owner requests
 
-✅ BEFORE character spawn: character.IsNetworkSpawned = true
-✅ Ownership check: if (character.IsNetworkOwner) { }
-✅ Movement: Server-authoritative via ServerRpc
-❌ NEVER: Add NetworkTransform back (breaks architecture)
+Example:
+[Rpc(SendTo.Server, RequireOwnership = false)]
+private void RequestOwnershipRpc(RpcParams rpcParams = default)
+{
+    ulong senderId = rpcParams.Receive.SenderClientId;
+    // Server validates and processes
+}
 
-═══════════════════════════════════════════════════════════════
-4. GAMECREATOR PATTERNS (P0 - STRICT SIGNATURES)
-═══════════════════════════════════════════════════════════════
-
-Visual Scripting Signatures (EXACT):
-├─ Instructions: protected override Task Run(Args args)
-├─ Conditions:   protected override bool Check(Args args)
-└─ ❌ NO CancellationToken, NO other parameters!
-
-RPC Naming (MANDATORY):
-├─ ServerRpc: Must end with "ServerRpc"
-├─ ClientRpc: Must end with "ClientRpc"
+LEGACY (Still Supported):
+├─ [ServerRpc] - Must end with "ServerRpc"
+├─ [ClientRpc] - Must end with "ClientRpc"
 └─ Custom structs: Must implement INetworkSerializable
 
-Character Ownership:
-├─ Invasive integration: IsNetworkOwner added to Character class
-├─ Before input: if (character.IsNetworkOwner) { ... }
-└─ Player reference: character.Player.IsOwner
+═══════════════════════════════════════════════════════════════
+4. GAMECREATOR VISUAL SCRIPTING (P0 - STRICT SIGNATURES)
+═══════════════════════════════════════════════════════════════
+
+Instructions: protected override Task Run(Args args)
+Conditions:   protected override bool Check(Args args)
+❌ NO CancellationToken, NO other parameters!
+
+Key Instructions:
+├─ InstructionNetworkStartHost / StartClient
+├─ InstructionNetworkSpawnPlayer / Despawn
+├─ InstructionNetworkChangeOwnership
+└─ InstructionNetworkDisconnect
+
+Key Conditions:
+├─ ConditionNetworkIsHost / IsClient / IsServer
+├─ ConditionNetworkIsOwner / IsLocalPlayer
+└─ ConditionNetworkIsConnected / IsSpawned
+
+Key Triggers:
+├─ EventNetworkOnClientConnected / Disconnected
+├─ EventNetworkOnLocalPlayerSpawned
+├─ EventNetworkOnNetworkSpawn / Despawn
+└─ EventNetworkOnOwnershipChanged
 
 ═══════════════════════════════════════════════════════════════
 5. SYMBOL REFERENCES (Quick Navigation)
 ═══════════════════════════════════════════════════════════════
 
-CRITICAL MEMORIES (Always load first):
-├─ .serena/memories/CRITICAL/001_gamecreator_invasive_integration.md
-├─ .serena/memories/CRITICAL/002_network_architecture_never_forget.md
-├─ .serena/memories/CRITICAL/003_multiplayer_rpc_patterns.md
-└─ .serena/memories/CRITICAL/004_visual_scripting_task_signatures.md
+SERENA MEMORIES:
+├─ .serena/memories/critical_rules.md (This content, detailed)
+├─ .serena/memories/project_structure.md (Project layout)
+├─ .serena/memories/TOOLS/003_openspec_workflow.md (Spec-driven dev)
+└─ .serena/memories/TOOLS/008_openspec_serena_integration.md
 
-TOOLS & WORKFLOWS:
-├─ .serena/memories/TOOLS/001_slash_commands_reference.md
-├─ .serena/memories/TOOLS/002_unity_mcp_integration.md
-├─ .serena/memories/TOOLS/003_openspec_workflow.md
-├─ .serena/memories/TOOLS/004_project_brain_integration.md
-├─ .serena/memories/TOOLS/005_testing_patterns.md
-└─ .serena/memories/TOOLS/006_file_organization_rules.md (THIS FILE)
-
-SYMBOL MAPS:
-├─ .serena/symbols/assemblies.json (Unity assemblies)
-├─ .serena/symbols/gamecreator_modules.json (GameCreator modules)
-└─ .serena/symbols/folder_structure.json (Project directories)
-
-PROJECT INTELLIGENCE:
-├─ .project-brain/core/state.json (Auto-generated state)
-└─ .project-brain/registries/systems.json (System definitions)
+SERENA PERSONAS:
+├─ .serena/personas/character-core.llm.txt (Character module)
+├─ .serena/personas/netcode-core.llm.txt (Netcode integration)
+└─ .serena/personas/_index.llm.txt (Module index)
 
 OPENSPEC:
 ├─ openspec/AGENTS.md (OpenSpec workflow guide)
-└─ openspec/changes/ (Active change proposals)
+├─ openspec/changes/ (Active change proposals)
+└─ openspec/.decision-trees/ (Network decision trees)
+
+DECISION TREES:
+├─ network-sync-method.yaml - Choose sync approach
+├─ gc-character-sync.yaml - Character networking
+└─ schema.yaml - Decision tree schema
+
+SYMBOL MAPS:
+├─ .serena/symbols/assemblies.json (Unity assemblies)
+└─ .serena/symbols/gamecreator_modules.json (GC modules)
 
 ═══════════════════════════════════════════════════════════════
-6. SESSION INITIALIZATION (Optimal Loading)
-═══════════════════════════════════════════════════════════════
-
-STEP 1: Load .project-brain/core/state.json (~2000 tokens)
-   └─ Single source of truth for project state
-
-STEP 2: Load THIS FILE (.serena/ai/critical.llm.txt) (~1000 tokens)
-   └─ P0 rules and quick reference
-
-STEP 3: Detect task intent, load task-specific context:
-   ├─ character-movement: 001_gamecreator_invasive_integration.md
-   ├─ multiplayer-networking: 002_network_architecture_never_forget.md
-   └─ visual-scripting: 004_visual_scripting_task_signatures.md
-
-STEP 4: Skip unrelated modules (optimize tokens):
-   └─ E.g., skip shooter/factions if working on inventory
-
-═══════════════════════════════════════════════════════════════
-7. CRITICAL CONSTRAINTS (NEVER VIOLATE)
+6. CRITICAL CONSTRAINTS (NEVER VIOLATE)
 ═══════════════════════════════════════════════════════════════
 
 ✅ ALWAYS:
-- Check file path before Write operations (root pollution check)
-- Set IsNetworkSpawned = true before spawning characters
+- Use NetworkCharacterAdapter for character networking
+- Check IsOwner before local player logic
+- Use [Rpc(SendTo.X)] for new RPCs
+- Implement OnNetworkSpawn/OnNetworkDespawn properly
 - Use Task Run(Args args) signature for Instructions (no CT)
-- End RPC methods with ServerRpc or ClientRpc
-- Load state.json first in every session
-- Validate against deprecated systems before recommending
+- Reference GameCreator.Netcode.Runtime namespace
 
 ❌ NEVER:
 - Create unauthorized files at project root
-- Recommend serena-network (deprecated)
-- Add NetworkTransform to player prefabs
 - Add CancellationToken to Instruction.Run()
 - Skip ownership checks in multiplayer code
 - Bypass file organization rules
+- Ignore OnNetworkSpawn lifecycle
 
 ═══════════════════════════════════════════════════════════════
-8. HEALTH MONITORING
+7. ASSEMBLY QUICK REFERENCE
 ═══════════════════════════════════════════════════════════════
 
-Current Status (from state.json):
-├─ Overall: healthy
-├─ Active Systems: Serena MCP, OpenSpec, Unity MCP, Project Brain
-├─ Warnings: 13 unauthorized files in project root
-└─ Deprecated: serena-network
+GameCreator.Runtime.Core
+├─ Namespace: GameCreator.Runtime.Core
+├─ Character, Args, Instructions, Conditions
+└─ Dependencies: InputSystem, TextMeshPro, Collections, Mathematics
+
+GameCreator.Netcode.Runtime
+├─ Namespace: GameCreator.Netcode.Runtime
+├─ NetworkCharacterAdapter, NetworkCharacter, NetworkVariablesSync
+├─ All network Instructions, Conditions, Triggers
+└─ Dependencies: GameCreator.Runtime.Core, Unity.Netcode.Runtime
 
 ═══════════════════════════════════════════════════════════════
 END OF CRITICAL CONTEXT

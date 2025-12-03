@@ -20,9 +20,8 @@
     ,
     "serena-mcp": {
       "type": "stdio",
-      "command": "D:/UnityWorkspaces/ml/.venv/Scripts/python.exe",
+      "command": "C:/Users/andre_wjgj23f/.local/bin/uvx.exe",
       "args": [
-        "-m", "uvx",
         "--from", "git+https://github.com/oraios/serena",
         "serena", "start-mcp-server"
       ],
