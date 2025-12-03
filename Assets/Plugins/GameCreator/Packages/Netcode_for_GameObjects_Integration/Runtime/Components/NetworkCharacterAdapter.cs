@@ -174,7 +174,7 @@ namespace GameCreator.Netcode.Runtime
             if (IsServer) return;
             if (IsOwner) return;
 
-            RequestOwnershipServerRpc();
+            RequestOwnershipRpc();
         }
 
         /// <summary>
@@ -196,8 +196,8 @@ namespace GameCreator.Netcode.Runtime
 
         // RPCs: ----------------------------------------------------------------------------------
 
-        [ServerRpc(RequireOwnership = false)]
-        private void RequestOwnershipServerRpc(ServerRpcParams rpcParams = default)
+        [Rpc(SendTo.Server, RequireOwnership = false)]
+        private void RequestOwnershipRpc(RpcParams rpcParams = default)
         {
             ulong requestingClientId = rpcParams.Receive.SenderClientId;
 

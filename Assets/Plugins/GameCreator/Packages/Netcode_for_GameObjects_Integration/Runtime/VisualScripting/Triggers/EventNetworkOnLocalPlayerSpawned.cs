@@ -24,7 +24,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
-        protected override void OnEnable(Trigger trigger)
+        protected internal override void OnEnable(Trigger trigger)
         {
             base.OnEnable(trigger);
             this.m_Args = new Args(trigger.gameObject);
@@ -37,7 +37,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             }
         }
 
-        protected override void OnDisable(Trigger trigger)
+        protected internal override void OnDisable(Trigger trigger)
         {
             base.OnDisable(trigger);
 

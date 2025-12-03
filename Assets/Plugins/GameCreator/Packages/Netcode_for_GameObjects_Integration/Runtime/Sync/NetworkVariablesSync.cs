@@ -166,7 +166,7 @@ namespace GameCreator.Netcode.Runtime
             }
             else
             {
-                SetVariableServerRpc(variableName, new NetworkString64(value));
+                SetVariableRpc(variableName, new NetworkString64(value));
             }
         }
 
@@ -277,11 +277,11 @@ namespace GameCreator.Netcode.Runtime
 
         // RPCs: ----------------------------------------------------------------------------------
 
-        [ServerRpc(RequireOwnership = false)]
-        private void SetVariableServerRpc(
+        [Rpc(SendTo.Server, RequireOwnership = false)]
+        private void SetVariableRpc(
             string variableName,
             NetworkString64 value,
-            ServerRpcParams rpcParams = default
+            RpcParams rpcParams = default
         )
         {
             if (!this.m_VariableIndexMap.TryGetValue(variableName, out int index))
