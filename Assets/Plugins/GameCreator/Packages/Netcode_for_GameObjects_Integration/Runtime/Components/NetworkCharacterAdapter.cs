@@ -151,15 +151,15 @@ namespace GameCreator.Netcode.Runtime
         {
             if (this.m_Character == null) return;
 
-            // Use NetworkCharacter's method if available, otherwise set IsPlayer directly
+            // Use NetworkCharacter's method if available
             if (this.m_NetworkCharacter != null)
             {
                 this.m_NetworkCharacter.BecomeRemotePlayer();
             }
-            else
-            {
-                this.m_Character.IsPlayer = false;
-            }
+            // Note: For standard Character without NetworkCharacter, we intentionally
+            // do NOT set IsPlayer = false here because that would clear ShortcutPlayer
+            // and break all Player-targeting functionality for the local player.
+            // Remote characters should never have IsPlayer = true anyway.
 
             Debug.Log($"[NetworkCharacterAdapter] Remote player spawned: {gameObject.name} (OwnerClientId: {OwnerClientId})");
         }

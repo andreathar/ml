@@ -1,7 +1,7 @@
 using System;
-using Unity.Netcode;
 using GameCreator.Runtime.Characters;
 using GameCreator.Runtime.Common;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GameCreator.Netcode.Runtime
@@ -14,14 +14,19 @@ namespace GameCreator.Netcode.Runtime
     [Title("Network Character Controller")]
     [Image(typeof(IconCapsuleSolid), ColorTheme.Type.Blue)]
     [Category("Network Character Controller")]
-    [Description("Moves the Character using Unity's Character Controller with network awareness. Skips center modifications for networked characters.")]
+    [Description(
+        "Moves the Character using Unity's Character Controller with network awareness. Skips center modifications for networked characters."
+    )]
     [Serializable]
     public class NetworkUnitDriverController : UnitDriverController
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private NetworkCharacter m_NetworkCharacter;
-        [NonSerialized] private bool m_CachedNetworkCheck;
+        [NonSerialized]
+        private NetworkCharacter m_NetworkCharacter;
+
+        [NonSerialized]
+        private bool m_CachedNetworkCheck;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
@@ -32,7 +37,8 @@ namespace GameCreator.Netcode.Runtime
         {
             get
             {
-                if (this.m_NetworkCharacter == null) return false;
+                if (this.m_NetworkCharacter == null)
+                    return false;
                 return this.m_NetworkCharacter.IsNetworkSpawned;
             }
         }
@@ -57,8 +63,10 @@ namespace GameCreator.Netcode.Runtime
 
         public override void OnFixedUpdate()
         {
-            if (this.Character == null) return;
-            if (this.Character.IsDead) return;
+            if (this.Character == null)
+                return;
+            if (this.Character.IsDead)
+                return;
 
             // For networked characters, use our custom physics update
             if (this.ShouldSkipCenterModification)
@@ -79,7 +87,8 @@ namespace GameCreator.Netcode.Runtime
         {
             // Get the CharacterController via reflection or direct access
             CharacterController controller = this.Character.GetComponent<CharacterController>();
-            if (controller == null) return;
+            if (controller == null)
+                return;
 
             float height = this.Character.Motion.Height;
             float radius = this.Character.Motion.Radius;

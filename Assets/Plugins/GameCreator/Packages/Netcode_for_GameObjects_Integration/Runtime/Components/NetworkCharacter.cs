@@ -32,9 +32,14 @@ namespace GameCreator.Netcode.Runtime
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private NetworkObject m_NetworkObject;
-        [NonSerialized] private bool m_IsInitialized;
-        [NonSerialized] private bool m_WasPlayerBeforeNetwork;
+        [NonSerialized]
+        private NetworkObject m_NetworkObject;
+
+        [NonSerialized]
+        private bool m_IsInitialized;
+
+        [NonSerialized]
+        private bool m_WasPlayerBeforeNetwork;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
@@ -65,7 +70,8 @@ namespace GameCreator.Netcode.Runtime
         {
             get
             {
-                if (this.m_NetworkObject == null) return true; // Not networked, treat as local
+                if (this.m_NetworkObject == null)
+                    return true; // Not networked, treat as local
                 return this.m_NetworkObject.IsOwner;
             }
         }
@@ -77,8 +83,10 @@ namespace GameCreator.Netcode.Runtime
         {
             get
             {
-                if (!this.m_IsNetworkSpawned) return true;
-                if (!this.m_DisableInputForRemote) return true;
+                if (!this.m_IsNetworkSpawned)
+                    return true;
+                if (!this.m_DisableInputForRemote)
+                    return true;
                 return this.IsLocalOwner;
             }
         }
@@ -123,24 +131,29 @@ namespace GameCreator.Netcode.Runtime
         protected override void Update()
         {
             // Skip update if not properly initialized (animation system not ready)
-            if (!this.m_IsInitialized) return;
+            if (!this.m_IsInitialized)
+                return;
 
             // Check if animation system is ready (prevents NullReferenceException)
-            if (this.Animim?.Animator == null) return;
-            if (this.Gestures == null) return;
+            if (this.Animim?.Animator == null)
+                return;
+            if (this.Gestures == null)
+                return;
 
             base.Update();
         }
 
         protected override void LateUpdate()
         {
-            if (!this.m_IsInitialized) return;
+            if (!this.m_IsInitialized)
+                return;
             base.LateUpdate();
         }
 
         protected override void FixedUpdate()
         {
-            if (!this.m_IsInitialized) return;
+            if (!this.m_IsInitialized)
+                return;
             base.FixedUpdate();
         }
 
@@ -155,19 +168,28 @@ namespace GameCreator.Netcode.Runtime
             this.IsPlayer = true;
             this.UpdateControllability();
 
-            Debug.Log($"[NetworkCharacter] {gameObject.name} became local player");
+            Debug.Log(
+                $"[NetworkCharacter] {gameObject.name} became local player (ShortcutPlayer set)"
+            );
         }
 
         /// <summary>
-        /// Called when this character is no longer the local player.
-        /// Sets IsPlayer = false and disables input processing for remote characters.
+        /// Called when this character is no longer the local player (remote character).
+        /// Sets the internal IsPlayer flag to false WITHOUT clearing ShortcutPlayer.
+        /// This ensures remote characters don't interfere with the local player reference.
         /// </summary>
         public void BecomeRemotePlayer()
         {
-            this.IsPlayer = false;
+            // Set the backing field directly to avoid triggering ShortcutPlayer.Change(null)
+            // which would clear the local player reference when remote players spawn.
+            // The m_IsPlayer field is protected in the base Character class.
+            this.m_IsPlayer = false;
+
             this.UpdateControllability();
 
-            Debug.Log($"[NetworkCharacter] {gameObject.name} became remote player");
+            Debug.Log(
+                $"[NetworkCharacter] {gameObject.name} became remote player (ShortcutPlayer preserved)"
+            );
         }
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
@@ -177,7 +199,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         private void UpdateControllability()
         {
-            if (this.Player == null) return;
+            if (this.Player == null)
+                return;
 
             if (this.m_IsNetworkSpawned && this.m_DisableInputForRemote)
             {

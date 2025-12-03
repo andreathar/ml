@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/On Client Disconnected")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Client", "Disconnect", "Leave")]
-
     [Serializable]
     public class EventNetworkOnClientDisconnected : TriggerEvent
     {
@@ -25,7 +24,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -54,7 +54,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnClientDisconnected(ulong clientId)
         {
-            if (this.m_ServerOnly && !NetworkManager.Singleton.IsServer) return;
+            if (this.m_ServerOnly && !NetworkManager.Singleton.IsServer)
+                return;
 
             Debug.Log($"[EventNetworkOnClientDisconnected] Client {clientId} disconnected");
             _ = this.m_Trigger.Execute(this.m_Args);
