@@ -1,6 +1,6 @@
 {
-  "Host": "http://localhost:8080",
-  "KeepConnected": true,
+  "Host": "http://localhost:8081",
+  "KeepConnected": false,
   "LogLevel": 3,
   "TimeoutMs": 10000
 }

@@ -12,7 +12,7 @@ mcp:
     unity-knowledge-base:
       enabled: true
       command: "python"
-      args: ["D:\\UnityWorkspaces\\ml\\scripts\\unity-kb\\direct_mcp_server.py"]
+      args: ["D:\\UnityWorkspaces\\ml\\openspec\\unity-kb\\direct_mcp_server.py"]
       env:
         QDRANT_HOST: "localhost"
         QDRANT_PORT: "6333"
