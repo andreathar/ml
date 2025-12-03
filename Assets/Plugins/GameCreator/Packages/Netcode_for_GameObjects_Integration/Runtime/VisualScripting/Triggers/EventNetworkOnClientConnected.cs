@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/On Client Connected")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Client", "Connect", "Join")]
-
     [Serializable]
     public class EventNetworkOnClientConnected : TriggerEvent
     {
@@ -25,7 +24,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -54,7 +54,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnClientConnected(ulong clientId)
         {
-            if (this.m_ServerOnly && !NetworkManager.Singleton.IsServer) return;
+            if (this.m_ServerOnly && !NetworkManager.Singleton.IsServer)
+                return;
 
             Debug.Log($"[EventNetworkOnClientConnected] Client {clientId} connected");
             _ = this.m_Trigger.Execute(this.m_Args);

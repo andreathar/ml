@@ -465,7 +465,7 @@ Transform:
   m_GameObject: {fileID: 19854769}
   serializedVersion: 2
   m_LocalRotation: {x: 0.16825807, y: -0.45616052, z: 0.46239704, w: 0.74148226}
-  m_LocalPosition: {x: -1.0803881, y: 1.7421219, z: 5.086167}
+  m_LocalPosition: {x: 4.081612, y: 2.438122, z: 3.8911667}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1053,7 +1053,7 @@ Transform:
   m_GameObject: {fileID: 81478294}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.13052596, z: -0, w: 0.99144495}
-  m_LocalPosition: {x: 0, y: 1, z: 4.25}
+  m_LocalPosition: {x: 5.162, y: 1.696, z: 3.055}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5525,7 +5525,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4509127192215882086, guid: 79e507a36c7664c86ba713eb7f926e46, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.665
+      value: 6.647
       objectReference: {fileID: 0}
     - target: {fileID: 4509127192215882086, guid: 79e507a36c7664c86ba713eb7f926e46, type: 3}
       propertyPath: m_LocalPosition.y
@@ -5533,7 +5533,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4509127192215882086, guid: 79e507a36c7664c86ba713eb7f926e46, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.54
+      value: 0.63
       objectReference: {fileID: 0}
     - target: {fileID: 4509127192215882086, guid: 79e507a36c7664c86ba713eb7f926e46, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5878,7 +5878,7 @@ Transform:
   m_GameObject: {fileID: 579045398}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.5, y: 0, z: 5}
+  m_LocalPosition: {x: 3.6620002, y: 0.696, z: 3.8050003}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -15710,7 +15710,7 @@ Transform:
   m_GameObject: {fileID: 1345664693}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.25, y: 0, z: 4.5}
+  m_LocalPosition: {x: 6.4119997, y: 0.696, z: 3.305}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -16791,7 +16791,7 @@ Transform:
   m_GameObject: {fileID: 1420575796}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 3.75}
+  m_LocalPosition: {x: 5.162, y: 0.696, z: 2.555}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -19203,9 +19203,6 @@ MonoBehaviour:
     - rid: 1083509398704488892
       type: {class: GetDecimalConstantPointOne, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data: 
-    - rid: 1083509398704488893
-      type: {class: GetGameObjectPlayer, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
-      data: 
     - rid: 1083509398704488894
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
@@ -19231,6 +19228,9 @@ MonoBehaviour:
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
         m_Value: 0.15000000596046448
+    - rid: 1083509424920461580
+      type: {class: GetGameObjectNetworkLocalPlayer, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
+      data: 
     - rid: 5243232770371355548
       type: {class: ShotTypeThirdPerson, ns: GameCreator.Runtime.Cameras, asm: GameCreator.Runtime.Core}
       data:
@@ -19263,7 +19263,7 @@ MonoBehaviour:
         m_ThirdPerson:
           m_Pivot:
             m_Property:
-              rid: 1083509398704488893
+              rid: 1083509424920461580
           m_Shoulder:
             m_Property:
               rid: 1083509398704488894
@@ -20738,6 +20738,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 1083509424920461578
+      type: {class: GetPositionNetworkLocalPlayer, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
+      data: 
+    - rid: 1083509424920461579
+      type: {class: GetPositionNetworkLocalPlayer, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
+      data: 
     - rid: 4529983035851145597
       type: {class: GetGameObjectInstance, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
@@ -20765,7 +20771,7 @@ MonoBehaviour:
         m_IsEnabled: 1
         m_Origin:
           m_Property:
-            rid: 4776501101208010961
+            rid: 1083509424920461578
         m_MaxRadius:
           m_Property:
             rid: 4776501101208010949
@@ -20799,14 +20805,8 @@ MonoBehaviour:
           m_GlobalList: {fileID: 0}
         m_Position:
           m_Property:
-            rid: 4776501101208010962
+            rid: 1083509424920461579
         m_Order: 0
-    - rid: 4776501101208010961
-      type: {class: GetPositionCharactersPlayer, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
-      data: 
-    - rid: 4776501101208010962
-      type: {class: GetPositionCharactersPlayer, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
-      data: 
 --- !u!4 &1675451536
 Transform:
   m_ObjectHideFlags: 0
@@ -25518,7 +25518,7 @@ Transform:
   m_GameObject: {fileID: 2130639323}
   serializedVersion: 2
   m_LocalRotation: {x: 0.25660437, y: 0.12607841, z: 0.03378254, w: 0.95766234}
-  m_LocalPosition: {x: 0, y: 2.316987, z: 4.2500005}
+  m_LocalPosition: {x: 5.162, y: 3.0129871, z: 3.0550005}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
