@@ -49938,7 +49938,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 802085998}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -87381,7 +87381,7 @@ GameObject:
   - component: {fileID: 1414702929}
   - component: {fileID: 1414702928}
   m_Layer: 0
-  m_Name: Trigger_Patrol
+  m_Name: Trigger_Spawn_NPC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -87511,7 +87511,7 @@ MonoBehaviour:
     - rid: 1083509434233914025
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
-        m_Value: 2
+        m_Value: 60
     - rid: 1083509439596855719
       type: {class: InstructionNetworkSpawnNPC, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
       data:
@@ -128320,6 +128320,67 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1abaf49de9b7ec34b89306142776e7b3, type: 3}
+--- !u!1001 &3441623899864085571
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -16.27914
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -7.78428
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 4.52181
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6349469058172139931, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7662790326640988593, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: m_Name
+      value: NetworkNoiseEmitter
+      objectReference: {fileID: 0}
+    - target: {fileID: 8878504815861841432, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 4254591740
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b6523cae8a61b2346af6db157b07a56a, type: 3}
 --- !u!1001 &4484930757376608708
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -128644,6 +128705,7 @@ SceneRoots:
   - {fileID: 1451551167548263894}
   - {fileID: 5404631772591218413}
   - {fileID: 6232980900290493529}
+  - {fileID: 3441623899864085571}
   - {fileID: 959301243}
   - {fileID: 1569060973}
   - {fileID: 1260826}

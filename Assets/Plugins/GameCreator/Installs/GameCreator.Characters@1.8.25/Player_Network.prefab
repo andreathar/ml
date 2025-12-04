@@ -3883,10 +3883,9 @@ GameObject:
   - component: {fileID: -7500956404896953787}
   - component: {fileID: -4704167418427787172}
   - component: {fileID: 7970498104933940842}
-  - component: {fileID: 5177263775729479774}
   m_Layer: 0
   m_Name: Player_Network
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3929,9 +3928,7 @@ MonoBehaviour:
   m_InverseKinematics:
     m_RigLayers:
       m_Rigs:
-      - rid: 1083509426127897067
       - rid: 1083509426127897474
-      - rid: 1083509441328054736
   m_Footsteps:
     m_Feet:
     - rid: 1083509421220299069
@@ -3985,7 +3982,7 @@ MonoBehaviour:
         m_IsControllable: 1
         m_InputMove:
           m_Input:
-            rid: 1083509421220299078
+            rid: 1083509442486206795
     - rid: 1083509421220299074
       type: {class: UnitMotionController, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -4024,9 +4021,6 @@ MonoBehaviour:
         m_Axonometry:
           m_Axonometry:
             rid: 1083509421220299081
-    - rid: 1083509421220299078
-      type: {class: InputValueVector2MotionPrimary, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
-      data: 
     - rid: 1083509421220299079
       type: {class: InteractionModeNearCharacter, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -4034,22 +4028,12 @@ MonoBehaviour:
     - rid: 1083509421220299081
       type: {class: AxonometryNone, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data: 
-    - rid: 1083509426127897067
-      type: {class: RigFeetPlant, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_FootOffset: 1
-        m_FootMask:
-          serializedVersion: 2
-          m_Bits: 59
-        m_SmoothTime: 0.25
     - rid: 1083509426127897093
       type: {class: FootstepDetectorFulcrum, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Breakpoint: 0
         m_IsEnabled: 1
-        m_Fulcrum: 0
+        m_Fulcrum: -1
     - rid: 1083509426127897474
       type: {class: RigLookTo, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
       data:
@@ -4099,13 +4083,13 @@ MonoBehaviour:
         m_Animator: {fileID: 5513080447165554280}
         m_StartState: {fileID: 0}
         m_Reaction: {fileID: 0}
-    - rid: 1083509441328054736
-      type: {class: RigAlignGround, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
+    - rid: 1083509442486206795
+      type: {class: InputValueVector2InputAction, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_SmoothTime: 0.25
-        m_MaxAngle: 35
+        m_Input:
+          m_InputAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+          m_ActionMap: Player
+          m_Action: Move
 --- !u!114 &1420291136657417544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4381,29 +4365,6 @@ MonoBehaviour:
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
         m_Value: 2
---- !u!136 &5177263775729479774
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8230587750230797869}
-  m_Material: {fileID: 13400000, guid: 9136104d39503441e863c2726e6a97cc, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.4
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &8324245983732157449
 GameObject:
   m_ObjectHideFlags: 0
@@ -4707,7 +4668,7 @@ MonoBehaviour:
   m_Instructions:
     m_Instructions:
     - rid: 5243232769980760395
-    - rid: 1083509434233913543
+    - rid: 1083509441730708072
   m_TriggerEvent:
     rid: 5243232769980760066
   references:
@@ -4716,37 +4677,37 @@ MonoBehaviour:
     - rid: 1083509426127896755
       type: {class: GetGameObjectNetworkLocalPlayer, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
       data: 
-    - rid: 1083509434233913543
-      type: {class: InstructionPerceptionEmitNoise, ns: GameCreator.Runtime.Perception, asm: GameCreator.Runtime.Perception}
+    - rid: 1083509441730708072
+      type: {class: InstructionNetworkEmitNoise, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
       data:
         m_Breakpoint: 0
         m_IsEnabled: 1
         m_Position:
           m_Property:
-            rid: 1083509434233913607
+            rid: 1083509441730708137
         m_Radius:
           m_Property:
-            rid: 1083509434233913545
+            rid: 1083509441730708074
         m_Tag:
           m_Property:
-            rid: 1083509434233913546
+            rid: 1083509441730708075
         m_Intensity:
           m_Property:
-            rid: 1083509434233913547
-    - rid: 1083509434233913545
+            rid: 1083509441730708076
+    - rid: 1083509441730708074
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
         m_Value: 10
-    - rid: 1083509434233913546
+    - rid: 1083509441730708075
       type: {class: GetStringId, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
         m_Id:
           m_String: player
-    - rid: 1083509434233913547
+    - rid: 1083509441730708076
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
         m_Value: 5
-    - rid: 1083509434233913607
+    - rid: 1083509441730708137
       type: {class: GetPositionNetworkLocalPlayer, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
       data: 
     - rid: 5243232769980760066

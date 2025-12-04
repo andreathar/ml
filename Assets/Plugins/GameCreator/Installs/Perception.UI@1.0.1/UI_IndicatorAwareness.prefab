@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6467865930196071887}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -47,7 +47,7 @@ GameObject:
   - component: {fileID: 4094957551015718850}
   - component: {fileID: 3160603206444805582}
   - component: {fileID: 9072135148364178648}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: UI_IndicatorAwareness
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3340416625553999687}
   - component: {fileID: 227816192444726154}
   - component: {fileID: 5354680923887164767}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: UI_Luminance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -151,7 +151,7 @@ GameObject:
   - component: {fileID: 1051442563425083787}
   - component: {fileID: 4415261372809372402}
   - component: {fileID: 7036819316601624996}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: LuminanceOutline
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -227,7 +227,7 @@ GameObject:
   - component: {fileID: 5269700267540875010}
   - component: {fileID: 1491640930246559746}
   - component: {fileID: 7041511282888580891}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -357,7 +357,7 @@ GameObject:
   - component: {fileID: 2892932370784244439}
   - component: {fileID: 203555291576297927}
   - component: {fileID: 628465684959329695}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: LuminanceBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -435,7 +435,7 @@ GameObject:
   - component: {fileID: 6445946497753410948}
   - component: {fileID: 2002938572722254146}
   - component: {fileID: 7769004754115912602}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: LuminanceValue
   m_TagString: Untagged
   m_Icon: {fileID: 0}

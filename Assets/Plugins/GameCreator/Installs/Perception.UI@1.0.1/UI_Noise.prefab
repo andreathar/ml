@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6825881250082098983}
   - component: {fileID: 1337394036846001930}
   - component: {fileID: 7453237780376772152}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: UI_Noise
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -153,7 +153,7 @@ GameObject:
   - component: {fileID: 8923108435446302240}
   - component: {fileID: 3438328103066608339}
   - component: {fileID: 504117718517635613}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Noise
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -228,7 +228,7 @@ GameObject:
   - component: {fileID: 2826645984018781422}
   - component: {fileID: 6335726657430857891}
   - component: {fileID: 6913166677718020419}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -303,7 +303,7 @@ GameObject:
   - component: {fileID: 6610429036543795838}
   - component: {fileID: 3984249167011965243}
   - component: {fileID: 3771038557863899760}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: NoiseBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -382,7 +382,7 @@ GameObject:
   - component: {fileID: 7576130482994254851}
   - component: {fileID: 3355487095886906911}
   - component: {fileID: 4179106062658498658}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Ambient
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -457,7 +457,7 @@ GameObject:
   - component: {fileID: 1258312880094494369}
   - component: {fileID: 5541518640772377372}
   - component: {fileID: 5891307354205208060}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Highlight
   m_TagString: Untagged
   m_Icon: {fileID: 0}

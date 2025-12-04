@@ -1,278 +1,367 @@
-# Perception Netcode Integration
+# Perception Netcode Integration - Complete Networking Architecture
 
 ## Summary
 
-Integrate the GameCreator Perception module with Unity Netcode for GameObjects to enable multiplayer AI awareness, sensory detection, and evidence tracking across networked games.
+Make the GameCreator Perception module **totally networked** for multiplayer games. This includes all five senses (See, Hear, Smell, Feel), awareness tracking, evidence system, environmental modifiers (Luminance, Camouflage, Din), and UI synchronization.
+
+## Current Implementation Status
+
+### Already Implemented (Phase 1-2 Complete)
+| Component | Status | Location |
+|-----------|--------|----------|
+| `NetworkPerception` | Done | `Runtime/Components/Perception/` |
+| `NetworkPerceptionSync` | Done | `Runtime/Components/Perception/` |
+| `NetworkPerceptionRegistry` | Done | `Runtime/Components/Perception/` |
+| `NetworkPerceptionEvents` | Done | `Runtime/Components/Perception/` |
+| `NetworkNoiseEmitter` | Done | `Runtime/Components/Perception/` |
+| Awareness Events | Done | `Runtime/VisualScripting/Events/Perception/` |
+| Awareness Instructions | Done | `Runtime/VisualScripting/Instructions/Perception/` |
+| Awareness Conditions | Done | `Runtime/VisualScripting/Conditions/Perception/` |
+
+### Missing for "Totally Networked"
+| Feature | Priority | Complexity |
+|---------|----------|------------|
+| **NetworkScentEmitter** | High | Medium |
+| **NetworkEnvironmentSync** (Luminance, Din, Dissipation) | High | Medium |
+| **NetworkEvidence** | High | Low |
+| **NetworkCamouflage** | Medium | Low |
+| **Network UI Components** | Medium | Medium |
+| **Feel Sensor Sync** | Low | Low |
 
 ## Motivation
 
-The existing Netcode integration successfully handles character synchronization, spawning, and visual scripting events. However, the Perception module—which provides AI awareness, hearing, sight, smell, and evidence detection—operates locally and is unaware of network context. In a multiplayer game:
+The existing implementation handles **awareness and hearing** but a multiplayer game needs **all perception features** synchronized:
 
-1. **Awareness State Divergence**: Each client runs Perception independently, leading to different AI awareness levels across clients
-2. **Sensory Event Desync**: Noise/scent stimuli only affect local Perception components, causing inconsistent AI behavior
-3. **Evidence State Conflicts**: Evidence tampering state is local-only, creating gameplay inconsistencies
-4. **Server Authority Missing**: No mechanism for server-authoritative AI perception decisions
+1. **Scent Tracking**: NPCs tracking players by smell must work consistently across all clients
+2. **Environmental State**: Ambient luminance, global din, scent dissipation must be server-authoritative
+3. **Evidence System**: Tampered evidence state must sync for stealth/investigation gameplay
+4. **Camouflage**: Player stealth modifiers must sync for fair NPC detection
+5. **UI Consistency**: Awareness indicators must show server-authoritative values
 
-## Analysis of Existing Netcode Integration Pattern
+## Architecture Overview
 
-The successful Netcode integration follows these key patterns that we should replicate:
-
-### 1. Component Architecture
+### Network Topology
 ```
-NetworkCharacter (extends Character)
-├── Wraps base component with network-aware properties
-├── IsNetworkSpawned flag for conditional behavior
-├── IsLocalOwner for ownership checks
-├── Deferred initialization for network spawn timing
-└── Network lifecycle callbacks (OnNetworkSpawn/Despawn)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           SERVER (Authority)                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
+│  │ NetworkPerception│  │NetworkScentEmit │  │NetworkEnvironmentSync   │  │
+│  │ (per NPC)        │  │ (singleton)     │  │ (singleton)             │  │
+│  │ - Awareness      │  │ - Scent events  │  │ - AmbientLuminance      │  │
+│  │ - TrackedTargets │  │ - Validation    │  │ - GlobalDin             │  │
+│  │ - Evidence       │  │                 │  │ - ScentDissipation      │  │
+│  └────────┬────────┘  └────────┬────────┘  └───────────┬─────────────┘  │
+│           │                    │                       │                 │
+│           └────────────────────┼───────────────────────┘                 │
+│                                │                                         │
+│                       [ClientRpc Broadcast]                              │
+└────────────────────────────────┼─────────────────────────────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  CLIENT 1       │    │  CLIENT 2       │    │  CLIENT 3       │
+│  - Local UI     │    │  - Local UI     │    │  - Local UI     │
+│  - Predictions  │    │  - Predictions  │    │  - Predictions  │
+│  - Visual FX    │    │  - Visual FX    │    │  - Visual FX    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### 2. Global Event Broadcasting (NetworkSessionEvents)
+## New Components Required
+
+### 1. NetworkScentEmitter (High Priority)
 ```csharp
-// Static events that visual scripting triggers can subscribe to
-public static event Action<NetworkCharacter> EventLocalPlayerSpawned;
-public static event Action<NetworkCharacter> EventNPCSpawned;
-
-// Called by network components to broadcast
-public static void NotifyPlayerSpawned(NetworkCharacter character, bool isLocalOwner)
-```
-
-### 3. Registry Pattern (NetworkCharacterRegistry)
-```csharp
-// Efficient lookup by ClientId, NetworkObjectId, or InstanceId
-public static NetworkCharacter GetPlayerByClientId(ulong clientId)
-public static IReadOnlyList<NetworkCharacter> AllNPCs { get; }
-```
-
-### 4. Visual Scripting Events
-```csharp
-// Subscribe to global static events
-protected internal override void OnEnable(Trigger trigger)
-{
-    NetworkSessionEvents.EventLocalPlayerSpawned += OnLocalPlayerSpawned;
-}
-
-// Set Target in Args for downstream instructions
-private void OnLocalPlayerSpawned(NetworkCharacter player)
-{
-    this.m_Args = new Args(this.m_Trigger.gameObject, player.gameObject);
-    _ = this.m_Trigger.Execute(this.m_Args);
-}
-```
-
-## Perception Module Architecture Analysis
-
-### Core Components
-| Component | Purpose | Network Sync Needs |
-|-----------|---------|-------------------|
-| `Perception` | Main component, manages Cortex + Sensors | Server-authoritative state |
-| `Cortex` | Tracks awareness per-target via Trackers | Awareness levels, stage changes |
-| `Tracker` | Per-target awareness (0-1 float, stage enum) | Float value, last increase time |
-| `TSensor` | Base sensor class | Active state |
-| `SensorHear` | Noise detection | Noise intensity, position |
-| `SensorSee` | Visual detection | Target visibility |
-| `SensorSmell` | Scent detection | Scent intensity |
-| `SensorFeel` | Proximity detection | Detection state |
-| `Evidence` | Investigation targets | IsTampered state |
-
-### Key State to Synchronize
-1. **Awareness Level** (`Tracker.Awareness`: 0-1 float)
-2. **Awareness Stage** (`AwareStage`: None/Suspicious/Alert/Aware)
-3. **Tracked Targets** (Dictionary<int, Tracker>)
-4. **Evidence State** (Dictionary<string, bool>)
-5. **Noise Intensity** (per-tag float values)
-6. **Last Heard Position** (Vector3)
-
-### Events to Network
-```csharp
-// Perception.cs events to broadcast across network
-EventChangeAwarenessLevel(GameObject target, float level)
-EventChangeAwarenessStage(GameObject target, AwareStage stage)
-EventTrack(GameObject target)
-EventUntrack(GameObject target)
-EventNoticeEvidence(GameObject evidence)
-
-// SensorHear events
-EventHearNoise(string noiseTag)
-EventReceiveNoise(string tag, float intensity)
-```
-
-## Proposed Architecture
-
-### 1. NetworkPerception Component
-```csharp
+/// <summary>
+/// Singleton that handles network-synchronized scent emission.
+/// Mirrors NetworkNoiseEmitter pattern for smell stimuli.
+/// </summary>
+[AddComponentMenu("Game Creator/Network/Network Scent Emitter")]
 [RequireComponent(typeof(NetworkObject))]
-[RequireComponent(typeof(Perception))]
-public class NetworkPerception : NetworkBehaviour
+public class NetworkScentEmitter : NetworkBehaviour
 {
-    // Synchronized state
-    private NetworkVariable<float>[] m_AwarenessLevels; // Per tracked target
-    private NetworkList<TrackedTargetData> m_TrackedTargets;
-    private NetworkList<EvidenceData> m_EvidenceState;
-
-    // Server-authoritative perception updates
-    [ServerRpc]
-    public void AddAwarenessServerRpc(ulong targetNetworkId, float amount);
-
-    // Client notifications
-    [ClientRpc]
-    private void NotifyAwarenessChangeClientRpc(ulong targetId, float level, AwareStage stage);
+    public void EmitScent(Vector3 position, float radius, string tag, float intensity);
+    
+    [Rpc(SendTo.Server)]
+    private void EmitScentServerRpc(Vector3 position, float radius, 
+        FixedString32Bytes tag, float intensity, RpcParams rpcParams = default);
+    
+    [Rpc(SendTo.ClientsAndHost)]
+    private void BroadcastScentClientRpc(Vector3 position, float radius,
+        FixedString32Bytes tag, float intensity, ulong sourceClientId);
 }
 ```
 
-### 2. NetworkPerceptionEvents (Global Event Manager)
+### 2. NetworkEnvironmentSync (High Priority)
 ```csharp
-public class NetworkPerceptionEvents : MonoBehaviour
+/// <summary>
+/// Synchronizes global environmental perception state across network.
+/// Single authority source for ambient conditions.
+/// </summary>
+[AddComponentMenu("Game Creator/Network/Network Environment Sync")]
+[RequireComponent(typeof(NetworkObject))]
+public class NetworkEnvironmentSync : NetworkBehaviour
 {
-    // Global events for visual scripting
-    public static event Action<Perception, GameObject, float> EventAwarenessChanged;
-    public static event Action<Perception, GameObject, AwareStage> EventAwarenessStageChanged;
-    public static event Action<Perception, StimulusNoise> EventNoiseHeard;
-    public static event Action<Perception, Evidence> EventEvidenceNoticed;
-
-    // Broadcast methods
-    public static void NotifyAwarenessChanged(Perception perception, GameObject target, float level);
+    // Synchronized environmental state
+    private NetworkVariable<float> m_AmbientLuminance = new(1f);
+    private NetworkVariable<float> m_GlobalDin = new(0f);
+    private NetworkVariable<float> m_ScentDissipation = new(1f);
+    
+    // Public accessors for local systems
+    public static float AmbientLuminance => Instance?.m_AmbientLuminance.Value ?? 1f;
+    public static float GlobalDin => Instance?.m_GlobalDin.Value ?? 0f;
+    public static float ScentDissipation => Instance?.m_ScentDissipation.Value ?? 1f;
+    
+    // Server-only modification
+    [Rpc(SendTo.Server)]
+    public void SetAmbientLuminanceRpc(float value);
+    [Rpc(SendTo.Server)]
+    public void SetGlobalDinRpc(float value);
+    [Rpc(SendTo.Server)]
+    public void SetScentDissipationRpc(float value);
 }
 ```
 
-### 3. NetworkPerceptionRegistry
+### 3. NetworkEvidence (High Priority)
 ```csharp
-public static class NetworkPerceptionRegistry
+/// <summary>
+/// Network wrapper for Evidence component.
+/// Synchronizes tampered state across all clients.
+/// </summary>
+[AddComponentMenu("Game Creator/Network/Network Evidence")]
+[RequireComponent(typeof(NetworkObject))]
+[RequireComponent(typeof(Evidence))]
+public class NetworkEvidence : NetworkBehaviour
 {
-    public static NetworkPerception GetByNetworkObjectId(ulong id);
-    public static IReadOnlyList<NetworkPerception> AllPerceptions { get; }
-    public static NetworkPerception GetPerceptionFor(NetworkCharacter character);
+    private NetworkVariable<bool> m_IsTampered = new();
+    private NetworkVariable<FixedString64Bytes> m_EvidenceTag = new();
+    
+    [NonSerialized] private Evidence m_Evidence;
+    
+    public bool IsTampered => m_IsTampered.Value;
+    
+    [Rpc(SendTo.Server)]
+    public void TamperEvidenceRpc(RpcParams rpcParams = default);
+    
+    [Rpc(SendTo.Server)]
+    public void RestoreEvidenceRpc(RpcParams rpcParams = default);
+    
+    [Rpc(SendTo.ClientsAndHost)]
+    private void NotifyEvidenceTamperedRpc(bool isTampered, ulong actorClientId);
 }
 ```
 
-### 4. Network Visual Scripting Components
+### 4. NetworkCamouflage (Medium Priority)
+```csharp
+/// <summary>
+/// Synchronizes player/NPC camouflage modifier across network.
+/// Ensures fair detection calculations on all clients.
+/// </summary>
+[AddComponentMenu("Game Creator/Network/Network Camouflage")]
+[RequireComponent(typeof(NetworkObject))]
+public class NetworkCamouflage : NetworkBehaviour
+{
+    private NetworkVariable<float> m_CamouflageValue = new(0f);
+    
+    public float Value => m_CamouflageValue.Value;
+    
+    [Rpc(SendTo.Server)]
+    public void SetCamouflageRpc(float value);
+}
+```
 
-#### New Network-Aware Triggers
-| Trigger | Category | Description |
-|---------|----------|-------------|
-| On Network Awareness Changed | Network/Perception | Awareness level changed (any client) |
-| On Network Awareness Stage | Network/Perception | Stage threshold crossed |
-| On Network Noise Heard | Network/Perception | Server-validated noise detection |
-| On Network Evidence Noticed | Network/Perception | Evidence state change |
+## New Visual Scripting Components
 
-#### New Network Instructions
-| Instruction | Category | Server-Only |
+### Instructions (Missing)
+| Instruction | Category | Description |
 |-------------|----------|-------------|
-| Set Network Awareness | Network/Perception | Yes |
-| Add Network Awareness | Network/Perception | Yes |
-| Relay Network Awareness | Network/Perception | Yes |
-| Emit Network Noise | Network/Perception | No (local, server validates) |
+| `InstructionNetworkEmitScent` | Network/Perception | Emit networked scent stimulus |
+| `InstructionNetworkSetAmbientLuminance` | Network/Perception | Set global light level |
+| `InstructionNetworkSetGlobalDin` | Network/Perception | Set global noise floor |
+| `InstructionNetworkSetScentDissipation` | Network/Perception | Set scent decay rate |
+| `InstructionNetworkTamperEvidence` | Network/Perception | Mark evidence as tampered |
+| `InstructionNetworkRestoreEvidence` | Network/Perception | Reset evidence state |
+| `InstructionNetworkRelayAwareness` | Network/Perception | Share awareness between NPCs |
+| `InstructionNetworkRelayEvidence` | Network/Perception | Share evidence knowledge |
+| `InstructionNetworkSetCamouflage` | Network/Perception | Set stealth modifier |
 
-#### New Network Conditions
+### Events (Missing)
+| Event | Category | Description |
+|-------|----------|-------------|
+| `EventNetworkOnScentSmelled` | Network/Perception | NPC smelled a scent |
+| `EventNetworkOnEvidenceTampered` | Network/Perception | Evidence state changed |
+| `EventNetworkOnEnvironmentChanged` | Network/Perception | Global env value changed |
+| `EventNetworkOnFeel` | Network/Perception | Proximity detection triggered |
+
+### Conditions (Missing)
 | Condition | Description |
 |-----------|-------------|
-| Is Tracking Target (Network) | Server-authoritative tracking check |
-| Awareness Stage Is (Network) | Check synced awareness stage |
+| `ConditionNetworkCanSmellScent` | Check if scent is detectable |
+| `ConditionNetworkEvidenceIsTampered` | Check evidence state |
+| `ConditionNetworkCanSee` | Check visibility with network luminance |
 
-### 5. Sync Strategy
+### Properties (Missing)
+| Property | Description |
+|----------|-------------|
+| `GetNetworkAmbientLuminance` | Get synced luminance value |
+| `GetNetworkGlobalDin` | Get synced din value |
+| `GetNetworkCamouflageValue` | Get synced camouflage |
+| `GetNetworkEvidenceState` | Get evidence tampered state |
 
-**Server-Authoritative Model**:
-- Server owns all NPC Perception components
-- Player perceptions owned by respective clients (for local predictions)
-- Awareness changes validated and applied by server
-- RPCs broadcast significant events to all clients
+## Network UI Components
 
-**Delta Compression**:
+### NetworkIndicatorAwarenessUI
+Replaces local `IndicatorAwarenessUI` to display server-authoritative awareness values:
 ```csharp
-// Only sync meaningful changes
-private void SyncAwareness(float newLevel)
+public class NetworkIndicatorAwarenessUI : MonoBehaviour
 {
-    if (Mathf.Abs(m_LastSyncedLevel - newLevel) > SYNC_THRESHOLD)
+    // Uses NetworkPerceptionRegistry instead of local Perception
+    private void Update()
     {
-        m_AwarenessLevel.Value = newLevel;
-        m_LastSyncedLevel = newLevel;
+        var networkPerception = NetworkPerceptionRegistry.GetByGameObject(m_Target);
+        if (networkPerception == null) return;
+        
+        // Display synced awareness from NetworkPerception
+        float awareness = networkPerception.GetAwareness(m_TrackedTarget);
+        UpdateUI(awareness);
     }
 }
 ```
 
+### NetworkLuminanceUI / NetworkNoiseUI / NetworkSmellUI
+Similar pattern - read from `NetworkEnvironmentSync` singleton instead of local managers.
+
 ## Implementation Phases
 
-### Phase 1: Core Network Components
-- [ ] NetworkPerception component with NetworkVariable state
-- [ ] NetworkPerceptionSync helper (like NetworkCharacterSync)
-- [ ] NetworkPerceptionRegistry for lookups
-- [ ] NetworkPerceptionEvents for global broadcasting
+### Phase 3: Scent Networking (NEW)
+- [ ] Create `NetworkScentEmitter.cs` singleton
+- [ ] Add scent validation and rate limiting
+- [ ] Create `InstructionNetworkEmitScent.cs`
+- [ ] Create `EventNetworkOnScentSmelled.cs`
+- [ ] Create `ConditionNetworkCanSmellScent.cs`
+- [ ] Hook into `SensorSmell.OnReceiveScent()`
 
-### Phase 2: Visual Scripting Integration
-- [ ] Network-aware awareness triggers
-- [ ] Network-aware perception instructions
-- [ ] Network-aware perception conditions
-- [ ] Network-aware perception properties (getters)
+### Phase 4: Environment Synchronization (NEW)
+- [ ] Create `NetworkEnvironmentSync.cs` singleton
+- [ ] Sync `LuminanceManager.AmbientLuminance`
+- [ ] Sync `HearManager.GlobalDin`
+- [ ] Sync `SmellManager.Dissipation`
+- [ ] Create environment VS instructions
+- [ ] Create `EventNetworkOnEnvironmentChanged.cs`
 
-### Phase 3: Sensory Synchronization
-- [ ] NetworkStimulusNoise (server-validated noise emission)
-- [ ] NetworkStimulusScent (server-validated scent emission)
-- [ ] Stimulus propagation RPCs
+### Phase 5: Evidence Networking (NEW)
+- [ ] Create `NetworkEvidence.cs` component
+- [ ] Sync `IsTampered` state
+- [ ] Create `InstructionNetworkTamperEvidence.cs`
+- [ ] Create `InstructionNetworkRestoreEvidence.cs`
+- [ ] Create `EventNetworkOnEvidenceTampered.cs`
+- [ ] Update `NetworkPerception` to use synced evidence
 
-### Phase 4: Evidence & Advanced Features
-- [ ] NetworkEvidence component
-- [ ] Evidence tampering sync
-- [ ] Relay awareness/evidence over network
+### Phase 6: Camouflage & Modifiers (NEW)
+- [ ] Create `NetworkCamouflage.cs` component
+- [ ] Create `InstructionNetworkSetCamouflage.cs`
+- [ ] Hook into `SensorSee` detection calculations
+- [ ] Add visibility modifier sync
 
-## File Structure
+### Phase 7: Network UI Components (NEW)
+- [ ] Create `NetworkIndicatorAwarenessUI.cs`
+- [ ] Create `NetworkLuminanceUI.cs`
+- [ ] Create `NetworkNoiseUI.cs`
+- [ ] Create `NetworkSmellUI.cs`
+- [ ] Create network-aware UI prefabs
+
+### Phase 8: Feel Sensor & Polish (NEW)
+- [ ] Hook `SensorFeel` into network events
+- [ ] Create `EventNetworkOnFeel.cs`
+- [ ] Performance optimization pass
+- [ ] Bandwidth profiling and tuning
+
+## File Structure (Updated)
 
 ```
 Assets/Plugins/GameCreator/Packages/Netcode_for_GameObjects_Integration/
 ├── Runtime/
 │   ├── Components/
 │   │   ├── Perception/
-│   │   │   ├── NetworkPerception.cs
-│   │   │   ├── NetworkPerceptionSync.cs
-│   │   │   └── NetworkPerceptionRegistry.cs
-│   │   └── NetworkPerceptionEvents.cs
-│   ├── VisualScripting/
-│   │   ├── Events/
-│   │   │   ├── Perception/
-│   │   │   │   ├── EventNetworkOnAwarenessChange.cs
-│   │   │   │   ├── EventNetworkOnAwarenessStage.cs
-│   │   │   │   ├── EventNetworkOnNoiseHeard.cs
-│   │   │   │   └── EventNetworkOnEvidenceNoticed.cs
-│   │   ├── Instructions/
-│   │   │   └── Perception/
-│   │   │       ├── InstructionNetworkSetAwareness.cs
-│   │   │       ├── InstructionNetworkAddAwareness.cs
-│   │   │       └── InstructionNetworkEmitNoise.cs
-│   │   ├── Conditions/
-│   │   │   └── Perception/
-│   │   │       ├── ConditionNetworkIsTracking.cs
-│   │   │       └── ConditionNetworkAwarenessStage.cs
-│   │   └── Properties/
-│   │       └── Perception/
-│   │           ├── GetNetworkAwarenessLevel.cs
-│   │           └── GetNetworkTrackedTarget.cs
+│   │   │   ├── NetworkPerception.cs         ✓ EXISTS
+│   │   │   ├── NetworkPerceptionSync.cs     ✓ EXISTS
+│   │   │   ├── NetworkPerceptionRegistry.cs ✓ EXISTS
+│   │   │   ├── NetworkPerceptionEvents.cs   ✓ EXISTS
+│   │   │   ├── NetworkNoiseEmitter.cs       ✓ EXISTS
+│   │   │   ├── NetworkScentEmitter.cs       ← NEW
+│   │   │   ├── NetworkEvidence.cs           ← NEW
+│   │   │   └── NetworkCamouflage.cs         ← NEW
+│   │   └── NetworkEnvironmentSync.cs        ← NEW
+│   ├── UI/
+│   │   └── Components/
+│   │       ├── NetworkIndicatorAwarenessUI.cs  ← NEW
+│   │       ├── NetworkLuminanceUI.cs           ← NEW
+│   │       ├── NetworkNoiseUI.cs               ← NEW
+│   │       └── NetworkSmellUI.cs               ← NEW
+│   └── VisualScripting/
+│       ├── Events/
+│       │   └── Perception/
+│       │       ├── EventNetworkOnAwarenessChange.cs    ✓ EXISTS
+│       │       ├── EventNetworkOnAwarenessStage.cs     ✓ EXISTS
+│       │       ├── EventNetworkOnNoiseHeard.cs         ✓ EXISTS
+│       │       ├── EventNetworkOnEvidenceNoticed.cs    ✓ EXISTS
+│       │       ├── EventNetworkOnTargetTracked.cs      ✓ EXISTS
+│       │       ├── EventNetworkOnTargetUntracked.cs    ✓ EXISTS
+│       │       ├── EventNetworkOnScentSmelled.cs       ← NEW
+│       │       ├── EventNetworkOnEvidenceTampered.cs   ← NEW
+│       │       ├── EventNetworkOnEnvironmentChanged.cs ← NEW
+│       │       └── EventNetworkOnFeel.cs               ← NEW
+│       ├── Instructions/
+│       │   └── Perception/
+│       │       ├── InstructionNetworkAddAwareness.cs   ✓ EXISTS
+│       │       ├── InstructionNetworkSetAwareness.cs   ✓ EXISTS
+│       │       ├── InstructionNetworkTrackTarget.cs    ✓ EXISTS
+│       │       ├── InstructionNetworkUntrackTarget.cs  ✓ EXISTS
+│       │       ├── InstructionNetworkEmitNoise.cs      ✓ EXISTS
+│       │       ├── InstructionNetworkEmitScent.cs      ← NEW
+│       │       ├── InstructionNetworkSetAmbientLuminance.cs  ← NEW
+│       │       ├── InstructionNetworkSetGlobalDin.cs   ← NEW
+│       │       ├── InstructionNetworkSetScentDissipation.cs  ← NEW
+│       │       ├── InstructionNetworkTamperEvidence.cs ← NEW
+│       │       ├── InstructionNetworkRestoreEvidence.cs ← NEW
+│       │       ├── InstructionNetworkRelayAwareness.cs ← NEW
+│       │       ├── InstructionNetworkRelayEvidence.cs  ← NEW
+│       │       └── InstructionNetworkSetCamouflage.cs  ← NEW
+│       └── Conditions/
+│           └── Perception/
+│               ├── ConditionNetworkAwarenessLevel.cs   ✓ EXISTS
+│               ├── ConditionNetworkAwarenessStage.cs   ✓ EXISTS
+│               ├── ConditionNetworkIsTracking.cs       ✓ EXISTS
+│               ├── ConditionNetworkCanSmellScent.cs    ← NEW
+│               ├── ConditionNetworkEvidenceIsTampered.cs ← NEW
+│               └── ConditionNetworkCanSee.cs           ← NEW
 ```
 
 ## Risks and Mitigations
 
 | Risk | Mitigation |
 |------|------------|
-| High sync bandwidth for many trackers | Delta compression, sync thresholds, interest management |
-| Perception updates conflicting with local predictions | Server-authoritative with client hints for responsiveness |
-| Initialization timing issues | Follow NetworkCharacter deferred init pattern |
-| Breaking existing local-only perception | Additive components, no invasive changes to core Perception |
+| High bandwidth for scent trails | Spatial quantization, interest management |
+| Luminance sync overhead (many lights) | Only sync ambient, not per-light |
+| Evidence sync conflicts | Server-authoritative, last-write-wins |
+| UI flickering from sync delays | Client-side smoothing, prediction |
+| Initialization race conditions | Deferred init, spawn ordering |
 
 ## Success Criteria
 
-1. NPC awareness state synchronized across all clients
-2. Server-authoritative perception decisions
-3. Visual scripting triggers work identically to local perception events
-4. No breaking changes to existing Perception module
-5. Performance: <1ms overhead per perception update
+1. **All 5 senses networked**: See, Hear, Smell, Feel awareness synced
+2. **Environmental state synced**: Luminance, Din, Dissipation consistent
+3. **Evidence system multiplayer-safe**: Tampered state authoritative
+4. **Zero breaking changes**: Existing single-player perception works
+5. **Visual Scripting parity**: Network triggers mirror local triggers
+6. **Performance**: <2ms overhead per perception update
+7. **Bandwidth**: <1KB/s per NPC perception
 
-## Dependencies
+## Estimated Scope (Updated)
 
-- Existing Netcode integration (GameCreator.Netcode.Runtime)
-- Perception module (GameCreator.Runtime.Perception)
-- Unity Netcode for GameObjects 2.7.0+
-
-## Estimated Scope
-
-- **Components**: 5 new C# classes
-- **Visual Scripting**: 10-15 new Event/Instruction/Condition classes
-- **Documentation**: Update NETWORK_VISUAL_SCRIPTING.md
+- **New Components**: 8 C# classes
+- **New Visual Scripting**: 15 Event/Instruction/Condition classes
+- **New UI Components**: 4 network-aware UI classes
+- **Documentation**: Full perception networking guide
 - **Testing**: Multiplayer perception test scenarios
+- **Prefabs**: Network perception manager prefab

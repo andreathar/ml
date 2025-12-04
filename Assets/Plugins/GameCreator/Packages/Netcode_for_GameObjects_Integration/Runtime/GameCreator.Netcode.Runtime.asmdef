@@ -5,7 +5,9 @@
         "GameCreator.Runtime.Core",
         "GameCreator.Runtime.Perception",
         "Unity.Netcode.Runtime",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

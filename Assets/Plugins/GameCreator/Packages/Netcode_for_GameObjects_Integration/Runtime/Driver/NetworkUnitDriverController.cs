@@ -81,7 +81,8 @@ namespace GameCreator.Netcode.Runtime
 
         /// <summary>
         /// Updates physics properties for networked characters.
-        /// This version skips the CharacterController.center reset that conflicts with NetworkTransform.
+        /// This version skips both CharacterController.center reset AND Transform.localPosition
+        /// modifications that conflict with NetworkTransform.
         /// </summary>
         protected virtual void UpdatePhysicPropertiesNetworked()
         {
@@ -96,8 +97,10 @@ namespace GameCreator.Netcode.Runtime
             // Update height if changed (still needed for character scaling)
             if (Math.Abs(controller.height - height) > float.Epsilon)
             {
-                float offset = (controller.height - height) * 0.5f;
-                this.Transform.localPosition += Vector3.down * offset;
+                // CRITICAL FIX: Do NOT modify Transform.localPosition for networked characters!
+                // The original code did: this.Transform.localPosition += Vector3.down * offset;
+                // This conflicts with NetworkTransform and causes leg animation jittering.
+                // Instead, just update the controller height and let ApplyMannequinPosition handle visuals.
                 controller.height = height;
                 this.Character.Animim.ApplyMannequinPosition();
             }

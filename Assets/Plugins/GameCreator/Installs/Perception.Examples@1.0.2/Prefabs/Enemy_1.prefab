@@ -286,7 +286,6 @@ GameObject:
   - component: {fileID: 7012054277613837662}
   - component: {fileID: 5933797818143959148}
   - component: {fileID: 5815516933927763507}
-  - component: {fileID: 8755510885713908434}
   m_Layer: 0
   m_Name: Enemy_1
   m_TagString: NPC
@@ -329,7 +328,7 @@ MonoBehaviour:
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 1
-  SynchronizeTransform: 1
+  SynchronizeTransform: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -358,7 +357,6 @@ MonoBehaviour:
     m_RigLayers:
       m_Rigs:
       - rid: 1083509429608645514
-      - rid: 1083509429608645571
   m_Footsteps:
     m_Feet:
     - rid: 1083509429608645347
@@ -412,7 +410,7 @@ MonoBehaviour:
         m_IsControllable: 0
         m_InputMove:
           m_Input:
-            rid: 1083509429608645356
+            rid: 1083509442486207137
     - rid: 1083509429608645352
       type: {class: UnitMotionController, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -462,9 +460,6 @@ MonoBehaviour:
         m_Animator: {fileID: 8802950225839975594}
         m_StartState: {fileID: 0}
         m_Reaction: {fileID: 0}
-    - rid: 1083509429608645356
-      type: {class: InputValueVector2MotionPrimary, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
-      data: 
     - rid: 1083509429608645357
       type: {class: InteractionModeNearCharacter, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -489,22 +484,12 @@ MonoBehaviour:
         - m_Bone: 10
           m_Euler: {x: 0, y: 0, z: 0}
           m_Weight: 3
-    - rid: 1083509429608645571
-      type: {class: RigFeetPlant, ns: GameCreator.Runtime.Characters.IK, asm: GameCreator.Runtime.Core}
-      data:
-        m_Breakpoint: 0
-        m_IsEnabled: 1
-        m_FootOffset: 1
-        m_FootMask:
-          serializedVersion: 2
-          m_Bits: 51
-        m_SmoothTime: 0.25
     - rid: 1083509429608645628
       type: {class: FootstepDetectorFulcrum, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Breakpoint: 0
         m_IsEnabled: 1
-        m_Fulcrum: 0.1
+        m_Fulcrum: -1
     - rid: 1083509439300633240
       type: {class: RagdollDefault, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -526,6 +511,13 @@ MonoBehaviour:
     - rid: 1083509441063813948
       type: {class: AxonometryNone, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data: 
+    - rid: 1083509442486207137
+      type: {class: InputValueVector2InputAction, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
+      data:
+        m_Input:
+          m_InputAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+          m_ActionMap: Player
+          m_Action: Move
 --- !u!114 &7012054277613837662
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -557,7 +549,7 @@ MonoBehaviour:
     - rid: 1083509440100958955
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
-        m_Value: 0
+        m_Value: 1
     - rid: 1083509440100959011
       type: {class: GetDecimalDecimal, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:
@@ -658,29 +650,6 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 1
---- !u!136 &8755510885713908434
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 398014917700472461}
-  m_Material: {fileID: 13400000, guid: 9136104d39503441e863c2726e6a97cc, type: 2}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.4
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &399251917714155445
 GameObject:
   m_ObjectHideFlags: 0
@@ -3599,7 +3568,7 @@ MonoBehaviour:
         m_From:
           m_Property:
             rid: 1083509441730707683
-        m_ExcludeLocalPlayer: 1
+        m_ExcludeLocalPlayer: 0
     - rid: 1083509441730707683
       type: {class: GetGameObjectCharactersInstance, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
@@ -4049,7 +4018,7 @@ MonoBehaviour:
     - rid: 7465644702515331251
     - rid: 7465644702515331242
   m_TriggerEvent:
-    rid: 7465644702515331247
+    rid: 1083509443507257875
   references:
     version: 2
     RefIds:
@@ -4078,6 +4047,19 @@ MonoBehaviour:
       type: {class: GetGameObjectCharactersInstance, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
       data:
         m_Character: {fileID: 6330370921157043916}
+    - rid: 1083509443507257875
+      type: {class: EventNetworkOnNoiseHeard, ns: GameCreator.Netcode.Runtime.VisualScripting, asm: GameCreator.Netcode.Runtime}
+      data:
+        m_Perception:
+          m_Option: 1
+          m_GameObject:
+            m_Property:
+              rid: 1083509443507257989
+        m_NoiseTag: player
+    - rid: 1083509443507257989
+      type: {class: GetGameObjectCharactersInstance, ns: GameCreator.Runtime.Characters, asm: GameCreator.Runtime.Core}
+      data:
+        m_Character: {fileID: 6330370921157043916}
     - rid: 7465644702515331242
       type: {class: InstructionCommonAudioSpeechPlay, ns: GameCreator.Runtime.VisualScripting, asm: GameCreator.Runtime.Core}
       data:
@@ -4094,26 +4076,6 @@ MonoBehaviour:
           m_Target:
             m_Property:
               rid: 1083509441524400926
-    - rid: 7465644702515331247
-      type: {class: EventPerceptionOnHear, ns: GameCreator.Runtime.Perception, asm: GameCreator.Runtime.Perception}
-      data:
-        m_Perception:
-          m_Property:
-            rid: 7465644702515331248
-        m_Noise:
-          m_Option: 1
-          m_Text:
-            m_Property:
-              rid: 7465644702515331249
-    - rid: 7465644702515331248
-      type: {class: GetGameObjectPerception, ns: GameCreator.Runtime.Perception, asm: GameCreator.Runtime.Perception}
-      data:
-        m_Perception: {fileID: 7012054277613837662}
-    - rid: 7465644702515331249
-      type: {class: GetStringId, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
-      data:
-        m_Id:
-          m_String: player
     - rid: 7465644702515331250
       type: {class: GetAudioClip, ns: GameCreator.Runtime.Common, asm: GameCreator.Runtime.Core}
       data:

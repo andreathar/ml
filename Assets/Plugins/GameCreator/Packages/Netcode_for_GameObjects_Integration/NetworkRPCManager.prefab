@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameCreator.Netcode.Runtime::GameCreator.Netcode.Runtime.NetworkRPCManager
   ShowTopMostFoldoutHeaderGroup: 1
-  m_MaxMessageSize: 1024
+  m_MaxMessageSize: 512
   m_DebugLogging: 1
 --- !u!114 &4672612036379104159
 MonoBehaviour:
@@ -60,7 +60,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 296906395
+  GlobalObjectIdHash: 2290013256
   InScenePlacedSourceGlobalObjectIdHash: 296906395
   DeferredDespawnTick: 0
   Ownership: 1

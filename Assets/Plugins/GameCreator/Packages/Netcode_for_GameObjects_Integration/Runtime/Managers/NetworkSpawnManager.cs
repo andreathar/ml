@@ -1,21 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace GameCreator.Netcode.Runtime
 {
     /// <summary>
-    /// Manages network spawning with proper timing and coordination.
+    /// Manages network spawning with proper timing, naming, and coordination.
     /// Features:
-    /// - Spawn points management
+    /// - Unique names per prefab type (Guard_001, Guard_002, Enemy_001, etc.)
+    /// - Name synchronization across all clients
     /// - Spawn queue to prevent flooding
-    /// - Player spawn coordination (waits for all players ready)
-    /// - NPC spawn scheduling
-    /// - Prefab validation
-    ///
-    /// Execution Order: Should run after NetworkManager (-50)
+    /// - Player spawn coordination
     /// </summary>
     [DefaultExecutionOrder(-50)]
     [AddComponentMenu("Game Creator/Network/Network Spawn Manager")]
@@ -68,35 +66,26 @@ namespace GameCreator.Netcode.Runtime
         private readonly Queue<SpawnRequest> m_SpawnQueue = new();
         private readonly Dictionary<ulong, NetworkCharacter> m_SpawnedPlayers = new();
         private readonly List<NetworkCharacter> m_SpawnedNPCs = new();
+        private readonly Dictionary<string, int> m_PrefabSpawnCounters = new();
         private int m_NextSpawnPointIndex;
         private float m_LastNPCSpawnTime;
-        private bool m_IsProcessingQueue;
 
         // EVENTS: --------------------------------------------------------------------------------
 
-        /// <summary>Fired before a player is spawned. Can be used to modify spawn position.</summary>
         public static event Action<ulong, SpawnData> EventBeforePlayerSpawn;
-
-        /// <summary>Fired after a player is spawned.</summary>
         public static event Action<ulong, NetworkCharacter> EventAfterPlayerSpawn;
-
-        /// <summary>Fired before an NPC is spawned.</summary>
         public static event Action<SpawnData> EventBeforeNPCSpawn;
-
-        /// <summary>Fired after an NPC is spawned.</summary>
         public static event Action<NetworkCharacter> EventAfterNPCSpawn;
-
-        /// <summary>Fired when all expected players have spawned.</summary>
         public static event Action EventAllPlayersSpawned;
 
         // ENUMS: ---------------------------------------------------------------------------------
 
         public enum SpawnPointMode
         {
-            RoundRobin, // Cycle through spawn points
-            Random, // Random spawn point
-            Closest, // Closest to some reference point
-            ByClientId, // Index matches ClientId (mod spawn point count)
+            RoundRobin,
+            Random,
+            Closest,
+            ByClientId,
         }
 
         public enum SpawnType
@@ -114,7 +103,7 @@ namespace GameCreator.Netcode.Runtime
             public Quaternion Rotation;
             public ulong OwnerClientId;
             public SpawnType Type;
-            public object CustomData;
+            public string CustomName;
         }
 
         private struct SpawnRequest
@@ -125,23 +114,15 @@ namespace GameCreator.Netcode.Runtime
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        /// <summary>The player prefab used for spawning.</summary>
         public GameObject PlayerPrefab
         {
             get => m_PlayerPrefab;
             set => m_PlayerPrefab = value;
         }
 
-        /// <summary>Number of players currently spawned.</summary>
         public int SpawnedPlayerCount => m_SpawnedPlayers.Count;
-
-        /// <summary>Number of NPCs currently spawned.</summary>
         public int SpawnedNPCCount => m_SpawnedNPCs.Count;
-
-        /// <summary>All spawned players.</summary>
         public IReadOnlyDictionary<ulong, NetworkCharacter> SpawnedPlayers => m_SpawnedPlayers;
-
-        /// <summary>All spawned NPCs.</summary>
         public IReadOnlyList<NetworkCharacter> SpawnedNPCs => m_SpawnedNPCs;
 
         // INITIALIZERS: --------------------------------------------------------------------------
@@ -164,6 +145,7 @@ namespace GameCreator.Netcode.Runtime
             {
                 s_Instance = null;
             }
+
             base.OnDestroy();
         }
 
@@ -173,11 +155,9 @@ namespace GameCreator.Netcode.Runtime
 
             if (IsServer)
             {
-                // Subscribe to client connections for auto-spawn
                 NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-
-                Debug.Log("[NetworkSpawnManager] Server started, listening for client connections");
+                Debug.Log("[NetworkSpawnManager] Server started");
             }
         }
 
@@ -189,6 +169,7 @@ namespace GameCreator.Netcode.Runtime
                 NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             }
 
+            m_PrefabSpawnCounters.Clear();
             base.OnNetworkDespawn();
         }
 
@@ -213,7 +194,6 @@ namespace GameCreator.Netcode.Runtime
 
             if (m_AutoSpawnPlayer)
             {
-                // Delay spawn slightly to ensure client is fully ready
                 StartCoroutine(DelayedPlayerSpawn(clientId));
             }
         }
@@ -225,11 +205,9 @@ namespace GameCreator.Netcode.Runtime
 
             Debug.Log($"[NetworkSpawnManager] Client {clientId} disconnected");
 
-            // Clean up spawned player reference
             if (m_SpawnedPlayers.TryGetValue(clientId, out var player))
             {
                 m_SpawnedPlayers.Remove(clientId);
-                // NetworkObject handles despawning automatically
             }
         }
 
@@ -240,11 +218,9 @@ namespace GameCreator.Netcode.Runtime
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer)
                 yield break;
 
-            // Check if client is still connected
             if (!NetworkManager.Singleton.ConnectedClientsIds.Contains(clientId))
                 yield break;
 
-            // Check if player already spawned (e.g., by manual spawn)
             if (m_SpawnedPlayers.ContainsKey(clientId))
                 yield break;
 
@@ -254,8 +230,7 @@ namespace GameCreator.Netcode.Runtime
         // PUBLIC SPAWN METHODS: ------------------------------------------------------------------
 
         /// <summary>
-        /// Spawn a player for a specific client.
-        /// Server-only.
+        /// Spawn a player for a specific client. Server-only.
         /// </summary>
         public NetworkCharacter SpawnPlayerForClient(
             ulong clientId,
@@ -275,9 +250,12 @@ namespace GameCreator.Netcode.Runtime
                 return null;
             }
 
-            // Get spawn point
             Vector3 spawnPos = position ?? GetNextSpawnPoint();
             Quaternion spawnRot = rotation ?? Quaternion.identity;
+
+            // Generate unique player name
+            bool isHost = clientId == NetworkManager.ServerClientId;
+            string playerName = isHost ? "Player_Host" : $"Player_Client{clientId}";
 
             var spawnData = new SpawnData
             {
@@ -286,32 +264,27 @@ namespace GameCreator.Netcode.Runtime
                 Rotation = spawnRot,
                 OwnerClientId = clientId,
                 Type = SpawnType.Player,
+                CustomName = playerName,
             };
 
-            // Allow modification before spawn
             EventBeforePlayerSpawn?.Invoke(clientId, spawnData);
 
-            // Instantiate and spawn
-            GameObject instance = Instantiate(
-                spawnData.Prefab,
-                spawnData.Position,
-                spawnData.Rotation
-            );
-            NetworkObject networkObject = instance.GetComponent<NetworkObject>();
+            GameObject instance = Instantiate(spawnData.Prefab, spawnData.Position, spawnData.Rotation);
+            instance.name = spawnData.CustomName;
 
+            NetworkObject networkObject = instance.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
-                Debug.LogError(
-                    "[NetworkSpawnManager] Player prefab must have NetworkObject component"
-                );
+                Debug.LogError("[NetworkSpawnManager] Player prefab must have NetworkObject");
                 Destroy(instance);
                 return null;
             }
 
-            // Spawn with ownership
             networkObject.SpawnAsPlayerObject(clientId);
 
-            // Get NetworkCharacter
+            // Sync name to all clients
+            SyncObjectNameClientRpc(networkObject.NetworkObjectId, spawnData.CustomName);
+
             NetworkCharacter networkCharacter = instance.GetComponent<NetworkCharacter>();
             if (networkCharacter != null)
             {
@@ -319,17 +292,14 @@ namespace GameCreator.Netcode.Runtime
                 EventAfterPlayerSpawn?.Invoke(clientId, networkCharacter);
             }
 
-            Debug.Log($"[NetworkSpawnManager] Spawned player for client {clientId} at {spawnPos}");
-
-            // Check if all players spawned
+            Debug.Log($"[NetworkSpawnManager] Spawned '{spawnData.CustomName}' at {spawnPos}");
             CheckAllPlayersSpawned();
 
             return networkCharacter;
         }
 
         /// <summary>
-        /// Queue an NPC for spawning. Uses spawn queue to prevent flooding.
-        /// Server-only.
+        /// Queue an NPC for spawning. Server-only.
         /// </summary>
         public void QueueNPCSpawn(
             GameObject prefab,
@@ -361,14 +331,9 @@ namespace GameCreator.Netcode.Runtime
         }
 
         /// <summary>
-        /// Spawn an NPC immediately (bypasses queue).
-        /// Server-only.
+        /// Spawn an NPC immediately. Server-only.
         /// </summary>
-        public NetworkCharacter SpawnNPCImmediate(
-            GameObject prefab,
-            Vector3 position,
-            Quaternion rotation
-        )
+        public NetworkCharacter SpawnNPCImmediate(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             if (!IsServer)
             {
@@ -389,14 +354,13 @@ namespace GameCreator.Netcode.Runtime
         }
 
         /// <summary>
-        /// Despawn and destroy a network character.
-        /// Server-only.
+        /// Despawn a network character. Server-only.
         /// </summary>
         public void DespawnCharacter(NetworkCharacter character)
         {
             if (!IsServer)
             {
-                Debug.LogError("[NetworkSpawnManager] Only server can despawn characters");
+                Debug.LogError("[NetworkSpawnManager] Only server can despawn");
                 return;
             }
 
@@ -406,7 +370,6 @@ namespace GameCreator.Netcode.Runtime
             var networkObject = character.GetComponent<NetworkObject>();
             if (networkObject != null && networkObject.IsSpawned)
             {
-                // Remove from tracking
                 if (character.IsPlayer)
                 {
                     var clientId = networkObject.OwnerClientId;
@@ -422,8 +385,7 @@ namespace GameCreator.Netcode.Runtime
         }
 
         /// <summary>
-        /// Despawn all NPCs.
-        /// Server-only.
+        /// Despawn all NPCs. Server-only.
         /// </summary>
         public void DespawnAllNPCs()
         {
@@ -435,6 +397,16 @@ namespace GameCreator.Netcode.Runtime
             {
                 DespawnCharacter(npc);
             }
+
+            m_PrefabSpawnCounters.Clear();
+        }
+
+        /// <summary>
+        /// Get the current spawn count for a prefab type.
+        /// </summary>
+        public int GetSpawnCountForPrefab(string prefabName)
+        {
+            return m_PrefabSpawnCounters.TryGetValue(prefabName, out int count) ? count : 0;
         }
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
@@ -444,7 +416,6 @@ namespace GameCreator.Netcode.Runtime
             if (m_SpawnQueue.Count == 0)
                 return;
 
-            // Check spawn delay
             if (Time.time - m_LastNPCSpawnTime < m_NPCSpawnDelay)
                 return;
 
@@ -471,26 +442,36 @@ namespace GameCreator.Netcode.Runtime
                 return null;
             }
 
-            // Allow modification before spawn
+            // Generate unique name per prefab type
+            string baseName = data.Prefab.name;
+            if (!m_PrefabSpawnCounters.TryGetValue(baseName, out int counter))
+            {
+                counter = 0;
+            }
+
+            counter++;
+            m_PrefabSpawnCounters[baseName] = counter;
+
+            string uniqueName = $"{baseName}_{counter:D3}";
+
             EventBeforeNPCSpawn?.Invoke(data);
 
-            // Instantiate
             GameObject instance = Instantiate(data.Prefab, data.Position, data.Rotation);
-            NetworkObject networkObject = instance.GetComponent<NetworkObject>();
+            instance.name = uniqueName;
 
+            NetworkObject networkObject = instance.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
-                Debug.LogError(
-                    "[NetworkSpawnManager] NPC prefab must have NetworkObject component"
-                );
+                Debug.LogError("[NetworkSpawnManager] NPC prefab must have NetworkObject");
                 Destroy(instance);
                 return null;
             }
 
-            // Spawn (server-owned)
             networkObject.Spawn();
 
-            // Get NetworkCharacter
+            // Sync name to all clients
+            SyncObjectNameClientRpc(networkObject.NetworkObjectId, uniqueName);
+
             NetworkCharacter networkCharacter = instance.GetComponent<NetworkCharacter>();
             if (networkCharacter != null)
             {
@@ -498,7 +479,7 @@ namespace GameCreator.Netcode.Runtime
                 EventAfterNPCSpawn?.Invoke(networkCharacter);
             }
 
-            Debug.Log($"[NetworkSpawnManager] Spawned NPC '{data.Prefab.name}' at {data.Position}");
+            Debug.Log($"[NetworkSpawnManager] Spawned NPC '{uniqueName}' at {data.Position}");
 
             return networkCharacter;
         }
@@ -516,21 +497,15 @@ namespace GameCreator.Netcode.Runtime
             {
                 case SpawnPointMode.RoundRobin:
                     spawnPoint = m_PlayerSpawnPoints[m_NextSpawnPointIndex];
-                    m_NextSpawnPointIndex =
-                        (m_NextSpawnPointIndex + 1) % m_PlayerSpawnPoints.Length;
+                    m_NextSpawnPointIndex = (m_NextSpawnPointIndex + 1) % m_PlayerSpawnPoints.Length;
                     break;
 
                 case SpawnPointMode.Random:
-                    spawnPoint = m_PlayerSpawnPoints[
-                        UnityEngine.Random.Range(0, m_PlayerSpawnPoints.Length)
-                    ];
+                    spawnPoint = m_PlayerSpawnPoints[UnityEngine.Random.Range(0, m_PlayerSpawnPoints.Length)];
                     break;
 
                 case SpawnPointMode.ByClientId:
-                    int index = (int)(
-                        NetworkManager.Singleton.ConnectedClientsIds.Count
-                        % m_PlayerSpawnPoints.Length
-                    );
+                    int index = (int)(NetworkManager.Singleton.ConnectedClientsIds.Count % m_PlayerSpawnPoints.Length);
                     spawnPoint = m_PlayerSpawnPoints[index];
                     break;
 
@@ -552,6 +527,21 @@ namespace GameCreator.Netcode.Runtime
             {
                 EventAllPlayersSpawned?.Invoke();
                 Debug.Log($"[NetworkSpawnManager] All {connectedCount} players spawned");
+            }
+        }
+
+        // RPCS: ----------------------------------------------------------------------------------
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void SyncObjectNameClientRpc(ulong networkObjectId, string objectName)
+        {
+            // Find the NetworkObject and update its name
+            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(
+                    networkObjectId,
+                    out NetworkObject networkObject
+                ))
+            {
+                networkObject.gameObject.name = objectName;
             }
         }
 
