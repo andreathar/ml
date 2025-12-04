@@ -1,13 +1,14 @@
 CRITICAL PROJECT RULES (P0 - NEVER VIOLATE)
-Project: ML - GameCreator Core + Netcode Integration
-Generated: 2025-12-03 | Token Budget: ~1000 | Load Priority: CRITICAL
+Project: ML - GameCreator Core + Netcode + Perception
+Generated: 2025-12-04 | Token Budget: ~1200 | Load Priority: CRITICAL
 
 ═══════════════════════════════════════════════════════════════
 PROJECT OVERVIEW
 ═══════════════════════════════════════════════════════════════
 
-Clean Unity project with GameCreator Core + official Netcode Integration:
+Unity project with GameCreator Core + Netcode + Perception:
 ├─ GameCreator.Runtime.Core (Characters, Visual Scripting, Variables)
+├─ GameCreator.Runtime.Perception (AI senses, awareness, evidence)
 ├─ GameCreator.Netcode.Runtime (Network sync, RPCs, ownership)
 ├─ Unity.Netcode.Runtime (Unity Netcode for GameObjects 2.x)
 └─ UNITY_NETCODE_2 define enabled
@@ -16,22 +17,15 @@ Clean Unity project with GameCreator Core + official Netcode Integration:
 1. FILE ORGANIZATION (P0 - MANDATORY)
 ═══════════════════════════════════════════════════════════════
 
-ZERO ROOT POLLUTION POLICY - Before creating ANY file, check:
+ZERO ROOT POLLUTION POLICY:
 
-✅ ALLOWED AT ROOT (ONLY):
-- .gitignore, .gitattributes, .editorconfig
-- .claude.json, .mcp.json
-- README.md, LICENSE
-- *.sln, *.csproj (Unity/VS project files)
+✅ ALLOWED AT ROOT: .gitignore, .claude.json, .mcp.json, README.md, *.sln
 
-❌ AUTO-REDIRECT REQUIRED:
-AI reports/analysis     → claudedocs/reports/
-AI action items         → claudedocs/action-items/
-AI guides/tutorials     → claudedocs/guides/
-User documentation      → docs/
-Temporary files         → .temp/ (gitignored)
-Tests                   → Assets/Tests/ or tests/
-Scripts                 → scripts/
+❌ AUTO-REDIRECT:
+AI reports     → claudedocs/reports/
+AI guides      → claudedocs/guides/
+User docs      → docs/
+Temp files     → .temp/
 
 ═══════════════════════════════════════════════════════════════
 2. NETWORK ARCHITECTURE (P0 - CORE PATTERNS)
@@ -40,135 +34,130 @@ Scripts                 → scripts/
 🎯 NetworkCharacterAdapter - Primary bridge component
    ├─ Bridges GameCreator Character ↔ Unity NetworkBehaviour
    ├─ Manages IsNetworkSpawned lifecycle
-   ├─ Provides IsLocalPlayer: IsOwner && Character.IsPlayer
-   └─ Located: GameCreator.Netcode.Runtime.NetworkCharacterAdapter
+   ├─ IsLocalPlayer: IsOwner && Character.IsPlayer
+   └─ Namespace: GameCreator.Netcode.Runtime
 
 ✅ Ownership Pattern:
    if (IsOwner) { /* local player logic */ }
-   if (networkCharacterAdapter.IsLocalPlayer) { /* alternative */ }
 
 ✅ Spawn Lifecycle:
    OnNetworkSpawn() → BecomeLocalPlayer() or BecomeRemotePlayer()
-   OnNetworkDespawn() → Cleanup
 
 ✅ Variables Sync:
    NetworkVariablesSync.SetFloat("name", value)
    NetworkVariablesSync.GetFloat("name", defaultValue)
 
 ═══════════════════════════════════════════════════════════════
-3. RPC PATTERNS (Netcode 2.x Syntax)
+3. PERCEPTION MODULE (AI SENSES)
 ═══════════════════════════════════════════════════════════════
 
-NEW Rpc Attribute (PREFERRED):
-├─ [Rpc(SendTo.Server)] - Client → Server
-├─ [Rpc(SendTo.Everyone)] - Server → All Clients
-├─ [Rpc(SendTo.Owner)] - Server → Owner only
-├─ [Rpc(SendTo.NotOwner)] - Server → Everyone except owner
-└─ RequireOwnership = false for non-owner requests
+Key Components (GameCreator.Runtime.Perception):
+├─ Perception - Main AI perception component
+├─ Cortex - Awareness tracking (Trackers per target)
+├─ Tracker - Per-target awareness (0-1 float, AwareStage)
+├─ Sensors: SensorSee, SensorHear, SensorSmell, SensorFeel
+├─ Evidence - Investigation targets
+└─ Environment: Luminance, Camouflage, Din
+
+Awareness Stages:
+├─ None (0-0.25) → Suspicious (0.25-0.5)
+├─ Alert (0.5-0.75) → Aware (0.75-1.0)
+
+⚠️ NETWORK STATUS: Local-only (network integration PLANNED)
+   OpenSpec: add-perception-netcode-integration (0/64 tasks)
+
+═══════════════════════════════════════════════════════════════
+4. RPC PATTERNS (Netcode 2.x Syntax)
+═══════════════════════════════════════════════════════════════
+
+[Rpc(SendTo.Server)] - Client → Server
+[Rpc(SendTo.Everyone)] - Server → All Clients
+[Rpc(SendTo.Owner)] - Server → Owner only
 
 Example:
 [Rpc(SendTo.Server, RequireOwnership = false)]
-private void RequestOwnershipRpc(RpcParams rpcParams = default)
+private void RequestRpc(RpcParams rpcParams = default)
 {
     ulong senderId = rpcParams.Receive.SenderClientId;
-    // Server validates and processes
 }
 
-LEGACY (Still Supported):
-├─ [ServerRpc] - Must end with "ServerRpc"
-├─ [ClientRpc] - Must end with "ClientRpc"
-└─ Custom structs: Must implement INetworkSerializable
-
 ═══════════════════════════════════════════════════════════════
-4. GAMECREATOR VISUAL SCRIPTING (P0 - STRICT SIGNATURES)
+5. GAMECREATOR VISUAL SCRIPTING (P0 - STRICT SIGNATURES)
 ═══════════════════════════════════════════════════════════════
 
 Instructions: protected override Task Run(Args args)
 Conditions:   protected override bool Check(Args args)
 ❌ NO CancellationToken, NO other parameters!
 
-Key Instructions:
-├─ InstructionNetworkStartHost / StartClient
-├─ InstructionNetworkSpawnPlayer / Despawn
-├─ InstructionNetworkChangeOwnership
-└─ InstructionNetworkDisconnect
-
-Key Conditions:
-├─ ConditionNetworkIsHost / IsClient / IsServer
-├─ ConditionNetworkIsOwner / IsLocalPlayer
-└─ ConditionNetworkIsConnected / IsSpawned
-
-Key Triggers:
-├─ EventNetworkOnClientConnected / Disconnected
-├─ EventNetworkOnLocalPlayerSpawned
-├─ EventNetworkOnNetworkSpawn / Despawn
-└─ EventNetworkOnOwnershipChanged
+Key Perception VS:
+├─ InstructionPerceptionEmitNoise
+├─ InstructionPerceptionAwarenessAdd
+├─ ConditionPerceptionCanSee
+├─ ConditionPerceptionAwareStage
+├─ EventPerceptionOnAwarenessStage
+└─ EventPerceptionOnHear
 
 ═══════════════════════════════════════════════════════════════
-5. SYMBOL REFERENCES (Quick Navigation)
+6. SYMBOL REFERENCES (Quick Navigation)
 ═══════════════════════════════════════════════════════════════
 
 SERENA MEMORIES:
-├─ .serena/memories/critical_rules.md (This content, detailed)
+├─ .serena/memories/critical_rules.md (Detailed patterns)
 ├─ .serena/memories/project_structure.md (Project layout)
-├─ .serena/memories/TOOLS/003_openspec_workflow.md (Spec-driven dev)
+├─ .serena/memories/CRITICAL/ (4 critical files)
 └─ .serena/memories/TOOLS/008_openspec_serena_integration.md
 
 SERENA PERSONAS:
-├─ .serena/personas/character-core.llm.txt (Character module)
-├─ .serena/personas/netcode-core.llm.txt (Netcode integration)
-└─ .serena/personas/_index.llm.txt (Module index)
+├─ .serena/personas/character-core.llm.txt
+├─ .serena/personas/netcode-core.llm.txt
+├─ .serena/personas/perception.llm.txt
+└─ .serena/personas/_index.llm.txt
 
 OPENSPEC:
-├─ openspec/AGENTS.md (OpenSpec workflow guide)
-├─ openspec/changes/ (Active change proposals)
-└─ openspec/.decision-trees/ (Network decision trees)
-
-DECISION TREES:
-├─ network-sync-method.yaml - Choose sync approach
-├─ gc-character-sync.yaml - Character networking
-└─ schema.yaml - Decision tree schema
+├─ openspec/AGENTS.md (Workflow guide)
+├─ openspec/changes/ (Active proposals)
+├─ openspec/changes/add-perception-netcode-integration/ (ACTIVE)
+└─ openspec/.decision-trees/ (Decision trees)
 
 SYMBOL MAPS:
-├─ .serena/symbols/assemblies.json (Unity assemblies)
-└─ .serena/symbols/gamecreator_modules.json (GC modules)
+├─ .serena/symbols/assemblies.json
+└─ .serena/symbols/gamecreator_modules.json
 
 ═══════════════════════════════════════════════════════════════
-6. CRITICAL CONSTRAINTS (NEVER VIOLATE)
+7. CRITICAL CONSTRAINTS (NEVER VIOLATE)
 ═══════════════════════════════════════════════════════════════
 
 ✅ ALWAYS:
 - Use NetworkCharacterAdapter for character networking
 - Check IsOwner before local player logic
 - Use [Rpc(SendTo.X)] for new RPCs
-- Implement OnNetworkSpawn/OnNetworkDespawn properly
-- Use Task Run(Args args) signature for Instructions (no CT)
-- Reference GameCreator.Netcode.Runtime namespace
+- Use Task Run(Args args) signature (no CT)
+- Reference correct namespace for each module
 
 ❌ NEVER:
-- Create unauthorized files at project root
+- Create files at project root
 - Add CancellationToken to Instruction.Run()
 - Skip ownership checks in multiplayer code
-- Bypass file organization rules
-- Ignore OnNetworkSpawn lifecycle
+- Assume Perception is network-synced (it's NOT yet)
 
 ═══════════════════════════════════════════════════════════════
-7. ASSEMBLY QUICK REFERENCE
+8. ASSEMBLY QUICK REFERENCE
 ═══════════════════════════════════════════════════════════════
 
 GameCreator.Runtime.Core
-├─ Namespace: GameCreator.Runtime.Core
-├─ Character, Args, Instructions, Conditions
-└─ Dependencies: InputSystem, TextMeshPro, Collections, Mathematics
+└─ Character, Args, Instructions, Conditions
+
+GameCreator.Runtime.Perception
+└─ Perception, Cortex, Tracker, Sensors, Evidence
+└─ Dependencies: GameCreator.Runtime.Core
 
 GameCreator.Netcode.Runtime
-├─ Namespace: GameCreator.Netcode.Runtime
-├─ NetworkCharacterAdapter, NetworkCharacter, NetworkVariablesSync
-├─ All network Instructions, Conditions, Triggers
+└─ NetworkCharacterAdapter, NetworkCharacter, NetworkVariablesSync
 └─ Dependencies: GameCreator.Runtime.Core, Unity.Netcode.Runtime
 
 ═══════════════════════════════════════════════════════════════
 END OF CRITICAL CONTEXT
 ═══════════════════════════════════════════════════════════════
 
-Next: Load task-specific memories based on user intent
+Next: Load task-specific personas based on user intent
+For Perception network work: Read openspec/changes/add-perception-netcode-integration/

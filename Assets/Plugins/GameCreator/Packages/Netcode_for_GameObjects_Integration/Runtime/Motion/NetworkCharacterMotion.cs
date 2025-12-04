@@ -255,7 +255,7 @@ namespace GameCreator.Netcode.Runtime
         {
             if (!IsOwner)
                 return;
-            RequestJumpServerRpc(force);
+            RequestJumpRpc(force);
         }
 
         /// <summary>
@@ -276,13 +276,13 @@ namespace GameCreator.Netcode.Runtime
         {
             if (!IsOwner)
                 return;
-            RequestDashServerRpc(direction, speed, gravity, duration, fade);
+            RequestDashRpc(direction, speed, gravity, duration, fade);
         }
 
         // RPCs: ----------------------------------------------------------------------------------
 
-        [ServerRpc]
-        private void RequestJumpServerRpc(float force)
+        [Rpc(SendTo.Server)]
+        private void RequestJumpRpc(float force)
         {
             // Server validates and executes jump
             if (this.m_Character.Jump != null)
@@ -291,11 +291,11 @@ namespace GameCreator.Netcode.Runtime
             }
 
             // Broadcast to all clients
-            ExecuteJumpClientRpc(force);
+            ExecuteJumpRpc(force);
         }
 
-        [ClientRpc]
-        private void ExecuteJumpClientRpc(float force)
+        [Rpc(SendTo.ClientsAndHost)]
+        private void ExecuteJumpRpc(float force)
         {
             if (IsOwner)
                 return; // Owner already executed locally
@@ -306,8 +306,8 @@ namespace GameCreator.Netcode.Runtime
             }
         }
 
-        [ServerRpc]
-        private void RequestDashServerRpc(
+        [Rpc(SendTo.Server)]
+        private void RequestDashRpc(
             Vector3 direction,
             float speed,
             float gravity,
@@ -322,11 +322,11 @@ namespace GameCreator.Netcode.Runtime
             }
 
             // Broadcast to all clients
-            ExecuteDashClientRpc(direction, speed, gravity, duration, fade);
+            ExecuteDashRpc(direction, speed, gravity, duration, fade);
         }
 
-        [ClientRpc]
-        private void ExecuteDashClientRpc(
+        [Rpc(SendTo.ClientsAndHost)]
+        private void ExecuteDashRpc(
             Vector3 direction,
             float speed,
             float gravity,

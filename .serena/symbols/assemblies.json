@@ -1,7 +1,7 @@
 {
   "project": "ML",
-  "generated": "2025-12-03",
-  "description": "GameCreator Core + Netcode Integration for Unity",
+  "generated": "2025-12-04",
+  "description": "GameCreator Core + Netcode + Perception for Unity",
   "assemblies": {
     "gamecreator": {
       "GameCreator.Runtime.Core": {
@@ -28,6 +28,43 @@
         "type": "editor",
         "dependencies": [
           "GameCreator.Runtime.Core"
+        ]
+      },
+      "GameCreator.Runtime.Perception": {
+        "namespace": "GameCreator.Runtime.Perception",
+        "path": "Assets/Plugins/GameCreator/Packages/Perception/Runtime",
+        "type": "runtime",
+        "dependencies": [
+          "GameCreator.Runtime.Core"
+        ],
+        "key_types": [
+          "Perception",
+          "Cortex",
+          "Tracker",
+          "TSensor",
+          "SensorSee",
+          "SensorHear",
+          "SensorSmell",
+          "SensorFeel",
+          "Evidence",
+          "Luminance",
+          "Camouflage",
+          "Din",
+          "Scent",
+          "AwareStage",
+          "AwareMask",
+          "IStimulus",
+          "StimulusNoise",
+          "StimulusScent"
+        ]
+      },
+      "GameCreator.Editor.Perception": {
+        "namespace": "GameCreator.Editor.Perception",
+        "path": "Assets/Plugins/GameCreator/Packages/Perception/Editor",
+        "type": "editor",
+        "dependencies": [
+          "GameCreator.Runtime.Perception",
+          "GameCreator.Editor.Core"
         ]
       },
       "GameCreator.Netcode.Runtime": {

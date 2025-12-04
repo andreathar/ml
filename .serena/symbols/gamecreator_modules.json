@@ -1,6 +1,6 @@
 {
   "project": "ML",
-  "generated": "2025-12-03",
+  "generated": "2025-12-04",
   "description": "GameCreator modules installed in this project",
   "installed_modules": {
     "core": {
@@ -27,6 +27,80 @@
         "trigger_base": "Trigger",
         "signature_instruction": "protected override Task Run(Args args)",
         "signature_condition": "protected override bool Check(Args args)"
+      }
+    },
+    "perception": {
+      "name": "GameCreator Perception",
+      "assembly": "GameCreator.Runtime.Perception",
+      "namespace": "GameCreator.Runtime.Perception",
+      "path": "Assets/Plugins/GameCreator/Packages/Perception",
+      "status": "active",
+      "requires": ["core"],
+      "components": {
+        "perception": {
+          "class": "Perception",
+          "description": "Main AI perception component managing sensors and awareness",
+          "sub_components": ["Cortex", "SensorList"]
+        },
+        "cortex": {
+          "class": "Cortex",
+          "description": "Tracks awareness per-target via Trackers"
+        },
+        "tracker": {
+          "class": "Tracker",
+          "description": "Per-target awareness tracking (0-1 float, AwareStage enum)"
+        },
+        "sensors": {
+          "base_class": "TSensor",
+          "implementations": ["SensorSee", "SensorHear", "SensorSmell", "SensorFeel"]
+        },
+        "evidence": {
+          "class": "Evidence",
+          "description": "Investigation targets that can be tampered"
+        },
+        "environment": {
+          "classes": ["Luminance", "Camouflage", "Din", "Obstruction"],
+          "description": "Environmental modifiers for perception"
+        }
+      },
+      "visual_scripting": {
+        "instructions": {
+          "awareness": ["InstructionPerceptionAwarenessAdd", "InstructionPerceptionAwarenessSubtract", "InstructionPerceptionAwarenessRelay"],
+          "tracking": ["InstructionPerceptionTrack", "InstructionPerceptionUntrack"],
+          "hearing": ["InstructionPerceptionEmitNoise", "InstructionPerceptionGlobalDin"],
+          "smell": ["InstructionPerceptionEmitScent", "InstructionPerceptionDissipation"],
+          "see": ["InstructionPerceptionAmbientLuminance"],
+          "evidence": ["InstructionPerceptionEvidenceTamper", "InstructionPerceptionEvidenceRestore", "InstructionPerceptionEvidenceRelay"]
+        },
+        "conditions": {
+          "awareness": ["ConditionPerceptionAwareness", "ConditionPerceptionAwareStage"],
+          "see": ["ConditionPerceptionCanSee", "ConditionPerceptionLuminance"],
+          "hear": ["ConditionCanHearNoise", "ConditionHearsNoiseTag"],
+          "smell": ["ConditionCanSmellScent", "ConditionSmellsScentTag"],
+          "evidence": ["ConditionPerceptionIsEvidenceTampered"]
+        },
+        "events": {
+          "awareness": ["EventPerceptionOnAwarenessLevel", "EventPerceptionOnAwarenessStage", "EventPerceptionRelayedAwareness"],
+          "see": ["EventPerceptionOnSee"],
+          "hear": ["EventPerceptionOnHear"],
+          "smell": ["EventPerceptionOnSmell"],
+          "feel": ["EventPerceptionOnFeel"],
+          "evidence": ["EventPerceptionNoticeEvidence", "EventPerceptionEvidenceTamper", "EventPerceptionRelayedEvidence"]
+        }
+      },
+      "enums": {
+        "AwareStage": ["None", "Suspicious", "Alert", "Aware"],
+        "AwareMask": "Flags for awareness filtering"
+      },
+      "network_integration": {
+        "status": "planned",
+        "openspec_change": "add-perception-netcode-integration",
+        "planned_components": [
+          "NetworkPerception",
+          "NetworkPerceptionSync", 
+          "NetworkPerceptionRegistry",
+          "NetworkPerceptionEvents"
+        ]
       }
     },
     "netcode": {
@@ -104,7 +178,6 @@
     "Stats",
     "Quests",
     "Dialogue",
-    "Perception",
     "Behavior",
     "Shooter",
     "Melee",

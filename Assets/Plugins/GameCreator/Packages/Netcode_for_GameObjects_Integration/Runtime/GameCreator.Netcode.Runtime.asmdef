@@ -3,6 +3,7 @@
     "rootNamespace": "GameCreator.Netcode.Runtime",
     "references": [
         "GameCreator.Runtime.Core",
+        "GameCreator.Runtime.Perception",
         "Unity.Netcode.Runtime",
         "Unity.Collections"
     ],

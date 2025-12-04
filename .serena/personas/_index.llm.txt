@@ -1,9 +1,9 @@
 ======================================================================
-GAMECREATOR CORE + NETCODE - MODULE INDEX
+GAMECREATOR CORE + NETCODE + PERCEPTION - MODULE INDEX
 ======================================================================
-Project: ML - Clean Multiplayer Integration
-Generated: 2025-12-03
-Total Modules: 2 (Core + Netcode)
+Project: ML - Multiplayer AI Integration
+Generated: 2025-12-04
+Total Modules: 3 (Core + Netcode + Perception)
 
 ----------------------------------------------------------------------
 MODULE OVERVIEW
@@ -12,102 +12,109 @@ MODULE OVERVIEW
 [Core] (gc-core)
   Assembly: GameCreator.Runtime.Core
   Namespace: GameCreator.Runtime.Core
+  Persona: character-core.llm.txt
   Components: Character, Args, Instructions, Conditions, Triggers
   Dependencies: InputSystem, TextMeshPro, Collections, Mathematics
 
 [Netcode] (gc-netcode)
   Assembly: GameCreator.Netcode.Runtime
   Namespace: GameCreator.Netcode.Runtime
+  Persona: netcode-core.llm.txt
   Components: NetworkCharacterAdapter, NetworkCharacter, NetworkVariablesSync
   Dependencies: GameCreator.Runtime.Core, Unity.Netcode.Runtime
 
-----------------------------------------------------------------------
-NETCODE INTEGRATION COMPONENTS
-----------------------------------------------------------------------
-
-Components/
-├── NetworkCharacter.cs
-│   └── Extended Character with network properties
-├── NetworkCharacterAdapter.cs
-│   └── Bridge: Character ↔ NetworkBehaviour
-└── NetworkCharacterRegistry.cs
-    └── Tracks all network characters
-
-Driver/
-└── NetworkUnitDriverController.cs
-    └── Network-aware movement driver
-
-Motion/
-└── NetworkCharacterMotion.cs
-    └── Synced character motion
-
-Sync/
-└── NetworkVariablesSync.cs
-    └── GameCreator Variables ↔ NetworkVariables
-
-VisualScripting/
-├── Instructions/
-│   ├── InstructionNetworkStartHost
-│   ├── InstructionNetworkStartClient
-│   ├── InstructionNetworkSpawnPlayer
-│   ├── InstructionNetworkDespawn
-│   ├── InstructionNetworkChangeOwnership
-│   └── InstructionNetworkDisconnect
-├── Conditions/
-│   ├── ConditionNetworkIsHost
-│   ├── ConditionNetworkIsClient
-│   ├── ConditionNetworkIsServer
-│   ├── ConditionNetworkIsOwner
-│   ├── ConditionNetworkIsLocalPlayer
-│   ├── ConditionNetworkIsConnected
-│   └── ConditionNetworkIsSpawned
-├── Triggers/
-│   ├── EventNetworkOnClientConnected
-│   ├── EventNetworkOnClientDisconnected
-│   ├── EventNetworkOnLocalPlayerSpawned
-│   ├── EventNetworkOnNetworkSpawn
-│   ├── EventNetworkOnNetworkDespawn
-│   └── EventNetworkOnOwnershipChanged
-└── Properties/
-    ├── GetGameObjectNetworkLocalPlayer
-    └── GetGameObjectNetworkPlayerByClientId
+[Perception] (gc-perception)
+  Assembly: GameCreator.Runtime.Perception
+  Namespace: GameCreator.Runtime.Perception
+  Persona: perception.llm.txt
+  Components: Perception, Cortex, Tracker, Sensors, Evidence
+  Dependencies: GameCreator.Runtime.Core
+  Network Status: PLANNED (see openspec/changes/add-perception-netcode-integration)
 
 ----------------------------------------------------------------------
 DEPENDENCY GRAPH
 ----------------------------------------------------------------------
 
-Unity.Netcode.Runtime <- FOUNDATION
+Unity.Netcode.Runtime <- FOUNDATION (network layer)
     |
-    +-- GameCreator.Runtime.Core <- CHARACTER SYSTEM
-    |     +-- Character, Args, Instructions, Conditions
+GameCreator.Runtime.Core <- CHARACTER SYSTEM
     |
     +-- GameCreator.Netcode.Runtime <- NETWORK BRIDGE
-          +-- NetworkCharacterAdapter (bridges both)
-          +-- NetworkVariablesSync
-          +-- All network VS components
+    |     +-- NetworkCharacterAdapter
+    |     +-- NetworkVariablesSync
+    |
+    +-- GameCreator.Runtime.Perception <- AI SENSES
+          +-- Perception, Cortex, Sensors
+          +-- Evidence, Awareness
+          +-- (NetworkPerception - PLANNED)
 
 ----------------------------------------------------------------------
-KEY PATTERNS
+PERCEPTION COMPONENTS DETAIL
 ----------------------------------------------------------------------
 
-NetworkCharacterAdapter Lifecycle:
-├── OnNetworkSpawn() - Character spawns on network
-│   ├── IsOwner: BecomeLocalPlayer()
-│   └── !IsOwner: BecomeRemotePlayer()
-├── OnNetworkDespawn() - Character leaves network
-├── OnGainedOwnership() - Ownership transferred to us
-└── OnLostOwnership() - Ownership transferred away
+Perception (Main Component)
+├── Cortex - Awareness tracking brain
+│   └── Tracker - Per-target awareness (0-1, stages)
+├── Sensors
+│   ├── SensorSee - Visual detection
+│   ├── SensorHear - Audio detection
+│   ├── SensorSmell - Scent detection
+│   └── SensorFeel - Proximity detection
+└── Evidence - Investigation targets
 
-RPC Pattern (Netcode 2.x):
-├── [Rpc(SendTo.Server)] - Client → Server
-├── [Rpc(SendTo.Everyone)] - Server → All clients
-├── [Rpc(SendTo.Owner)] - Server → Owner only
-└── RpcParams rpcParams = default for sender info
+Awareness Stages:
+├── None (0-0.25)
+├── Suspicious (0.25-0.5)
+├── Alert (0.5-0.75)
+└── Aware (0.75-1.0)
 
-Variables Sync:
-├── NetworkSyncMode.Everyone - All clients read
-├── NetworkSyncMode.OwnerOnly - Owner read/write
-└── NetworkSyncMode.ServerOnly - Server only
+Environmental Modifiers:
+├── Luminance - Affects sight
+├── Camouflage - Reduces visibility
+├── Din - Ambient noise
+└── Obstruction - Blocks senses
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING SUMMARY
+----------------------------------------------------------------------
+
+Module      | Instructions | Conditions | Triggers
+------------|--------------|------------|----------
+Core        | Many         | Many       | Many
+Netcode     | 6            | 7          | 6
+Perception  | 11           | 9          | 10
+
+Key Perception Instructions:
+- InstructionPerceptionEmitNoise
+- InstructionPerceptionEmitScent
+- InstructionPerceptionAwarenessAdd
+- InstructionPerceptionTrack
+
+Key Perception Conditions:
+- ConditionPerceptionCanSee
+- ConditionCanHearNoise
+- ConditionPerceptionAwareStage
+
+Key Perception Triggers:
+- EventPerceptionOnAwarenessStage
+- EventPerceptionOnSee
+- EventPerceptionOnHear
+
+----------------------------------------------------------------------
+ACTIVE OPENSPEC CHANGES
+----------------------------------------------------------------------
+
+Perception Network Integration:
+├── Change ID: add-perception-netcode-integration
+├── Status: 0/64 tasks
+├── Goal: Server-authoritative perception sync
+└── Files: openspec/changes/add-perception-netcode-integration/
+
+Key Implementation Tasks:
+1. NetworkPerception component
+2. NetworkPerceptionRegistry
+3. NetworkPerceptionEvents
+4. Network-aware VS components
 
 ----------------------------------------------------------------------
 USAGE INSTRUCTIONS
@@ -116,17 +123,17 @@ USAGE INSTRUCTIONS
 1. Load persona schema before working on module:
    .serena/personas/character-core.llm.txt
    .serena/personas/netcode-core.llm.txt
+   .serena/personas/perception.llm.txt
 
-2. Check OpenSpec for existing specs and proposals:
-   openspec list --specs
+2. Check OpenSpec for active changes:
    openspec list
 
-3. Use decision trees for networking decisions:
-   openspec/.decision-trees/network-sync-method.yaml
-   openspec/.decision-trees/gc-character-sync.yaml
+3. For network perception work, review:
+   openspec/changes/add-perception-netcode-integration/proposal.md
+   openspec/changes/add-perception-netcode-integration/tasks.md
 
-4. Reference GameCreator.Netcode.Runtime namespace for all
-   network-related GameCreator code
+4. Use decision trees for networking decisions:
+   openspec/.decision-trees/network-sync-method.yaml
 
 ----------------------------------------------------------------------
 OPENSPEC INTEGRATION
@@ -137,10 +144,5 @@ Active Specs (check with: openspec list --specs):
 ├── network-synchronization/spec.md
 ├── spawn-system/spec.md
 └── visual-scripting/spec.md
-
-Decision Trees:
-├── network-sync-method.yaml
-├── gc-character-sync.yaml
-└── schema.yaml (KB-enhanced schema)
 
 Cross-reference: .serena/memories/TOOLS/008_openspec_serena_integration.md

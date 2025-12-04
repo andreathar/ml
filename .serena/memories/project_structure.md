@@ -1,19 +1,21 @@
 # ML Project Structure
 
-**Last Updated:** 2025-12-03
-**Purpose:** Clean GameCreator Core + Netcode integration for multiplayer games
+**Last Updated:** 2025-12-04
+**Purpose:** Clean GameCreator Core + Netcode + Perception integration for multiplayer games
 
 ## Project Overview
 
-This is a fresh Unity project with only the essential modules for perfect multiplayer integration:
+This is a fresh Unity project with essential modules for multiplayer AI integration:
 - **GameCreator Core** - Character, Visual Scripting, Variables
 - **GameCreator Netcode Integration** - Official Unity Netcode for GameObjects bridge
+- **GameCreator Perception** - AI awareness, senses (See, Hear, Smell, Feel), evidence
 
 ## Key Directories
 
 ### Unity Assets
 - `Assets/Plugins/GameCreator/Packages/Core/` - GameCreator Core module
 - `Assets/Plugins/GameCreator/Packages/Netcode_for_GameObjects_Integration/` - Netcode bridge
+- `Assets/Plugins/GameCreator/Packages/Perception/` - AI perception system
 - `Assets/Scripts/` - Project-specific scripts
 - `Assets/Scenes/` - Game scenes
 - `Assets/Resources/` - Runtime-loaded assets
@@ -33,6 +35,8 @@ This is a fresh Unity project with only the essential modules for perfect multip
 |----------|-----------|---------|
 | `GameCreator.Runtime.Core` | `GameCreator.Runtime.Core` | Characters, Visual Scripting, Variables |
 | `GameCreator.Editor.Core` | `GameCreator.Editor.Core` | Editor tooling for Core |
+| `GameCreator.Runtime.Perception` | `GameCreator.Runtime.Perception` | AI senses, awareness, evidence |
+| `GameCreator.Editor.Perception` | `GameCreator.Editor.Perception` | Editor tooling for Perception |
 | `GameCreator.Netcode.Runtime` | `GameCreator.Netcode.Runtime` | Network sync, RPCs, ownership |
 | `GameCreator.Netcode.Editor` | `GameCreator.Netcode.Editor` | Editor tooling for Netcode |
 
@@ -50,62 +54,37 @@ This is a fresh Unity project with only the essential modules for perfect multip
 - **Unity:** 6000.x (Unity 6)
 - **Language:** C# 9.0+
 - **Netcode:** Unity Netcode for GameObjects 2.x (`UNITY_NETCODE_2` define)
-- **GameCreator:** 2.x Core + Netcode Integration
+- **GameCreator:** 2.x Core + Netcode + Perception
 
-## Key Components (GameCreator.Netcode.Runtime)
+## Key Components
 
-### Components/
+### GameCreator.Netcode.Runtime
 | Component | Purpose |
 |-----------|---------|
 | `NetworkCharacter` | Extended Character with network properties |
 | `NetworkCharacterAdapter` | Bridges Character ↔ NetworkBehaviour |
 | `NetworkCharacterRegistry` | Tracks all network characters |
-
-### Driver/
-| Component | Purpose |
-|-----------|---------|
-| `NetworkUnitDriverController` | Network-aware movement driver |
-
-### Motion/
-| Component | Purpose |
-|-----------|---------|
-| `NetworkCharacterMotion` | Synced character motion |
-
-### Sync/
-| Component | Purpose |
-|-----------|---------|
 | `NetworkVariablesSync` | GameCreator Variables ↔ NetworkVariables |
 
-### VisualScripting/
+### GameCreator.Runtime.Perception
+| Component | Purpose |
+|-----------|---------|
+| `Perception` | Main AI perception component |
+| `Cortex` | Awareness tracking (per-target via Trackers) |
+| `Tracker` | Per-target awareness (0-1 float, stage enum) |
+| `SensorSee` | Visual detection sensor |
+| `SensorHear` | Audio detection sensor |
+| `SensorSmell` | Scent detection sensor |
+| `SensorFeel` | Proximity detection sensor |
+| `Evidence` | Investigation targets |
+| `Luminance` | Light level affecting visibility |
+| `Camouflage` | Stealth modifier |
+| `Din` | Ambient noise modifier |
 
-**Instructions:**
-- `InstructionNetworkStartHost` - Start as host
-- `InstructionNetworkStartClient` - Start as client
-- `InstructionNetworkDisconnect` - Disconnect from network
-- `InstructionNetworkSpawnPlayer` - Spawn player character
-- `InstructionNetworkDespawn` - Despawn network object
-- `InstructionNetworkChangeOwnership` - Transfer ownership
+## Active OpenSpec Changes
 
-**Conditions:**
-- `ConditionNetworkIsHost` - Check if host
-- `ConditionNetworkIsClient` - Check if client
-- `ConditionNetworkIsServer` - Check if server
-- `ConditionNetworkIsOwner` - Check if owner
-- `ConditionNetworkIsLocalPlayer` - Check if local player
-- `ConditionNetworkIsConnected` - Check if connected
-- `ConditionNetworkIsSpawned` - Check if spawned
-
-**Triggers:**
-- `EventNetworkOnClientConnected` - Client connected
-- `EventNetworkOnClientDisconnected` - Client disconnected
-- `EventNetworkOnLocalPlayerSpawned` - Local player spawned
-- `EventNetworkOnNetworkSpawn` - Object spawned
-- `EventNetworkOnNetworkDespawn` - Object despawned
-- `EventNetworkOnOwnershipChanged` - Ownership changed
-
-**Properties:**
-- `GetGameObjectNetworkLocalPlayer` - Get local player GameObject
-- `GetGameObjectNetworkPlayerByClientId` - Get player by client ID
+See `openspec list` for current proposals. Key active change:
+- `add-perception-netcode-integration` - Network sync for Perception module (0/64 tasks)
 
 ## Reference Files
 

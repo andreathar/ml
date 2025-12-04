@@ -1,0 +1,239 @@
+======================================================================
+GAMECREATOR PERCEPTION - AI SENSES MODULE SCHEMA
+======================================================================
+Project: ML - GameCreator Core + Netcode + Perception
+Generated: 2025-12-04
+Assembly: GameCreator.Runtime.Perception
+Namespace: GameCreator.Runtime.Perception
+
+----------------------------------------------------------------------
+OVERVIEW
+----------------------------------------------------------------------
+
+The Perception module provides AI awareness and sensory detection:
+- Awareness system (Cortex + Trackers) for per-target awareness tracking
+- Four senses: See, Hear, Smell, Feel
+- Evidence system for investigation mechanics
+- Environmental modifiers (Luminance, Camouflage, Din)
+
+----------------------------------------------------------------------
+CORE COMPONENTS
+----------------------------------------------------------------------
+
+Perception (Component) - Main AI perception component
+├── Cortex cortex - Manages awareness per-target
+├── SensorList sensors - Collection of sense components
+└── Events for awareness changes
+
+Cortex (Class) - Awareness brain
+├── Dictionary<int, Tracker> trackers - Per-target tracking
+├── Track(GameObject target) - Start tracking
+├── Untrack(GameObject target) - Stop tracking
+├── GetAwareness(GameObject target) → float (0-1)
+└── Events: EventChangeAwarenessLevel, EventChangeAwarenessStage
+
+Tracker (Class) - Per-target awareness state
+├── float Awareness - 0 to 1 awareness level
+├── AwareStage Stage - None, Suspicious, Alert, Aware
+├── float TimeLastIncrease - When last detected
+└── Methods: AddAwareness(), SubtractAwareness()
+
+----------------------------------------------------------------------
+AWARENESS STAGES
+----------------------------------------------------------------------
+
+AwareStage Enum:
+├── None - Not aware of target (0-0.25)
+├── Suspicious - Something might be there (0.25-0.5)
+├── Alert - Definitely something there (0.5-0.75)
+└── Aware - Fully aware, identified target (0.75-1.0)
+
+----------------------------------------------------------------------
+SENSORS
+----------------------------------------------------------------------
+
+TSensor (Base Class)
+├── bool IsActive - Sensor enabled
+├── UpdateInterval interval - How often to check
+└── UpdateMode mode - FixedUpdate/Update
+
+SensorSee : TSensor - Visual detection
+├── Field of view cone
+├── Max distance
+├── Occlusion checks (raycasts)
+├── Luminance awareness (dark = harder to see)
+└── Camouflage awareness (hidden = harder to see)
+
+SensorHear : TSensor - Audio detection  
+├── Hear radius
+├── Noise tag filtering
+├── Obstructed hearing (walls reduce)
+├── Din awareness (ambient noise masks sounds)
+└── Tracks last heard position
+
+SensorSmell : TSensor - Scent detection
+├── Smell radius
+├── Scent tag filtering
+├── Scent intensity tracking
+├── Scent trails (follow scent path)
+└── Dissipation over time
+
+SensorFeel : TSensor - Proximity detection
+├── Feel radius (close range)
+├── No occlusion (feels through walls)
+├── Immediate detection
+└── Often used for "sixth sense"
+
+----------------------------------------------------------------------
+EVIDENCE SYSTEM
+----------------------------------------------------------------------
+
+Evidence (Component) - Investigation target
+├── bool IsTampered - Has been modified
+├── string Tag - Evidence type identifier
+├── Tamper() - Mark as tampered
+├── Restore() - Mark as restored
+└── Events: EventTampered, EventRestored
+
+Use cases:
+- Open doors (evidence someone was here)
+- Missing items
+- Blood stains
+- Footprints
+
+----------------------------------------------------------------------
+ENVIRONMENTAL MODIFIERS
+----------------------------------------------------------------------
+
+Luminance (Component)
+├── Affects SensorSee detection
+├── Low light = harder to see
+├── Global ambient luminance setting
+
+Camouflage (Component)  
+├── Reduces visibility when hiding
+├── Modifier for SensorSee checks
+
+Din (Component)
+├── Ambient noise level
+├── High din = harder to hear
+├── Global din setting affects all hearing
+
+Obstruction (Component)
+├── Blocks line of sight
+├── Reduces sound propagation
+
+----------------------------------------------------------------------
+VISUAL SCRIPTING
+----------------------------------------------------------------------
+
+INSTRUCTIONS:
+├── Awareness
+│   ├── InstructionPerceptionAwarenessAdd
+│   ├── InstructionPerceptionAwarenessSubtract
+│   └── InstructionPerceptionAwarenessRelay
+├── Tracking
+│   ├── InstructionPerceptionTrack
+│   └── InstructionPerceptionUntrack
+├── Hearing
+│   ├── InstructionPerceptionEmitNoise
+│   └── InstructionPerceptionGlobalDin
+├── Smell
+│   ├── InstructionPerceptionEmitScent
+│   └── InstructionPerceptionDissipation
+├── See
+│   └── InstructionPerceptionAmbientLuminance
+└── Evidence
+    ├── InstructionPerceptionEvidenceTamper
+    ├── InstructionPerceptionEvidenceRestore
+    └── InstructionPerceptionEvidenceRelay
+
+CONDITIONS:
+├── ConditionPerceptionAwareness - Check awareness level
+├── ConditionPerceptionAwareStage - Check awareness stage
+├── ConditionPerceptionCanSee - Can see target
+├── ConditionPerceptionLuminance - Check light level
+├── ConditionCanHearNoise - Can hear sound
+├── ConditionHearsNoiseTag - Hears specific tag
+├── ConditionCanSmellScent - Can smell target
+├── ConditionSmellsScentTag - Smells specific tag
+└── ConditionPerceptionIsEvidenceTampered - Evidence state
+
+TRIGGERS:
+├── EventPerceptionOnAwarenessLevel - Level changed
+├── EventPerceptionOnAwarenessStage - Stage changed
+├── EventPerceptionOnSee - Saw something
+├── EventPerceptionOnHear - Heard something
+├── EventPerceptionOnSmell - Smelled something
+├── EventPerceptionOnFeel - Felt something
+├── EventPerceptionNoticeEvidence - Noticed evidence
+└── EventPerceptionEvidenceTamper - Evidence tampered
+
+----------------------------------------------------------------------
+USAGE PATTERNS
+----------------------------------------------------------------------
+
+Basic AI Setup:
+```csharp
+// Add Perception component to NPC
+Perception perception = npc.GetComponent<Perception>();
+
+// Check awareness of player
+float awareness = perception.Cortex.GetAwareness(player);
+AwareStage stage = perception.Cortex.GetAwarenessStage(player);
+
+// Manually adjust awareness (server-side in multiplayer)
+perception.Cortex.AddAwareness(player, 0.1f);
+```
+
+Emitting Stimuli:
+```csharp
+// Emit noise (Visual Scripting or code)
+StimulusNoise noise = new StimulusNoise(
+    position: transform.position,
+    radius: 10f,
+    tag: "footstep"
+);
+HearManager.Emit(noise);
+
+// Emit scent
+StimulusScent scent = new StimulusScent(
+    position: transform.position,
+    radius: 5f,
+    tag: "blood"
+);
+SmellManager.Emit(scent);
+```
+
+----------------------------------------------------------------------
+NETWORK INTEGRATION (PLANNED)
+----------------------------------------------------------------------
+
+OpenSpec Change: add-perception-netcode-integration
+
+Planned Components:
+├── NetworkPerception - NetworkBehaviour wrapper
+├── NetworkPerceptionSync - Awareness state sync
+├── NetworkPerceptionRegistry - Lookup by NetworkObjectId
+└── NetworkPerceptionEvents - Global event broadcasting
+
+Key Challenges:
+├── Awareness state synchronization (float values)
+├── Stage change events across network
+├── Stimulus emission validation (server authority)
+└── Evidence state consistency
+
+Sync Strategy:
+├── Server-authoritative for NPCs
+├── Delta compression for awareness values
+├── RPC broadcast for significant events
+└── NetworkVariable for awareness levels
+
+----------------------------------------------------------------------
+RELATED FILES
+----------------------------------------------------------------------
+
+- .serena/personas/character-core.llm.txt (Base Character)
+- .serena/personas/netcode-core.llm.txt (Network patterns)
+- openspec/changes/add-perception-netcode-integration/ (Integration spec)
+- .serena/memories/critical_rules.md (Project patterns)

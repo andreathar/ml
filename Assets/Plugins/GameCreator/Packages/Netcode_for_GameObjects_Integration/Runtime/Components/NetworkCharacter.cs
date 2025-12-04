@@ -255,6 +255,9 @@ namespace GameCreator.Netcode.Runtime
 
             if (isNPC)
             {
+                // Clean up NPC name (remove "(Clone)" suffix from network-spawned objects)
+                this.SetNetworkNPCName();
+
                 // NPC - server controls, all clients see it as remote
                 this.BecomeNPC();
 
@@ -466,6 +469,22 @@ namespace GameCreator.Netcode.Runtime
         public bool IsNPC => !this.IsPlayer;
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Cleans up the NPC name by removing "(Clone)" suffix from network-spawned objects.
+        /// This ensures GameCreator instructions can find NPCs by their original prefab name.
+        /// </summary>
+        private void SetNetworkNPCName()
+        {
+            // Remove "(Clone)" suffix if present
+            string currentName = gameObject.name;
+            if (currentName.EndsWith("(Clone)"))
+            {
+                string newName = currentName.Substring(0, currentName.Length - "(Clone)".Length);
+                gameObject.name = newName;
+                Debug.Log($"[NetworkCharacter] Renamed NPC '{currentName}' -> '{newName}'");
+            }
+        }
 
         /// <summary>
         /// Sets a unique name for the player based on their role and client ID.
