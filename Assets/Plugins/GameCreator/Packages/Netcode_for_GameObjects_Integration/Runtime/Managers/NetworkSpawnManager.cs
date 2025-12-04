@@ -5,7 +5,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Managers
 {
     /// <summary>
     /// Manages network spawning with proper timing, naming, and coordination.

@@ -2,7 +2,7 @@ using System;
 using GameCreator.Runtime.Perception;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Perception
 {
     /// <summary>
     /// Global network perception event manager.

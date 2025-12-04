@@ -1,7 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Managers
 {
     /// <summary>
     /// Bootstrap component that ensures all network managers are present and properly configured.

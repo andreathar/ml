@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Managers
 {
     /// <summary>
     /// Controls script execution order and initialization phases for network objects.

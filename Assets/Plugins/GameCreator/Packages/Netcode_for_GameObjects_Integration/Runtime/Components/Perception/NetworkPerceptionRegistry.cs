@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using GameCreator.Netcode.Runtime.Components.Core;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Perception
 {
     /// <summary>
     /// Static registry for efficient lookup of NetworkPerception components.

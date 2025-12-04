@@ -4,7 +4,7 @@ using GameCreator.Runtime.Common;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Core
 {
     /// <summary>
     /// NetworkUnitDriverController extends UnitDriverController to support networked characters.

@@ -4,7 +4,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Core
 {
     /// <summary>
     /// Central registry for all active NetworkCharacters (players and NPCs).

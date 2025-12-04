@@ -2,7 +2,7 @@ using System;
 using GameCreator.Runtime.Common;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Properties.Core
 {
     [Title("Ready Player Count")]
     [Category("Network/Ready Player Count")]

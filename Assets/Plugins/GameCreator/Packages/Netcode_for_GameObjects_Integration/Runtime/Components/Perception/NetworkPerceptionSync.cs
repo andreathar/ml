@@ -1,7 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Perception
 {
     /// <summary>
     /// Helper component that forwards NetworkBehaviour callbacks to NetworkPerception.

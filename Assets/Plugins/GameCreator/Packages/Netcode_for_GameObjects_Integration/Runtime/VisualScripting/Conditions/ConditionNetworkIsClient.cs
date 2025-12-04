@@ -4,7 +4,7 @@ using GameCreator.Runtime.VisualScripting;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Conditions.Core
 {
     [Version(1, 0, 0)]
     [Title("Is Client")]

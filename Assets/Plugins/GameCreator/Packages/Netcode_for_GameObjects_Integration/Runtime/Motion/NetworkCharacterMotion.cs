@@ -3,7 +3,7 @@ using GameCreator.Runtime.Characters;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Core
 {
     /// <summary>
     /// NetworkCharacterMotion synchronizes character motion state across the network.

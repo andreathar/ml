@@ -1,8 +1,9 @@
 using System;
+using GameCreator.Netcode.Runtime.Components.Core;
 using GameCreator.Runtime.Common;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Properties.Core
 {
     [Title("NPC Count")]
     [Category("Network/NPC Count")]

@@ -6,7 +6,7 @@ using GameCreator.Runtime.Variables;
 using GameCreator.Runtime.VisualScripting;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Instructions.Core
 {
     [Title("Collect Network Characters")]
     [Description("Collects all spawned NetworkCharacters into a List Variable")]

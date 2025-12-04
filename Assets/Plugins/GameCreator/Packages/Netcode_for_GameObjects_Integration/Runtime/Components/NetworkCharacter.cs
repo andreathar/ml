@@ -4,7 +4,7 @@ using GameCreator.Runtime.Common;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Core
 {
     /// <summary>
     /// NetworkCharacter extends the standard GameCreator Character with network-aware properties.

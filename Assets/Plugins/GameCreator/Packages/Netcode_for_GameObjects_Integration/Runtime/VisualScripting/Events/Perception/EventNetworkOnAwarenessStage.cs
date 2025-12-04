@@ -5,7 +5,7 @@ using GameCreator.Runtime.VisualScripting;
 using UnityEngine;
 using TriggerEvent = GameCreator.Runtime.VisualScripting.Event;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Events.Perception
 {
     [Version(1, 0, 0)]
     [Title("On Network Awareness Stage")]

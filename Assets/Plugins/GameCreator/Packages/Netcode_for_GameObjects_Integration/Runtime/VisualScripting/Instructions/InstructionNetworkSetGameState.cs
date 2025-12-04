@@ -4,7 +4,7 @@ using GameCreator.Runtime.Common;
 using GameCreator.Runtime.VisualScripting;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Instructions.Core
 {
     [Version(1, 0, 0)]
     [Title("Set Game State")]

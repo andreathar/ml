@@ -2,7 +2,7 @@ using System;
 using GameCreator.Runtime.Common;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Properties.Core
 {
     [Title("Network Game Time")]
     [Category("Network/Network Game Time")]

@@ -4,7 +4,7 @@ using GameCreator.Runtime.Perception;
 using GameCreator.Runtime.VisualScripting;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Conditions.Perception
 {
     [Version(1, 0, 0)]
     [Title("Network Awareness Stage Is")]

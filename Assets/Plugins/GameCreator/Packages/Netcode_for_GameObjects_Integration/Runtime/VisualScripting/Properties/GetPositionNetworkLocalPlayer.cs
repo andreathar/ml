@@ -3,7 +3,7 @@ using GameCreator.Runtime.Characters;
 using GameCreator.Runtime.Common;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime.VisualScripting
+namespace GameCreator.Netcode.Runtime.VisualScripting.Properties.Core
 {
     [Title("Network Local Player Position")]
     [Category("Network/Network Local Player Position")]

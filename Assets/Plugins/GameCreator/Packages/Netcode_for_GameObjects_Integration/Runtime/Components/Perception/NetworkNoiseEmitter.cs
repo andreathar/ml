@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Perception
 {
     /// <summary>
     /// NetworkNoiseEmitter handles network-synchronized noise emission.

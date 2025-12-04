@@ -6,7 +6,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GameCreator.Netcode.Runtime
+namespace GameCreator.Netcode.Runtime.Components.Perception
 {
     /// <summary>
     /// NetworkPerception synchronizes GameCreator Perception state across the network.
