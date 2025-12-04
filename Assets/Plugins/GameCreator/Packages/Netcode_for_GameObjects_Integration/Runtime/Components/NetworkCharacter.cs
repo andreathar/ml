@@ -268,6 +268,9 @@ namespace GameCreator.Netcode.Runtime
             }
             else
             {
+                // Set unique player name based on role and client ID
+                this.SetNetworkPlayerName();
+
                 // Player character - set up local vs remote player
                 if (this.IsLocalOwner)
                 {
@@ -463,6 +466,37 @@ namespace GameCreator.Netcode.Runtime
         public bool IsNPC => !this.IsPlayer;
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Sets a unique name for the player based on their role and client ID.
+        /// Format: "Player_Host" for ClientId 0, "Player_Client1", "Player_Client2", etc.
+        /// </summary>
+        private void SetNetworkPlayerName()
+        {
+            if (this.m_NetworkObject == null)
+                return;
+
+            ulong clientId = this.OwnerClientId;
+            bool isHost = clientId == 0 && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+
+            string newName;
+            if (isHost)
+            {
+                newName = "Player_Host";
+            }
+            else
+            {
+                newName = $"Player_Client{clientId}";
+            }
+
+            // Only rename if different (avoid unnecessary updates)
+            if (gameObject.name != newName)
+            {
+                string oldName = gameObject.name;
+                gameObject.name = newName;
+                Debug.Log($"[NetworkCharacter] Renamed '{oldName}' -> '{newName}'");
+            }
+        }
 
         /// <summary>
         /// Updates the controllability of the character based on network ownership.

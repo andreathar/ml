@@ -45,4 +45,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameCreator.Netcode.Runtime::GameCreator.Netcode.Runtime.NetworkInitializationManager
   m_DebugLogging: 1
-  m_FramesBetweenPhases: 1
+  m_FramesBetweenPhases: 10

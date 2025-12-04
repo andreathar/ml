@@ -72,7 +72,12 @@ namespace GameCreator.Netcode.Runtime
             }
 
             EnsureManagers();
+        }
 
+        private void Start()
+        {
+            // Log status in Start() after all Awake() methods have completed
+            // This ensures singletons are properly initialized
             if (m_DebugLogging)
             {
                 LogManagerStatus();
@@ -83,17 +88,14 @@ namespace GameCreator.Netcode.Runtime
 
         private void EnsureManagers()
         {
-            // Check if NetworkManager exists
-            if (NetworkManager.Singleton == null)
+            // Find NetworkManager using FindAnyObjectByType since Singleton may not be set yet during Awake
+            var networkManager = FindAnyObjectByType<NetworkManager>();
+            if (networkManager == null)
             {
-                var nm = FindAnyObjectByType<NetworkManager>();
-                if (nm == null)
-                {
-                    Debug.LogWarning("[NetworkManagersBootstrap] No NetworkManager found in scene!");
-                }
+                Debug.LogWarning("[NetworkManagersBootstrap] No NetworkManager found in scene!");
             }
 
-            // Ensure each manager
+            // Ensure each manager (MonoBehaviours - don't need NetworkObject)
             if (m_EnsureInitializationManager)
             {
                 EnsureComponent<NetworkInitializationManager>();
@@ -104,64 +106,46 @@ namespace GameCreator.Netcode.Runtime
                 EnsureComponent<NetworkSessionEvents>();
             }
 
-            // NetworkBehaviour managers need to be on a NetworkObject
-            // Check if this GameObject has NetworkObject for the NetworkBehaviour managers
-            NetworkObject networkObject = GetComponent<NetworkObject>();
+            // NetworkBehaviour managers are already placed in the scene on their own GameObjects
+            // with NetworkObject components. We just need to verify they exist.
+            // Don't try to auto-add them as they need proper NetworkObject setup.
 
-            if (networkObject == null)
+            // The managers should already exist in scene on separate GameObjects:
+            // - NetworkSpawnManager (on its own GO with NetworkObject)
+            // - NetworkGameStateManager (on its own GO with NetworkObject)
+            // - NetworkRPCManager (on its own GO with NetworkObject)
+            // - NetworkSceneCoordinator (on its own GO with NetworkObject)
+
+            // Just verify they exist - don't auto-create as that causes issues
+            if (m_DebugLogging)
             {
-                // Try to find existing managers or create them on NetworkManager object
-                var networkManagerObj = NetworkManager.Singleton?.gameObject;
-
-                if (networkManagerObj != null)
-                {
-                    if (m_EnsureSpawnManager)
-                    {
-                        EnsureComponentOn<NetworkSpawnManager>(networkManagerObj);
-                    }
-
-                    if (m_EnsureGameStateManager)
-                    {
-                        EnsureComponentOn<NetworkGameStateManager>(networkManagerObj);
-                    }
-
-                    if (m_EnsureRPCManager)
-                    {
-                        EnsureComponentOn<NetworkRPCManager>(networkManagerObj);
-                    }
-
-                    if (m_EnsureSceneCoordinator)
-                    {
-                        EnsureComponentOn<NetworkSceneCoordinator>(networkManagerObj);
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("[NetworkManagersBootstrap] NetworkManager not found. NetworkBehaviour managers will not be added.");
-                }
+                VerifyNetworkBehaviourManagers();
             }
-            else
+        }
+
+        private void VerifyNetworkBehaviourManagers()
+        {
+            // Just check that the managers exist in the scene
+            // They should be on their own GameObjects with NetworkObject components
+
+            if (m_EnsureSpawnManager && FindAnyObjectByType<NetworkSpawnManager>() == null)
             {
-                // This GameObject has NetworkObject, add managers here
-                if (m_EnsureSpawnManager)
-                {
-                    EnsureComponent<NetworkSpawnManager>();
-                }
+                Debug.LogWarning("[NetworkManagersBootstrap] NetworkSpawnManager not found in scene. Add it to a GameObject with NetworkObject.");
+            }
 
-                if (m_EnsureGameStateManager)
-                {
-                    EnsureComponent<NetworkGameStateManager>();
-                }
+            if (m_EnsureGameStateManager && FindAnyObjectByType<NetworkGameStateManager>() == null)
+            {
+                Debug.LogWarning("[NetworkManagersBootstrap] NetworkGameStateManager not found in scene. Add it to a GameObject with NetworkObject.");
+            }
 
-                if (m_EnsureRPCManager)
-                {
-                    EnsureComponent<NetworkRPCManager>();
-                }
+            if (m_EnsureRPCManager && FindAnyObjectByType<NetworkRPCManager>() == null)
+            {
+                Debug.LogWarning("[NetworkManagersBootstrap] NetworkRPCManager not found in scene. Add it to a GameObject with NetworkObject.");
+            }
 
-                if (m_EnsureSceneCoordinator)
-                {
-                    EnsureComponent<NetworkSceneCoordinator>();
-                }
+            if (m_EnsureSceneCoordinator && FindAnyObjectByType<NetworkSceneCoordinator>() == null)
+            {
+                Debug.LogWarning("[NetworkManagersBootstrap] NetworkSceneCoordinator not found in scene. Add it to a GameObject with NetworkObject.");
             }
         }
 
@@ -203,14 +187,15 @@ namespace GameCreator.Netcode.Runtime
 
         private void LogManagerStatus()
         {
+            // Use FindAnyObjectByType for reliability - singletons may not be set depending on execution order
             Debug.Log("=== Network Managers Status ===");
-            Debug.Log($"  NetworkManager: {(NetworkManager.Singleton != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkInitializationManager: {(NetworkInitializationManager.Instance != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSessionEvents: {(NetworkSessionEvents.Instance != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSpawnManager: {(NetworkSpawnManager.Instance != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkGameStateManager: {(NetworkGameStateManager.Instance != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkRPCManager: {(NetworkRPCManager.Instance != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSceneCoordinator: {(NetworkSceneCoordinator.Instance != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkManager: {(FindAnyObjectByType<NetworkManager>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkInitializationManager: {(FindAnyObjectByType<NetworkInitializationManager>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkSessionEvents: {(FindAnyObjectByType<NetworkSessionEvents>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkSpawnManager: {(FindAnyObjectByType<NetworkSpawnManager>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkGameStateManager: {(FindAnyObjectByType<NetworkGameStateManager>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkRPCManager: {(FindAnyObjectByType<NetworkRPCManager>() != null ? "OK" : "MISSING")}");
+            Debug.Log($"  NetworkSceneCoordinator: {(FindAnyObjectByType<NetworkSceneCoordinator>() != null ? "OK" : "MISSING")}");
             Debug.Log("===============================");
         }
 
