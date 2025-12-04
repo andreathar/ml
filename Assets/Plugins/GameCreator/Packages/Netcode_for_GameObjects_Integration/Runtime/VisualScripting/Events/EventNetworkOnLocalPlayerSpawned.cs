@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Local Player Spawned")]
-    [Description("Triggered when YOUR player spawns on the network. The spawned player is available as the Target. Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when YOUR player spawns on the network. The spawned player is available as the Target. Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Characters/On Local Player Spawned")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Player", "Spawn", "Local", "Own")]
-
     [Serializable]
     public class EventNetworkOnLocalPlayerSpawned : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -40,7 +42,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnLocalPlayerSpawned(NetworkCharacter player)
         {
-            if (player == null) return;
+            if (player == null)
+                return;
 
             Debug.Log($"[EventNetworkOnLocalPlayerSpawned] Local player spawned: {player.name}");
 

@@ -7,11 +7,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("Network Awareness Level")]
-    [Description("Compares the networked Perception's awareness level for a target against a value")]
+    [Description(
+        "Compares the networked Perception's awareness level for a target against a value"
+    )]
     [Category("Network/Perception/Network Awareness Level")]
     [Image(typeof(GameCreator.Runtime.Perception.IconAwareness), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Perception", "Awareness", "Level", "Compare")]
-
     [Serializable]
     public class ConditionNetworkAwarenessLevel : Condition
     {
@@ -21,7 +22,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             LessOrEqual,
             Equal,
             GreaterOrEqual,
-            GreaterThan
+            GreaterThan,
         }
 
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
@@ -52,7 +53,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
                     Comparison.Equal => "==",
                     Comparison.GreaterOrEqual => ">=",
                     Comparison.GreaterThan => ">",
-                    _ => "?"
+                    _ => "?",
                 };
                 return $"{m_Perception} awareness of {m_Target} {op} {m_Value}";
             }
@@ -63,13 +64,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             var perceptionGO = m_Perception.Get(args);
-            if (perceptionGO == null) return false;
+            if (perceptionGO == null)
+                return false;
 
             var networkPerception = perceptionGO.GetComponent<NetworkPerception>();
-            if (networkPerception == null) return false;
+            if (networkPerception == null)
+                return false;
 
             var target = m_Target.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             float awareness = networkPerception.GetAwareness(target);
             float compareValue = (float)m_Value.Get(args);
@@ -81,7 +85,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
                 Comparison.Equal => Mathf.Approximately(awareness, compareValue),
                 Comparison.GreaterOrEqual => awareness >= compareValue,
                 Comparison.GreaterThan => awareness > compareValue,
-                _ => false
+                _ => false,
             };
         }
     }

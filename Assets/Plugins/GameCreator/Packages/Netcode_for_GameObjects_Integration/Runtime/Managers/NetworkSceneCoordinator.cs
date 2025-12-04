@@ -101,7 +101,7 @@ namespace GameCreator.Netcode.Runtime
             Loading = 1,
             Loaded = 2,
             Unloading = 3,
-            Transitioning = 4
+            Transitioning = 4,
         }
 
         // PROPERTIES: ----------------------------------------------------------------------------
@@ -123,8 +123,10 @@ namespace GameCreator.Netcode.Runtime
         {
             get
             {
-                if (NetworkManager.Singleton == null) return false;
-                return m_ClientsReadyForScene.Count >= NetworkManager.Singleton.ConnectedClientsIds.Count;
+                if (NetworkManager.Singleton == null)
+                    return false;
+                return m_ClientsReadyForScene.Count
+                    >= NetworkManager.Singleton.ConnectedClientsIds.Count;
             }
         }
 
@@ -134,7 +136,9 @@ namespace GameCreator.Netcode.Runtime
         {
             if (s_Instance != null && s_Instance != this)
             {
-                Debug.LogWarning("[NetworkSceneCoordinator] Duplicate instance detected. Destroying.");
+                Debug.LogWarning(
+                    "[NetworkSceneCoordinator] Duplicate instance detected. Destroying."
+                );
                 Destroy(gameObject);
                 return;
             }
@@ -164,9 +168,12 @@ namespace GameCreator.Netcode.Runtime
 
                 // Subscribe to NGO scene events
                 NetworkManager.Singleton.SceneManager.OnLoadComplete += OnClientSceneLoadComplete;
-                NetworkManager.Singleton.SceneManager.OnUnloadComplete += OnClientSceneUnloadComplete;
+                NetworkManager.Singleton.SceneManager.OnUnloadComplete +=
+                    OnClientSceneUnloadComplete;
 
-                Debug.Log($"[NetworkSceneCoordinator] Initialized. Current scene: {m_CurrentSceneName}");
+                Debug.Log(
+                    $"[NetworkSceneCoordinator] Initialized. Current scene: {m_CurrentSceneName}"
+                );
             }
         }
 
@@ -177,7 +184,8 @@ namespace GameCreator.Netcode.Runtime
             if (IsServer && NetworkManager.Singleton?.SceneManager != null)
             {
                 NetworkManager.Singleton.SceneManager.OnLoadComplete -= OnClientSceneLoadComplete;
-                NetworkManager.Singleton.SceneManager.OnUnloadComplete -= OnClientSceneUnloadComplete;
+                NetworkManager.Singleton.SceneManager.OnUnloadComplete -=
+                    OnClientSceneUnloadComplete;
             }
 
             base.OnNetworkDespawn();
@@ -191,14 +199,21 @@ namespace GameCreator.Netcode.Runtime
             EventSceneStateChanged?.Invoke(newState);
         }
 
-        private void OnClientSceneLoadComplete(ulong clientId, string sceneName, LoadSceneMode loadSceneMode)
+        private void OnClientSceneLoadComplete(
+            ulong clientId,
+            string sceneName,
+            LoadSceneMode loadSceneMode
+        )
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_ClientsReadyForScene.Add(clientId);
             m_LoadedClientsCount.Value = m_ClientsReadyForScene.Count;
 
-            Debug.Log($"[NetworkSceneCoordinator] Client {clientId} loaded scene: {sceneName} ({m_ClientsReadyForScene.Count}/{NetworkManager.Singleton.ConnectedClientsIds.Count})");
+            Debug.Log(
+                $"[NetworkSceneCoordinator] Client {clientId} loaded scene: {sceneName} ({m_ClientsReadyForScene.Count}/{NetworkManager.Singleton.ConnectedClientsIds.Count})"
+            );
 
             if (AreAllClientsReady)
             {
@@ -265,7 +280,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void LoadAdditiveScene(string sceneName)
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             if (m_AdditiveScenes.Contains(sceneName))
             {
@@ -281,7 +297,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void UnloadAdditiveScene(string sceneName)
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             if (!m_AdditiveScenes.Contains(sceneName))
             {
@@ -355,11 +372,16 @@ namespace GameCreator.Netcode.Runtime
             EventSceneLoadStarted?.Invoke(sceneName);
             NotifySceneLoadStartedClientRpc(sceneName);
 
-            var status = NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
+            var status = NetworkManager.Singleton.SceneManager.LoadScene(
+                sceneName,
+                LoadSceneMode.Additive
+            );
 
             if (status != SceneEventProgressStatus.Started)
             {
-                Debug.LogError($"[NetworkSceneCoordinator] Failed to load additive scene: {status}");
+                Debug.LogError(
+                    $"[NetworkSceneCoordinator] Failed to load additive scene: {status}"
+                );
                 yield break;
             }
 
@@ -376,7 +398,9 @@ namespace GameCreator.Netcode.Runtime
             EventSceneUnloadStarted?.Invoke(sceneName);
             NotifySceneUnloadStartedClientRpc(sceneName);
 
-            var status = NetworkManager.Singleton.SceneManager.UnloadScene(SceneManager.GetSceneByName(sceneName));
+            var status = NetworkManager.Singleton.SceneManager.UnloadScene(
+                SceneManager.GetSceneByName(sceneName)
+            );
 
             if (status != SceneEventProgressStatus.Started)
             {
@@ -401,7 +425,9 @@ namespace GameCreator.Netcode.Runtime
             m_ClientsReadyForScene.Add(clientId);
             m_LoadedClientsCount.Value = m_ClientsReadyForScene.Count;
 
-            Debug.Log($"[NetworkSceneCoordinator] Client {clientId} ready ({m_ClientsReadyForScene.Count}/{NetworkManager.Singleton.ConnectedClientsIds.Count})");
+            Debug.Log(
+                $"[NetworkSceneCoordinator] Client {clientId} ready ({m_ClientsReadyForScene.Count}/{NetworkManager.Singleton.ConnectedClientsIds.Count})"
+            );
 
             if (AreAllClientsReady && m_SceneState.Value == SceneState.Loading)
             {

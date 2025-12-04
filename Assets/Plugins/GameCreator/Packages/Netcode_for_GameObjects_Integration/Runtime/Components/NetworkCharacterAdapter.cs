@@ -1,6 +1,6 @@
 using System;
-using Unity.Netcode;
 using GameCreator.Runtime.Characters;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GameCreator.Netcode.Runtime
@@ -15,8 +15,11 @@ namespace GameCreator.Netcode.Runtime
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Character m_Character;
-        [NonSerialized] private NetworkCharacter m_NetworkCharacter;
+        [NonSerialized]
+        private Character m_Character;
+
+        [NonSerialized]
+        private NetworkCharacter m_NetworkCharacter;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
@@ -33,7 +36,8 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Returns true if this is the local player's character.
         /// </summary>
-        public new bool IsLocalPlayer => this.IsOwner && this.m_Character != null && this.m_Character.IsPlayer;
+        public new bool IsLocalPlayer =>
+            this.IsOwner && this.m_Character != null && this.m_Character.IsPlayer;
 
         // EVENTS: --------------------------------------------------------------------------------
 
@@ -61,7 +65,9 @@ namespace GameCreator.Netcode.Runtime
 
             if (this.m_Character == null)
             {
-                Debug.LogWarning($"[NetworkCharacterAdapter] No Character component found on {gameObject.name}. Add Character or NetworkCharacter component.");
+                Debug.LogWarning(
+                    $"[NetworkCharacterAdapter] No Character component found on {gameObject.name}. Add Character or NetworkCharacter component."
+                );
             }
         }
 
@@ -80,7 +86,9 @@ namespace GameCreator.Netcode.Runtime
             // For standard Character, we can still work but warn about potential issues
             if (this.m_Character != null && this.m_NetworkCharacter == null)
             {
-                Debug.LogWarning($"[NetworkCharacterAdapter] Using standard Character component on {gameObject.name}. Consider using NetworkCharacter for full network support.");
+                Debug.LogWarning(
+                    $"[NetworkCharacterAdapter] Using standard Character component on {gameObject.name}. Consider using NetworkCharacter for full network support."
+                );
             }
 
             this.EventNetworkSpawned?.Invoke();
@@ -128,7 +136,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         protected virtual void OnLocalPlayerSpawned()
         {
-            if (this.m_Character == null) return;
+            if (this.m_Character == null)
+                return;
 
             // Use NetworkCharacter's method if available, otherwise set IsPlayer directly
             if (this.m_NetworkCharacter != null)
@@ -140,7 +149,9 @@ namespace GameCreator.Netcode.Runtime
                 this.m_Character.IsPlayer = true;
             }
 
-            Debug.Log($"[NetworkCharacterAdapter] Local player spawned: {gameObject.name} (ClientId: {OwnerClientId})");
+            Debug.Log(
+                $"[NetworkCharacterAdapter] Local player spawned: {gameObject.name} (ClientId: {OwnerClientId})"
+            );
         }
 
         /// <summary>
@@ -149,7 +160,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         protected virtual void OnRemotePlayerSpawned()
         {
-            if (this.m_Character == null) return;
+            if (this.m_Character == null)
+                return;
 
             // Use NetworkCharacter's method if available
             if (this.m_NetworkCharacter != null)
@@ -161,7 +173,9 @@ namespace GameCreator.Netcode.Runtime
             // and break all Player-targeting functionality for the local player.
             // Remote characters should never have IsPlayer = true anyway.
 
-            Debug.Log($"[NetworkCharacterAdapter] Remote player spawned: {gameObject.name} (OwnerClientId: {OwnerClientId})");
+            Debug.Log(
+                $"[NetworkCharacterAdapter] Remote player spawned: {gameObject.name} (OwnerClientId: {OwnerClientId})"
+            );
         }
 
         // PUBLIC METHODS: ------------------------------------------------------------------------
@@ -171,8 +185,10 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void RequestOwnership()
         {
-            if (IsServer) return;
-            if (IsOwner) return;
+            if (IsServer)
+                return;
+            if (IsOwner)
+                return;
 
             RequestOwnershipRpc();
         }
@@ -206,7 +222,9 @@ namespace GameCreator.Netcode.Runtime
             NetworkObject.ChangeOwnership(requestingClientId);
             this.EventOwnershipChanged?.Invoke(oldOwner, requestingClientId);
 
-            Debug.Log($"[NetworkCharacterAdapter] Ownership transferred from {oldOwner} to {requestingClientId}");
+            Debug.Log(
+                $"[NetworkCharacterAdapter] Ownership transferred from {oldOwner} to {requestingClientId}"
+            );
         }
     }
 }

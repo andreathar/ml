@@ -14,7 +14,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Change Network Ownership")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Ownership", "Transfer", "Authority")]
-
     [Serializable]
     public class InstructionNetworkChangeOwnership : Instruction
     {
@@ -29,7 +28,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        public override string Title => $"Transfer ownership of {this.m_Target} to Client {this.m_NewOwnerClientId}";
+        public override string Title =>
+            $"Transfer ownership of {this.m_Target} to Client {this.m_NewOwnerClientId}";
 
         // RUN METHOD: ----------------------------------------------------------------------------
 
@@ -37,7 +37,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         {
             if (!NetworkManager.Singleton.IsServer)
             {
-                Debug.LogWarning("[InstructionNetworkChangeOwnership] Only server can change ownership.");
+                Debug.LogWarning(
+                    "[InstructionNetworkChangeOwnership] Only server can change ownership."
+                );
                 return Task.CompletedTask;
             }
 
@@ -51,13 +53,17 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             NetworkObject networkObject = target.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
-                Debug.LogWarning("[InstructionNetworkChangeOwnership] Target has no NetworkObject component.");
+                Debug.LogWarning(
+                    "[InstructionNetworkChangeOwnership] Target has no NetworkObject component."
+                );
                 return Task.CompletedTask;
             }
 
             if (!networkObject.IsSpawned)
             {
-                Debug.LogWarning("[InstructionNetworkChangeOwnership] Target is not spawned on network.");
+                Debug.LogWarning(
+                    "[InstructionNetworkChangeOwnership] Target is not spawned on network."
+                );
                 return Task.CompletedTask;
             }
 
@@ -66,14 +72,18 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             // Validate client exists
             if (!NetworkManager.Singleton.ConnectedClientsIds.Contains(newOwner))
             {
-                Debug.LogWarning($"[InstructionNetworkChangeOwnership] Client {newOwner} is not connected.");
+                Debug.LogWarning(
+                    $"[InstructionNetworkChangeOwnership] Client {newOwner} is not connected."
+                );
                 return Task.CompletedTask;
             }
 
             ulong oldOwner = networkObject.OwnerClientId;
             networkObject.ChangeOwnership(newOwner);
 
-            Debug.Log($"[InstructionNetworkChangeOwnership] Transferred ownership from {oldOwner} to {newOwner}");
+            Debug.Log(
+                $"[InstructionNetworkChangeOwnership] Transferred ownership from {oldOwner} to {newOwner}"
+            );
 
             return Task.CompletedTask;
         }

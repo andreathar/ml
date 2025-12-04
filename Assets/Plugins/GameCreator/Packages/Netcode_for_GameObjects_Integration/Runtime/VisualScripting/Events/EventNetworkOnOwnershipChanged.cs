@@ -13,20 +13,24 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/On Ownership Changed")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Owner", "Transfer", "Authority")]
-
     [Serializable]
     public class EventNetworkOnOwnershipChanged : TriggerEvent
     {
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
 
         [SerializeField]
-        [Tooltip("If true, only triggers when becoming the owner. If false, triggers on any ownership change.")]
+        [Tooltip(
+            "If true, only triggers when becoming the owner. If false, triggers on any ownership change."
+        )]
         private bool m_OnlyWhenGainingOwnership = false;
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
-        [NonSerialized] private NetworkCharacterAdapter m_Adapter;
+        [NonSerialized]
+        private Args m_Args;
+
+        [NonSerialized]
+        private NetworkCharacterAdapter m_Adapter;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -59,11 +63,15 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             if (this.m_OnlyWhenGainingOwnership)
             {
                 // Only trigger if we are the new owner
-                if (NetworkManager.Singleton == null) return;
-                if (newOwner != NetworkManager.Singleton.LocalClientId) return;
+                if (NetworkManager.Singleton == null)
+                    return;
+                if (newOwner != NetworkManager.Singleton.LocalClientId)
+                    return;
             }
 
-            Debug.Log($"[EventNetworkOnOwnershipChanged] Ownership changed from {oldOwner} to {newOwner}");
+            Debug.Log(
+                $"[EventNetworkOnOwnershipChanged] Ownership changed from {oldOwner} to {newOwner}"
+            );
             _ = this.m_Trigger.Execute(this.m_Args);
         }
     }

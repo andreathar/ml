@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Character Despawned")]
-    [Description("Triggered when any NetworkCharacter (player or NPC) despawns from the network. The despawned character is available as the Target.")]
+    [Description(
+        "Triggered when any NetworkCharacter (player or NPC) despawns from the network. The despawned character is available as the Target."
+    )]
     [Category("Network/Characters/On Character Despawned")]
     [Image(typeof(IconBust), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Character", "Despawn", "Remove", "Disconnect")]
-
     [Serializable]
     public class EventNetworkOnCharacterDespawned : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -40,7 +42,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnCharacterDespawned(NetworkCharacter character)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
             // Set the character as the target so it can be referenced in instructions
             this.m_Args = new Args(this.m_Trigger.gameObject, character.gameObject);

@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/Start Countdown")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Countdown", "Start", "Timer")]
-
     [Serializable]
     public class InstructionNetworkStartCountdown : Instruction
     {
@@ -38,7 +37,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             }
             else
             {
-                Debug.LogWarning("[InstructionNetworkStartCountdown] NetworkGameStateManager not found");
+                Debug.LogWarning(
+                    "[InstructionNetworkStartCountdown] NetworkGameStateManager not found"
+                );
             }
 
             return DefaultResult;

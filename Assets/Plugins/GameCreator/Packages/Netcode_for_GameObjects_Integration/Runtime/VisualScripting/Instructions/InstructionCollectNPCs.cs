@@ -9,16 +9,24 @@ using UnityEngine;
 namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Collect NPCs")]
-    [Description("Collects all spawned NPC NetworkCharacters (server-authoritative) into a List Variable")]
-
+    [Description(
+        "Collects all spawned NPC NetworkCharacters (server-authoritative) into a List Variable"
+    )]
     [Image(typeof(IconBust), ColorTheme.Type.Yellow, typeof(OverlayListVariable))]
-
     [Category("Network/Collect NPCs")]
-
     [Parameter("Store In", "List where the collected NPC GameObjects are saved")]
-
-    [Keywords("Gather", "Get", "Set", "Array", "List", "Variables", "Network", "Multiplayer", "NPC", "AI")]
-
+    [Keywords(
+        "Gather",
+        "Get",
+        "Set",
+        "Array",
+        "List",
+        "Variables",
+        "Network",
+        "Multiplayer",
+        "NPC",
+        "AI"
+    )]
     [Serializable]
     public class InstructionCollectNPCs : Instruction
     {
@@ -39,7 +47,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
             foreach (var npc in NetworkCharacterRegistry.NPCs)
             {
-                if (npc == null) continue;
+                if (npc == null)
+                    continue;
                 elements.Add(npc.gameObject);
             }
 

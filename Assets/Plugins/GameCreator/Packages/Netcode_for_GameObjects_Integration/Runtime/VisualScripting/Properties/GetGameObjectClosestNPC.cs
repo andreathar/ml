@@ -20,7 +20,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         public override GameObject Get(Args args)
         {
             GameObject from = this.m_From.Get(args);
-            if (from == null) return null;
+            if (from == null)
+                return null;
 
             var closest = NetworkCharacterRegistry.GetClosestNPC(from.transform.position);
             return closest != null ? closest.gameObject : null;
@@ -28,7 +29,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         public override GameObject Get(GameObject gameObject)
         {
-            if (gameObject == null) return null;
+            if (gameObject == null)
+                return null;
 
             var closest = NetworkCharacterRegistry.GetClosestNPC(gameObject.transform.position);
             return closest != null ? closest.gameObject : null;

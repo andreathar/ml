@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Spawn/Spawn Network NPC")]
     [Image(typeof(IconBust), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Spawn", "NPC", "AI", "Instantiate")]
-
     [Serializable]
     public class InstructionNetworkSpawnNPC : Instruction
     {

@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Spawn Network Player")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Spawn", "Player", "Instantiate")]
-
     [Serializable]
     public class InstructionNetworkSpawnPlayer : Instruction
     {
@@ -64,7 +63,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             NetworkObject networkObject = instance.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
-                Debug.LogError("[InstructionNetworkSpawnPlayer] Prefab must have NetworkObject component.");
+                Debug.LogError(
+                    "[InstructionNetworkSpawnPlayer] Prefab must have NetworkObject component."
+                );
                 UnityEngine.Object.Destroy(instance);
                 return Task.CompletedTask;
             }
@@ -79,7 +80,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
                 networkObject.Spawn();
             }
 
-            Debug.Log($"[InstructionNetworkSpawnPlayer] Spawned player at {position} with owner {ownerClientId}");
+            Debug.Log(
+                $"[InstructionNetworkSpawnPlayer] Spawned player at {position} with owner {ownerClientId}"
+            );
 
             return Task.CompletedTask;
         }

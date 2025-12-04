@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Session Ended")]
-    [Description("Triggered when the network session ends (disconnected from host/server or server stopped).")]
+    [Description(
+        "Triggered when the network session ends (disconnected from host/server or server stopped)."
+    )]
     [Category("Network/Session/On Session Ended")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Disconnect", "Stop", "End", "Session")]
-
     [Serializable]
     public class EventNetworkOnSessionEnded : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

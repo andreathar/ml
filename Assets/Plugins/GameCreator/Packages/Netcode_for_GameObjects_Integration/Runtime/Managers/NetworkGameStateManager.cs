@@ -115,14 +115,14 @@ namespace GameCreator.Netcode.Runtime
 
         public enum GameState
         {
-            None = 0,           // Not initialized
-            Lobby = 1,          // Waiting for players
-            Countdown = 2,      // Starting countdown
-            Loading = 3,        // Loading game resources
-            Playing = 4,        // Game in progress
-            Paused = 5,         // Game paused
-            GameOver = 6,       // Game ended
-            Transitioning = 7   // Between states
+            None = 0, // Not initialized
+            Lobby = 1, // Waiting for players
+            Countdown = 2, // Starting countdown
+            Loading = 3, // Loading game resources
+            Playing = 4, // Game in progress
+            Paused = 5, // Game paused
+            GameOver = 6, // Game ended
+            Transitioning = 7, // Between states
         }
 
         // PROPERTIES: ----------------------------------------------------------------------------
@@ -150,9 +150,11 @@ namespace GameCreator.Netcode.Runtime
         {
             get
             {
-                if (NetworkManager.Singleton == null) return false;
+                if (NetworkManager.Singleton == null)
+                    return false;
                 int connectedCount = NetworkManager.Singleton.ConnectedClientsIds.Count;
-                return connectedCount >= m_MinPlayersToStart && m_ReadyPlayers.Count >= connectedCount;
+                return connectedCount >= m_MinPlayersToStart
+                    && m_ReadyPlayers.Count >= connectedCount;
             }
         }
 
@@ -165,7 +167,9 @@ namespace GameCreator.Netcode.Runtime
         {
             if (s_Instance != null && s_Instance != this)
             {
-                Debug.LogWarning("[NetworkGameStateManager] Duplicate instance detected. Destroying.");
+                Debug.LogWarning(
+                    "[NetworkGameStateManager] Duplicate instance detected. Destroying."
+                );
                 Destroy(gameObject);
                 return;
             }
@@ -219,7 +223,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void Update()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             // Update countdown
             if (m_CountdownActive && CurrentState == GameState.Countdown)
@@ -287,7 +292,8 @@ namespace GameCreator.Netcode.Runtime
                 return;
             }
 
-            if (m_CurrentState.Value == newState) return;
+            if (m_CurrentState.Value == newState)
+                return;
 
             m_CurrentState.Value = newState;
         }
@@ -321,7 +327,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void StartGameImmediate()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_CountdownActive = false;
             m_CountdownTimer.Value = 0;
@@ -336,8 +343,10 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void Pause()
         {
-            if (!IsServer) return;
-            if (CurrentState != GameState.Playing) return;
+            if (!IsServer)
+                return;
+            if (CurrentState != GameState.Playing)
+                return;
 
             m_IsPaused.Value = true;
         }
@@ -347,7 +356,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void Resume()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_IsPaused.Value = false;
         }
@@ -357,7 +367,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void TogglePause()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_IsPaused.Value = !m_IsPaused.Value;
         }
@@ -367,7 +378,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void EndGame()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_IsPaused.Value = false;
             m_CountdownActive = false;
@@ -381,7 +393,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void ReturnToLobby()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             m_ReadyPlayers.Clear();
             m_GameTimer.Value = 0;
@@ -463,7 +476,8 @@ namespace GameCreator.Netcode.Runtime
             ulong clientId = rpcParams.Receive.SenderClientId;
 
             bool wasReady = m_ReadyPlayers.Contains(clientId);
-            if (isReady == wasReady) return;
+            if (isReady == wasReady)
+                return;
 
             if (isReady)
             {

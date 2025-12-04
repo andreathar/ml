@@ -12,13 +12,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Session/On Host Started")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Host", "Server", "Session", "Start")]
-
     [Serializable]
     public class EventNetworkOnHostStarted : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

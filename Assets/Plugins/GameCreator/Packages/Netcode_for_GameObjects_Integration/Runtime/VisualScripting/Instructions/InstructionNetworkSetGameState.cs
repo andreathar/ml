@@ -12,12 +12,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/Set Game State")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "State", "Lobby", "Playing", "Game")]
-
     [Serializable]
     public class InstructionNetworkSetGameState : Instruction
     {
         [SerializeField]
-        private NetworkGameStateManager.GameState m_State = NetworkGameStateManager.GameState.Playing;
+        private NetworkGameStateManager.GameState m_State = NetworkGameStateManager
+            .GameState
+            .Playing;
 
         public override string Title => $"Set Game State to {m_State}";
 
@@ -29,7 +30,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             }
             else
             {
-                Debug.LogWarning("[InstructionNetworkSetGameState] NetworkGameStateManager not found");
+                Debug.LogWarning(
+                    "[InstructionNetworkSetGameState] NetworkGameStateManager not found"
+                );
             }
 
             return DefaultResult;

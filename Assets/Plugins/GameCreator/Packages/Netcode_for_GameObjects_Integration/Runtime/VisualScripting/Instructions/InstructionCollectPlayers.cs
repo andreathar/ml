@@ -10,16 +10,24 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Collect Players")]
     [Description("Collects all spawned player NetworkCharacters into a List Variable")]
-
     [Image(typeof(IconPlayer), ColorTheme.Type.Green, typeof(OverlayListVariable))]
-
     [Category("Network/Collect Players")]
-
     [Parameter("Store In", "List where the collected player GameObjects are saved")]
-    [Parameter("Include Local Player", "Whether to include the local player's character in the list")]
-
-    [Keywords("Gather", "Get", "Set", "Array", "List", "Variables", "Network", "Multiplayer", "Player")]
-
+    [Parameter(
+        "Include Local Player",
+        "Whether to include the local player's character in the list"
+    )]
+    [Keywords(
+        "Gather",
+        "Get",
+        "Set",
+        "Array",
+        "List",
+        "Variables",
+        "Network",
+        "Multiplayer",
+        "Player"
+    )]
     [Serializable]
     public class InstructionCollectPlayers : Instruction
     {
@@ -33,9 +41,10 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        public override string Title => this.m_IncludeLocalPlayer
-            ? "Collect all Players"
-            : "Collect other Players (exclude local)";
+        public override string Title =>
+            this.m_IncludeLocalPlayer
+                ? "Collect all Players"
+                : "Collect other Players (exclude local)";
 
         // RUN METHOD: ----------------------------------------------------------------------------
 
@@ -47,7 +56,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
             foreach (var player in NetworkCharacterRegistry.Players)
             {
-                if (player == null) continue;
+                if (player == null)
+                    continue;
 
                 // Skip local player if not including
                 if (!this.m_IncludeLocalPlayer && player == localPlayer)

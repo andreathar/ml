@@ -54,17 +54,17 @@ namespace GameCreator.Netcode.Runtime
 
         public enum RPCTarget
         {
-            Server,             // Send to server only
-            AllClients,         // Send to all clients (including host)
+            Server, // Send to server only
+            AllClients, // Send to all clients (including host)
             AllClientsExceptSender, // Send to all except the sender
-            SpecificClient,     // Send to a specific client
-            NearbyClients       // Send to clients within range (requires position)
+            SpecificClient, // Send to a specific client
+            NearbyClients, // Send to clients within range (requires position)
         }
 
         public enum RPCDelivery
         {
-            Reliable,           // Guaranteed delivery, ordered
-            Unreliable          // Fast, may be lost or out of order
+            Reliable, // Guaranteed delivery, ordered
+            Unreliable, // Fast, may be lost or out of order
         }
 
         // STRUCTS: -------------------------------------------------------------------------------
@@ -84,7 +84,8 @@ namespace GameCreator.Netcode.Runtime
             public bool BoolData;
             public Vector3 VectorData;
 
-            public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+            public void NetworkSerialize<T>(BufferSerializer<T> serializer)
+                where T : IReaderWriter
             {
                 serializer.SerializeValue(ref Channel);
                 serializer.SerializeValue(ref EventName);
@@ -204,9 +205,25 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Send an RPC message to the server.
         /// </summary>
-        public void SendToServer(string channel, string eventName, string data = "", int intData = 0, float floatData = 0f, bool boolData = false, Vector3 vectorData = default)
+        public void SendToServer(
+            string channel,
+            string eventName,
+            string data = "",
+            int intData = 0,
+            float floatData = 0f,
+            bool boolData = false,
+            Vector3 vectorData = default
+        )
         {
-            var message = CreateMessage(channel, eventName, data, intData, floatData, boolData, vectorData);
+            var message = CreateMessage(
+                channel,
+                eventName,
+                data,
+                intData,
+                floatData,
+                boolData,
+                vectorData
+            );
             SendToServerRpc(message);
 
             if (m_DebugLogging)
@@ -218,7 +235,15 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Send an RPC message to all clients (server-only).
         /// </summary>
-        public void SendToAllClients(string channel, string eventName, string data = "", int intData = 0, float floatData = 0f, bool boolData = false, Vector3 vectorData = default)
+        public void SendToAllClients(
+            string channel,
+            string eventName,
+            string data = "",
+            int intData = 0,
+            float floatData = 0f,
+            bool boolData = false,
+            Vector3 vectorData = default
+        )
         {
             if (!IsServer)
             {
@@ -226,7 +251,15 @@ namespace GameCreator.Netcode.Runtime
                 return;
             }
 
-            var message = CreateMessage(channel, eventName, data, intData, floatData, boolData, vectorData);
+            var message = CreateMessage(
+                channel,
+                eventName,
+                data,
+                intData,
+                floatData,
+                boolData,
+                vectorData
+            );
             BroadcastToClientsRpc(message);
 
             if (m_DebugLogging)
@@ -238,7 +271,16 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Send an RPC message to a specific client (server-only).
         /// </summary>
-        public void SendToClient(ulong targetClientId, string channel, string eventName, string data = "", int intData = 0, float floatData = 0f, bool boolData = false, Vector3 vectorData = default)
+        public void SendToClient(
+            ulong targetClientId,
+            string channel,
+            string eventName,
+            string data = "",
+            int intData = 0,
+            float floatData = 0f,
+            bool boolData = false,
+            Vector3 vectorData = default
+        )
         {
             if (!IsServer)
             {
@@ -246,21 +288,41 @@ namespace GameCreator.Netcode.Runtime
                 return;
             }
 
-            var message = CreateMessage(channel, eventName, data, intData, floatData, boolData, vectorData);
+            var message = CreateMessage(
+                channel,
+                eventName,
+                data,
+                intData,
+                floatData,
+                boolData,
+                vectorData
+            );
             message.TargetClientId = targetClientId;
 
             SendToSpecificClientRpc(message, RpcTarget.Single(targetClientId, RpcTargetUse.Temp));
 
             if (m_DebugLogging)
             {
-                Debug.Log($"[NetworkRPCManager] Sent to client {targetClientId}: {channel}/{eventName}");
+                Debug.Log(
+                    $"[NetworkRPCManager] Sent to client {targetClientId}: {channel}/{eventName}"
+                );
             }
         }
 
         /// <summary>
         /// Send an RPC message to clients within range of a position (server-only).
         /// </summary>
-        public void SendToNearbyClients(Vector3 position, float range, string channel, string eventName, string data = "", int intData = 0, float floatData = 0f, bool boolData = false, Vector3 vectorData = default)
+        public void SendToNearbyClients(
+            Vector3 position,
+            float range,
+            string channel,
+            string eventName,
+            string data = "",
+            int intData = 0,
+            float floatData = 0f,
+            bool boolData = false,
+            Vector3 vectorData = default
+        )
         {
             if (!IsServer)
             {
@@ -268,14 +330,23 @@ namespace GameCreator.Netcode.Runtime
                 return;
             }
 
-            var message = CreateMessage(channel, eventName, data, intData, floatData, boolData, vectorData);
+            var message = CreateMessage(
+                channel,
+                eventName,
+                data,
+                intData,
+                floatData,
+                boolData,
+                vectorData
+            );
             message.Position = position;
             message.Range = range;
 
             // Find nearby players and send individually
             foreach (var character in NetworkCharacterRegistry.Players)
             {
-                if (character == null) continue;
+                if (character == null)
+                    continue;
 
                 float distance = Vector3.Distance(position, character.transform.position);
                 if (distance <= range)
@@ -287,7 +358,9 @@ namespace GameCreator.Netcode.Runtime
 
             if (m_DebugLogging)
             {
-                Debug.Log($"[NetworkRPCManager] Sent to nearby clients at {position} (range: {range}): {channel}/{eventName}");
+                Debug.Log(
+                    $"[NetworkRPCManager] Sent to nearby clients at {position} (range: {range}): {channel}/{eventName}"
+                );
             }
         }
 
@@ -295,9 +368,25 @@ namespace GameCreator.Netcode.Runtime
         /// Request the server to broadcast a message to all clients.
         /// Can be called from any client.
         /// </summary>
-        public void RequestBroadcast(string channel, string eventName, string data = "", int intData = 0, float floatData = 0f, bool boolData = false, Vector3 vectorData = default)
+        public void RequestBroadcast(
+            string channel,
+            string eventName,
+            string data = "",
+            int intData = 0,
+            float floatData = 0f,
+            bool boolData = false,
+            Vector3 vectorData = default
+        )
         {
-            var message = CreateMessage(channel, eventName, data, intData, floatData, boolData, vectorData);
+            var message = CreateMessage(
+                channel,
+                eventName,
+                data,
+                intData,
+                floatData,
+                boolData,
+                vectorData
+            );
             RequestBroadcastRpc(message);
         }
 
@@ -337,7 +426,15 @@ namespace GameCreator.Netcode.Runtime
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
 
-        private RPCMessage CreateMessage(string channel, string eventName, string data, int intData, float floatData, bool boolData, Vector3 vectorData)
+        private RPCMessage CreateMessage(
+            string channel,
+            string eventName,
+            string data,
+            int intData,
+            float floatData,
+            bool boolData,
+            Vector3 vectorData
+        )
         {
             return new RPCMessage
             {
@@ -351,7 +448,7 @@ namespace GameCreator.Netcode.Runtime
                 IntData = intData,
                 FloatData = floatData,
                 BoolData = boolData,
-                VectorData = vectorData
+                VectorData = vectorData,
             };
         }
 
@@ -369,7 +466,9 @@ namespace GameCreator.Netcode.Runtime
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[NetworkRPCManager] Handler error for {message.Channel}: {e.Message}");
+                    Debug.LogError(
+                        $"[NetworkRPCManager] Handler error for {message.Channel}: {e.Message}"
+                    );
                 }
             }
 
@@ -384,14 +483,18 @@ namespace GameCreator.Netcode.Runtime
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError($"[NetworkRPCManager] Listener error for {message.Channel}: {e.Message}");
+                        Debug.LogError(
+                            $"[NetworkRPCManager] Listener error for {message.Channel}: {e.Message}"
+                        );
                     }
                 }
             }
 
             if (m_DebugLogging)
             {
-                Debug.Log($"[NetworkRPCManager] Received: {message.Channel}/{message.EventName} from {message.SenderClientId}");
+                Debug.Log(
+                    $"[NetworkRPCManager] Received: {message.Channel}/{message.EventName} from {message.SenderClientId}"
+                );
             }
         }
 

@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/Set Player Ready")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Ready", "Player", "Lobby")]
-
     [Serializable]
     public class InstructionNetworkSetReady : Instruction
     {

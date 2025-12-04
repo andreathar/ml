@@ -10,16 +10,24 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Collect Network Characters")]
     [Description("Collects all spawned NetworkCharacters into a List Variable")]
-
     [Image(typeof(IconBust), ColorTheme.Type.Green, typeof(OverlayListVariable))]
-
     [Category("Network/Collect Network Characters")]
-
     [Parameter("Store In", "List where the collected NetworkCharacter GameObjects are saved")]
-    [Parameter("Include Local Player", "Whether to include the local player's character in the list")]
-
-    [Keywords("Gather", "Get", "Set", "Array", "List", "Variables", "Network", "Multiplayer", "Player")]
-
+    [Parameter(
+        "Include Local Player",
+        "Whether to include the local player's character in the list"
+    )]
+    [Keywords(
+        "Gather",
+        "Get",
+        "Set",
+        "Array",
+        "List",
+        "Variables",
+        "Network",
+        "Multiplayer",
+        "Player"
+    )]
     [Serializable]
     public class InstructionCollectNetworkCharacters : Instruction
     {
@@ -33,9 +41,10 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        public override string Title => this.m_IncludeLocalPlayer
-            ? "Collect all Network Characters"
-            : "Collect other Network Characters (exclude local)";
+        public override string Title =>
+            this.m_IncludeLocalPlayer
+                ? "Collect all Network Characters"
+                : "Collect other Network Characters (exclude local)";
 
         // RUN METHOD: ----------------------------------------------------------------------------
 
@@ -47,7 +56,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
             foreach (var character in NetworkCharacterRegistry.All)
             {
-                if (character == null) continue;
+                if (character == null)
+                    continue;
 
                 // Skip local player if not including
                 if (!this.m_IncludeLocalPlayer && character == localPlayer)

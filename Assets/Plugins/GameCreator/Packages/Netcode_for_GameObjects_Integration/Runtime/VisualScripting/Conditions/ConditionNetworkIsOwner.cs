@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Is Owner")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Owner", "Authority", "Local")]
-
     [Serializable]
     public class ConditionNetworkIsOwner : Condition
     {
@@ -30,10 +29,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             GameObject target = this.m_Target.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             NetworkObject networkObject = target.GetComponent<NetworkObject>();
-            if (networkObject == null) return false;
+            if (networkObject == null)
+                return false;
 
             return networkObject.IsOwner;
         }

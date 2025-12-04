@@ -93,16 +93,16 @@ namespace GameCreator.Netcode.Runtime
 
         public enum SpawnPointMode
         {
-            RoundRobin,     // Cycle through spawn points
-            Random,         // Random spawn point
-            Closest,        // Closest to some reference point
-            ByClientId      // Index matches ClientId (mod spawn point count)
+            RoundRobin, // Cycle through spawn points
+            Random, // Random spawn point
+            Closest, // Closest to some reference point
+            ByClientId, // Index matches ClientId (mod spawn point count)
         }
 
         public enum SpawnType
         {
             Player,
-            NPC
+            NPC,
         }
 
         // STRUCTS: -------------------------------------------------------------------------------
@@ -196,7 +196,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void Update()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             ProcessSpawnQueue();
         }
@@ -205,7 +206,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void OnClientConnected(ulong clientId)
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             Debug.Log($"[NetworkSpawnManager] Client {clientId} connected");
 
@@ -218,7 +220,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void OnClientDisconnected(ulong clientId)
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             Debug.Log($"[NetworkSpawnManager] Client {clientId} disconnected");
 
@@ -254,7 +257,11 @@ namespace GameCreator.Netcode.Runtime
         /// Spawn a player for a specific client.
         /// Server-only.
         /// </summary>
-        public NetworkCharacter SpawnPlayerForClient(ulong clientId, Vector3? position = null, Quaternion? rotation = null)
+        public NetworkCharacter SpawnPlayerForClient(
+            ulong clientId,
+            Vector3? position = null,
+            Quaternion? rotation = null
+        )
         {
             if (!IsServer)
             {
@@ -278,19 +285,25 @@ namespace GameCreator.Netcode.Runtime
                 Position = spawnPos,
                 Rotation = spawnRot,
                 OwnerClientId = clientId,
-                Type = SpawnType.Player
+                Type = SpawnType.Player,
             };
 
             // Allow modification before spawn
             EventBeforePlayerSpawn?.Invoke(clientId, spawnData);
 
             // Instantiate and spawn
-            GameObject instance = Instantiate(spawnData.Prefab, spawnData.Position, spawnData.Rotation);
+            GameObject instance = Instantiate(
+                spawnData.Prefab,
+                spawnData.Position,
+                spawnData.Rotation
+            );
             NetworkObject networkObject = instance.GetComponent<NetworkObject>();
 
             if (networkObject == null)
             {
-                Debug.LogError("[NetworkSpawnManager] Player prefab must have NetworkObject component");
+                Debug.LogError(
+                    "[NetworkSpawnManager] Player prefab must have NetworkObject component"
+                );
                 Destroy(instance);
                 return null;
             }
@@ -318,7 +331,12 @@ namespace GameCreator.Netcode.Runtime
         /// Queue an NPC for spawning. Uses spawn queue to prevent flooding.
         /// Server-only.
         /// </summary>
-        public void QueueNPCSpawn(GameObject prefab, Vector3 position, Quaternion rotation, Action<NetworkCharacter> callback = null)
+        public void QueueNPCSpawn(
+            GameObject prefab,
+            Vector3 position,
+            Quaternion rotation,
+            Action<NetworkCharacter> callback = null
+        )
         {
             if (!IsServer)
             {
@@ -334,9 +352,9 @@ namespace GameCreator.Netcode.Runtime
                     Position = position,
                     Rotation = rotation,
                     OwnerClientId = NetworkManager.ServerClientId,
-                    Type = SpawnType.NPC
+                    Type = SpawnType.NPC,
                 },
-                Callback = callback
+                Callback = callback,
             };
 
             m_SpawnQueue.Enqueue(request);
@@ -346,7 +364,11 @@ namespace GameCreator.Netcode.Runtime
         /// Spawn an NPC immediately (bypasses queue).
         /// Server-only.
         /// </summary>
-        public NetworkCharacter SpawnNPCImmediate(GameObject prefab, Vector3 position, Quaternion rotation)
+        public NetworkCharacter SpawnNPCImmediate(
+            GameObject prefab,
+            Vector3 position,
+            Quaternion rotation
+        )
         {
             if (!IsServer)
             {
@@ -360,7 +382,7 @@ namespace GameCreator.Netcode.Runtime
                 Position = position,
                 Rotation = rotation,
                 OwnerClientId = NetworkManager.ServerClientId,
-                Type = SpawnType.NPC
+                Type = SpawnType.NPC,
             };
 
             return SpawnNPCInternal(spawnData);
@@ -378,7 +400,8 @@ namespace GameCreator.Netcode.Runtime
                 return;
             }
 
-            if (character == null) return;
+            if (character == null)
+                return;
 
             var networkObject = character.GetComponent<NetworkObject>();
             if (networkObject != null && networkObject.IsSpawned)
@@ -404,7 +427,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void DespawnAllNPCs()
         {
-            if (!IsServer) return;
+            if (!IsServer)
+                return;
 
             var npcsToRemove = new List<NetworkCharacter>(m_SpawnedNPCs);
             foreach (var npc in npcsToRemove)
@@ -417,10 +441,12 @@ namespace GameCreator.Netcode.Runtime
 
         private void ProcessSpawnQueue()
         {
-            if (m_SpawnQueue.Count == 0) return;
+            if (m_SpawnQueue.Count == 0)
+                return;
 
             // Check spawn delay
-            if (Time.time - m_LastNPCSpawnTime < m_NPCSpawnDelay) return;
+            if (Time.time - m_LastNPCSpawnTime < m_NPCSpawnDelay)
+                return;
 
             int spawnsThisFrame = 0;
             while (m_SpawnQueue.Count > 0 && spawnsThisFrame < m_MaxNPCsPerFrame)
@@ -454,7 +480,9 @@ namespace GameCreator.Netcode.Runtime
 
             if (networkObject == null)
             {
-                Debug.LogError("[NetworkSpawnManager] NPC prefab must have NetworkObject component");
+                Debug.LogError(
+                    "[NetworkSpawnManager] NPC prefab must have NetworkObject component"
+                );
                 Destroy(instance);
                 return null;
             }
@@ -488,15 +516,21 @@ namespace GameCreator.Netcode.Runtime
             {
                 case SpawnPointMode.RoundRobin:
                     spawnPoint = m_PlayerSpawnPoints[m_NextSpawnPointIndex];
-                    m_NextSpawnPointIndex = (m_NextSpawnPointIndex + 1) % m_PlayerSpawnPoints.Length;
+                    m_NextSpawnPointIndex =
+                        (m_NextSpawnPointIndex + 1) % m_PlayerSpawnPoints.Length;
                     break;
 
                 case SpawnPointMode.Random:
-                    spawnPoint = m_PlayerSpawnPoints[UnityEngine.Random.Range(0, m_PlayerSpawnPoints.Length)];
+                    spawnPoint = m_PlayerSpawnPoints[
+                        UnityEngine.Random.Range(0, m_PlayerSpawnPoints.Length)
+                    ];
                     break;
 
                 case SpawnPointMode.ByClientId:
-                    int index = (int)(NetworkManager.Singleton.ConnectedClientsIds.Count % m_PlayerSpawnPoints.Length);
+                    int index = (int)(
+                        NetworkManager.Singleton.ConnectedClientsIds.Count
+                        % m_PlayerSpawnPoints.Length
+                    );
                     spawnPoint = m_PlayerSpawnPoints[index];
                     break;
 
@@ -510,7 +544,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void CheckAllPlayersSpawned()
         {
-            if (!m_WaitForAllPlayers) return;
+            if (!m_WaitForAllPlayers)
+                return;
 
             int connectedCount = NetworkManager.Singleton.ConnectedClientsIds.Count;
             if (m_SpawnedPlayers.Count >= connectedCount)

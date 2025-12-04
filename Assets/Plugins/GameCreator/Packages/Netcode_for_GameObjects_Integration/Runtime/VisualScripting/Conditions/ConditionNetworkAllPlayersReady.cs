@@ -11,7 +11,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/Are All Players Ready")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Ready", "Players", "All", "Lobby")]
-
     [Serializable]
     public class ConditionNetworkAllPlayersReady : Condition
     {
@@ -19,7 +18,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         protected override bool Run(Args args)
         {
-            if (NetworkGameStateManager.Instance == null) return false;
+            if (NetworkGameStateManager.Instance == null)
+                return false;
             return NetworkGameStateManager.Instance.AreAllPlayersReady;
         }
     }

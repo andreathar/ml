@@ -24,26 +24,26 @@ namespace GameCreator.Editor.Perception
             PropertyField fieldRadius = new PropertyField(radius);
             PropertyField fieldUseObstruction = new PropertyField(useObstruction);
             PropertyField fieldMinIntensity = new PropertyField(minIntensity);
-            
+
             content.Add(fieldUpdate);
             content.Add(fieldInterval);
             content.Add(new SpaceSmall());
             content.Add(fieldRadius);
             content.Add(fieldUseObstruction);
             content.Add(fieldMinIntensity);
-            
+
             fieldUpdate.RegisterValueChangeCallback(changeEvent =>
             {
                 int updateMode = changeEvent.changedProperty.enumValueIndex;
-                fieldInterval.style.display = updateMode == (int) UpdateMode.Interval
+                fieldInterval.style.display =
+                    updateMode == (int)UpdateMode.Interval ? DisplayStyle.Flex : DisplayStyle.None;
+            });
+
+            fieldInterval.style.display =
+                update.enumValueIndex == (int)UpdateMode.Interval
                     ? DisplayStyle.Flex
                     : DisplayStyle.None;
-            });
-            
-            fieldInterval.style.display = update.enumValueIndex == (int) UpdateMode.Interval
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-            
+
             return content;
         }
     }

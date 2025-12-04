@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Despawn Network Object")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Despawn", "Remove", "Destroy")]
-
     [Serializable]
     public class InstructionNetworkDespawn : Instruction
     {
@@ -50,7 +49,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             NetworkObject networkObject = target.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
-                Debug.LogWarning("[InstructionNetworkDespawn] Target has no NetworkObject component.");
+                Debug.LogWarning(
+                    "[InstructionNetworkDespawn] Target has no NetworkObject component."
+                );
                 return Task.CompletedTask;
             }
 

@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Is Spawned")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Spawned", "Active", "Exists")]
-
     [Serializable]
     public class ConditionNetworkIsSpawned : Condition
     {
@@ -30,10 +29,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             GameObject target = this.m_Target.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             NetworkObject networkObject = target.GetComponent<NetworkObject>();
-            if (networkObject == null) return false;
+            if (networkObject == null)
+                return false;
 
             return networkObject.IsSpawned;
         }

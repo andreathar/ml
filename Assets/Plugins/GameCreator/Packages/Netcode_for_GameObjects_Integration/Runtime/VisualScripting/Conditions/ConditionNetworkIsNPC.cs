@@ -7,11 +7,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("Is NPC")]
-    [Description("Returns true if the specified character is an NPC (server-authoritative, not a player)")]
+    [Description(
+        "Returns true if the specified character is an NPC (server-authoritative, not a player)"
+    )]
     [Category("Network/Is NPC")]
     [Image(typeof(IconBust), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "NPC", "AI", "Server", "Character")]
-
     [Serializable]
     public class ConditionNetworkIsNPC : Condition
     {
@@ -29,7 +30,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             GameObject target = this.m_Character.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             // Check if it's a NetworkCharacter
             NetworkCharacter networkCharacter = target.GetComponent<NetworkCharacter>();

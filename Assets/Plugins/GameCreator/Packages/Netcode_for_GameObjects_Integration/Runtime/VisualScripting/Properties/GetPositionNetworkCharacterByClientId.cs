@@ -6,10 +6,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Character Position by Client ID")]
     [Category("Network/Network Character Position by Client ID")]
-
     [Description("Returns the world position of a NetworkCharacter by their owner's Client ID")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Yellow)]
-
     [Serializable]
     public class GetPositionNetworkCharacterByClientId : PropertyTypeGetPosition
     {
@@ -32,7 +30,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         {
             var instance = new GetPositionNetworkCharacterByClientId
             {
-                m_ClientId = new PropertyGetInteger(clientId)
+                m_ClientId = new PropertyGetInteger(clientId),
             };
             return new PropertyGetPosition(instance);
         }

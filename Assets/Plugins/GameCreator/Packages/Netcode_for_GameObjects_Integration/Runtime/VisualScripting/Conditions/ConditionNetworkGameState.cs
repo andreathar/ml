@@ -11,18 +11,20 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/Is Game State")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "State", "Lobby", "Playing", "Game")]
-
     [Serializable]
     public class ConditionNetworkGameState : Condition
     {
         [SerializeField]
-        private NetworkGameStateManager.GameState m_State = NetworkGameStateManager.GameState.Playing;
+        private NetworkGameStateManager.GameState m_State = NetworkGameStateManager
+            .GameState
+            .Playing;
 
         protected override string Summary => $"is Game State {m_State}";
 
         protected override bool Run(Args args)
         {
-            if (NetworkGameStateManager.Instance == null) return false;
+            if (NetworkGameStateManager.Instance == null)
+                return false;
             return NetworkGameStateManager.Instance.CurrentState == m_State;
         }
     }

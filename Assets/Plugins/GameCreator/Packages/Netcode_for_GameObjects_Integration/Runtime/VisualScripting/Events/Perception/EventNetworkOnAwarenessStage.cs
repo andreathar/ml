@@ -9,11 +9,21 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Network Awareness Stage")]
-    [Description("Triggered when a networked Perception's awareness stage changes (None/Suspicious/Alert/Aware). Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when a networked Perception's awareness stage changes (None/Suspicious/Alert/Aware). Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Perception/On Network Awareness Stage")]
     [Image(typeof(GameCreator.Runtime.Perception.IconAwareness), ColorTheme.Type.Yellow)]
-    [Keywords("Network", "Multiplayer", "Perception", "Awareness", "Stage", "Alert", "Suspicious", "Aware")]
-
+    [Keywords(
+        "Network",
+        "Multiplayer",
+        "Perception",
+        "Awareness",
+        "Stage",
+        "Alert",
+        "Suspicious",
+        "Aware"
+    )]
     [Serializable]
     public class EventNetworkOnAwarenessStage : TriggerEvent
     {
@@ -31,7 +41,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -51,20 +62,30 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
 
-        private void OnAwarenessStageChanged(Perception perception, GameObject target, AwareStage stage)
+        private void OnAwarenessStageChanged(
+            Perception perception,
+            GameObject target,
+            AwareStage stage
+        )
         {
-            if (perception == null || target == null) return;
+            if (perception == null || target == null)
+                return;
 
             // Filter by perception
-            if (!m_Perception.Match(perception.gameObject, m_Args)) return;
+            if (!m_Perception.Match(perception.gameObject, m_Args))
+                return;
 
             // Filter by target
-            if (!m_Target.Match(target, m_Args)) return;
+            if (!m_Target.Match(target, m_Args))
+                return;
 
             // Filter by stage
-            if (!m_Stage.HasFlag((AwareMask)stage)) return;
+            if (!m_Stage.HasFlag((AwareMask)stage))
+                return;
 
-            Debug.Log($"[EventNetworkOnAwarenessStage] Triggered: {perception.name} -> {target.name} = {stage}");
+            Debug.Log(
+                $"[EventNetworkOnAwarenessStage] Triggered: {perception.name} -> {target.name} = {stage}"
+            );
 
             // Set both perception and target accessible in Args
             var args = new Args(perception.gameObject, target);

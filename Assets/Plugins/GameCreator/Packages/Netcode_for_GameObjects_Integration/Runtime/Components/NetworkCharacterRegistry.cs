@@ -132,8 +132,10 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void Register(NetworkCharacter character)
         {
-            if (character == null) return;
-            if (s_AllCharacters.Contains(character)) return;
+            if (character == null)
+                return;
+            if (s_AllCharacters.Contains(character))
+                return;
 
             s_AllCharacters.Add(character);
 
@@ -177,7 +179,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void Unregister(NetworkCharacter character)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
             bool removed = s_AllCharacters.Remove(character);
             s_PlayerCharacters.Remove(character);
@@ -246,7 +249,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void UpdateClientIdMapping(NetworkCharacter character, ulong newClientId)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
             // Remove old mapping
             var oldKeys = s_CharactersByClientId
@@ -320,7 +324,10 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Get the closest character (player or NPC) to a position, optionally excluding the local player.
         /// </summary>
-        public static NetworkCharacter GetClosestCharacter(Vector3 position, bool excludeLocalPlayer = true)
+        public static NetworkCharacter GetClosestCharacter(
+            Vector3 position,
+            bool excludeLocalPlayer = true
+        )
         {
             NetworkCharacter closest = null;
             float closestDistance = float.MaxValue;
@@ -328,7 +335,8 @@ namespace GameCreator.Netcode.Runtime
 
             foreach (var character in s_AllCharacters)
             {
-                if (character == localPlayer) continue;
+                if (character == localPlayer)
+                    continue;
 
                 float distance = Vector3.Distance(position, character.transform.position);
                 if (distance < closestDistance)

@@ -69,12 +69,12 @@ namespace GameCreator.Netcode.Runtime
         public enum InitializationPhase
         {
             None = 0,
-            PreNetwork = 1,         // Before NetworkManager starts
-            WaitingForNetwork = 2,  // Waiting for NetworkManager
-            NetworkReady = 3,       // NetworkManager is ready
-            WaitingForSpawn = 4,    // Waiting for network spawn
-            PostNetwork = 5,        // After network spawn
-            Complete = 6            // All initialization done
+            PreNetwork = 1, // Before NetworkManager starts
+            WaitingForNetwork = 2, // Waiting for NetworkManager
+            NetworkReady = 3, // NetworkManager is ready
+            WaitingForSpawn = 4, // Waiting for network spawn
+            PostNetwork = 5, // After network spawn
+            Complete = 6, // All initialization done
         }
 
         // PROPERTIES: ----------------------------------------------------------------------------
@@ -97,7 +97,9 @@ namespace GameCreator.Netcode.Runtime
         {
             if (s_Instance != null && s_Instance != this)
             {
-                Debug.LogWarning("[NetworkInitializationManager] Duplicate instance detected. Destroying.");
+                Debug.LogWarning(
+                    "[NetworkInitializationManager] Duplicate instance detected. Destroying."
+                );
                 Destroy(gameObject);
                 return;
             }
@@ -149,7 +151,9 @@ namespace GameCreator.Netcode.Runtime
                 // No NetworkManager, skip to complete
                 if (m_DebugLogging)
                 {
-                    Debug.Log("[NetworkInitializationManager] No NetworkManager found, completing initialization");
+                    Debug.Log(
+                        "[NetworkInitializationManager] No NetworkManager found, completing initialization"
+                    );
                 }
                 StartPhase(InitializationPhase.Complete);
             }
@@ -177,7 +181,8 @@ namespace GameCreator.Netcode.Runtime
 
         private void OnNetworkStarted()
         {
-            if (m_NetworkManagerReady) return;
+            if (m_NetworkManagerReady)
+                return;
 
             m_NetworkManagerReady = true;
 
@@ -356,7 +361,9 @@ namespace GameCreator.Netcode.Runtime
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[NetworkInitializationManager] Error in {initializable}: {e.Message}");
+                    Debug.LogError(
+                        $"[NetworkInitializationManager] Error in {initializable}: {e.Message}"
+                    );
                 }
             }
         }
@@ -372,7 +379,9 @@ namespace GameCreator.Netcode.Runtime
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[NetworkInitializationManager] Error processing queue: {e.Message}");
+                    Debug.LogError(
+                        $"[NetworkInitializationManager] Error processing queue: {e.Message}"
+                    );
                 }
             }
         }
@@ -389,7 +398,9 @@ namespace GameCreator.Netcode.Runtime
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError($"[NetworkInitializationManager] Error in deferred action: {e.Message}");
+                    Debug.LogError(
+                        $"[NetworkInitializationManager] Error in deferred action: {e.Message}"
+                    );
                 }
             }
         }

@@ -12,11 +12,11 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/On Countdown Started")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Countdown", "Start", "Timer")]
-
     [Serializable]
     public class EventNetworkOnCountdownStarted : TriggerEvent
     {
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         protected internal override void OnEnable(Trigger trigger)
         {

@@ -496,7 +496,10 @@ namespace GameCreator.Netcode.Runtime
                 return;
 
             ulong clientId = this.OwnerClientId;
-            bool isHost = clientId == 0 && NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+            bool isHost =
+                clientId == 0
+                && NetworkManager.Singleton != null
+                && NetworkManager.Singleton.IsHost;
 
             string newName;
             if (isHost)

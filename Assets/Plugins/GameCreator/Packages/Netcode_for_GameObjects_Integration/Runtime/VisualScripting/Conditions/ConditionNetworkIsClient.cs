@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Is Client")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Client", "Connected")]
-
     [Serializable]
     public class ConditionNetworkIsClient : Condition
     {
@@ -24,7 +23,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         protected override bool Run(Args args)
         {
-            if (NetworkManager.Singleton == null) return false;
+            if (NetworkManager.Singleton == null)
+                return false;
             return NetworkManager.Singleton.IsClient;
         }
     }

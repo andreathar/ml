@@ -130,26 +130,35 @@ namespace GameCreator.Netcode.Runtime
 
             if (m_EnsureSpawnManager && FindAnyObjectByType<NetworkSpawnManager>() == null)
             {
-                Debug.LogWarning("[NetworkManagersBootstrap] NetworkSpawnManager not found in scene. Add it to a GameObject with NetworkObject.");
+                Debug.LogWarning(
+                    "[NetworkManagersBootstrap] NetworkSpawnManager not found in scene. Add it to a GameObject with NetworkObject."
+                );
             }
 
             if (m_EnsureGameStateManager && FindAnyObjectByType<NetworkGameStateManager>() == null)
             {
-                Debug.LogWarning("[NetworkManagersBootstrap] NetworkGameStateManager not found in scene. Add it to a GameObject with NetworkObject.");
+                Debug.LogWarning(
+                    "[NetworkManagersBootstrap] NetworkGameStateManager not found in scene. Add it to a GameObject with NetworkObject."
+                );
             }
 
             if (m_EnsureRPCManager && FindAnyObjectByType<NetworkRPCManager>() == null)
             {
-                Debug.LogWarning("[NetworkManagersBootstrap] NetworkRPCManager not found in scene. Add it to a GameObject with NetworkObject.");
+                Debug.LogWarning(
+                    "[NetworkManagersBootstrap] NetworkRPCManager not found in scene. Add it to a GameObject with NetworkObject."
+                );
             }
 
             if (m_EnsureSceneCoordinator && FindAnyObjectByType<NetworkSceneCoordinator>() == null)
             {
-                Debug.LogWarning("[NetworkManagersBootstrap] NetworkSceneCoordinator not found in scene. Add it to a GameObject with NetworkObject.");
+                Debug.LogWarning(
+                    "[NetworkManagersBootstrap] NetworkSceneCoordinator not found in scene. Add it to a GameObject with NetworkObject."
+                );
             }
         }
 
-        private T EnsureComponent<T>() where T : Component
+        private T EnsureComponent<T>()
+            where T : Component
         {
             T component = GetComponent<T>();
             if (component == null)
@@ -167,7 +176,8 @@ namespace GameCreator.Netcode.Runtime
             return component;
         }
 
-        private T EnsureComponentOn<T>(GameObject target) where T : Component
+        private T EnsureComponentOn<T>(GameObject target)
+            where T : Component
         {
             T component = target.GetComponent<T>();
             if (component == null)
@@ -179,7 +189,9 @@ namespace GameCreator.Netcode.Runtime
                 component = target.AddComponent<T>();
                 if (m_DebugLogging)
                 {
-                    Debug.Log($"[NetworkManagersBootstrap] Added {typeof(T).Name} to {target.name}");
+                    Debug.Log(
+                        $"[NetworkManagersBootstrap] Added {typeof(T).Name} to {target.name}"
+                    );
                 }
             }
             return component;
@@ -189,13 +201,27 @@ namespace GameCreator.Netcode.Runtime
         {
             // Use FindAnyObjectByType for reliability - singletons may not be set depending on execution order
             Debug.Log("=== Network Managers Status ===");
-            Debug.Log($"  NetworkManager: {(FindAnyObjectByType<NetworkManager>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkInitializationManager: {(FindAnyObjectByType<NetworkInitializationManager>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSessionEvents: {(FindAnyObjectByType<NetworkSessionEvents>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSpawnManager: {(FindAnyObjectByType<NetworkSpawnManager>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkGameStateManager: {(FindAnyObjectByType<NetworkGameStateManager>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkRPCManager: {(FindAnyObjectByType<NetworkRPCManager>() != null ? "OK" : "MISSING")}");
-            Debug.Log($"  NetworkSceneCoordinator: {(FindAnyObjectByType<NetworkSceneCoordinator>() != null ? "OK" : "MISSING")}");
+            Debug.Log(
+                $"  NetworkManager: {(FindAnyObjectByType<NetworkManager>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkInitializationManager: {(FindAnyObjectByType<NetworkInitializationManager>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkSessionEvents: {(FindAnyObjectByType<NetworkSessionEvents>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkSpawnManager: {(FindAnyObjectByType<NetworkSpawnManager>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkGameStateManager: {(FindAnyObjectByType<NetworkGameStateManager>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkRPCManager: {(FindAnyObjectByType<NetworkRPCManager>() != null ? "OK" : "MISSING")}"
+            );
+            Debug.Log(
+                $"  NetworkSceneCoordinator: {(FindAnyObjectByType<NetworkSceneCoordinator>() != null ? "OK" : "MISSING")}"
+            );
             Debug.Log("===============================");
         }
 

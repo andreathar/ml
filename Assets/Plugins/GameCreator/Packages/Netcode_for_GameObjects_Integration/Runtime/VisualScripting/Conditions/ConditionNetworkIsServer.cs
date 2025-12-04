@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Is Server")]
     [Image(typeof(IconSignal), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Server", "Host", "Authority")]
-
     [Serializable]
     public class ConditionNetworkIsServer : Condition
     {
@@ -24,7 +23,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         protected override bool Run(Args args)
         {
-            if (NetworkManager.Singleton == null) return false;
+            if (NetworkManager.Singleton == null)
+                return false;
             return NetworkManager.Singleton.IsServer;
         }
     }

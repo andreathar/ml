@@ -160,9 +160,12 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void NotifyPlayerSpawned(NetworkCharacter character, bool isLocalOwner)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
-            Debug.Log($"[NetworkSessionEvents] Player spawned: {character.name} (IsLocal: {isLocalOwner})");
+            Debug.Log(
+                $"[NetworkSessionEvents] Player spawned: {character.name} (IsLocal: {isLocalOwner})"
+            );
 
             EventPlayerSpawned?.Invoke(character);
 
@@ -181,7 +184,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void NotifyNPCSpawned(NetworkCharacter character)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
             Debug.Log($"[NetworkSessionEvents] NPC spawned: {character.name}");
             EventNPCSpawned?.Invoke(character);
@@ -192,7 +196,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public static void NotifyCharacterDespawned(NetworkCharacter character)
         {
-            if (character == null) return;
+            if (character == null)
+                return;
 
             Debug.Log($"[NetworkSessionEvents] Character despawned: {character.name}");
             EventCharacterDespawned?.Invoke(character);

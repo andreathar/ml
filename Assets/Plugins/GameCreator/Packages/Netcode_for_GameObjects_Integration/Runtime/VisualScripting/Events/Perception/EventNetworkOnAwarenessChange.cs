@@ -9,11 +9,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Network Awareness Change")]
-    [Description("Triggered when a networked Perception's awareness level changes for any target. Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when a networked Perception's awareness level changes for any target. Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Perception/On Network Awareness Change")]
     [Image(typeof(GameCreator.Runtime.Perception.IconAwareness), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Perception", "Awareness", "Level", "Detect")]
-
     [Serializable]
     public class EventNetworkOnAwarenessChange : TriggerEvent
     {
@@ -31,8 +32,11 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
-        [NonSerialized] private float m_LastLevel;
+        [NonSerialized]
+        private Args m_Args;
+
+        [NonSerialized]
+        private float m_LastLevel;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -54,20 +58,26 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnAwarenessChanged(Perception perception, GameObject target, float level)
         {
-            if (perception == null || target == null) return;
+            if (perception == null || target == null)
+                return;
 
             // Filter by perception
-            if (!m_Perception.Match(perception.gameObject, m_Args)) return;
+            if (!m_Perception.Match(perception.gameObject, m_Args))
+                return;
 
             // Filter by target
-            if (!m_Target.Match(target, m_Args)) return;
+            if (!m_Target.Match(target, m_Args))
+                return;
 
             // Filter by minimum change
-            if (Mathf.Abs(level - m_LastLevel) < m_MinChange) return;
+            if (Mathf.Abs(level - m_LastLevel) < m_MinChange)
+                return;
 
             m_LastLevel = level;
 
-            Debug.Log($"[EventNetworkOnAwarenessChange] Triggered: {perception.name} -> {target.name} = {level:F2}");
+            Debug.Log(
+                $"[EventNetworkOnAwarenessChange] Triggered: {perception.name} -> {target.name} = {level:F2}"
+            );
 
             // Set both perception and target accessible in Args
             var args = new Args(perception.gameObject, target);

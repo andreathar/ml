@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On NPC Spawned")]
-    [Description("Triggered when any NPC (server-authoritative character) spawns on the network. The spawned NPC is available as the Target.")]
+    [Description(
+        "Triggered when any NPC (server-authoritative character) spawns on the network. The spawned NPC is available as the Target."
+    )]
     [Category("Network/Characters/On NPC Spawned")]
     [Image(typeof(IconBust), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "NPC", "AI", "Spawn", "Server")]
-
     [Serializable]
     public class EventNetworkOnNPCSpawned : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -40,7 +42,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnNPCSpawned(NetworkCharacter npc)
         {
-            if (npc == null) return;
+            if (npc == null)
+                return;
 
             // Set the NPC as the target so it can be referenced in instructions
             this.m_Args = new Args(this.m_Trigger.gameObject, npc.gameObject);

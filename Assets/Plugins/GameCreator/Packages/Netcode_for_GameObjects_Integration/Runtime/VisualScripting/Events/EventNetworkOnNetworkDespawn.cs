@@ -13,14 +13,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/On Network Despawn")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Despawn", "Destroy", "Remove")]
-
     [Serializable]
     public class EventNetworkOnNetworkDespawn : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
-        [NonSerialized] private NetworkCharacterAdapter m_Adapter;
+        [NonSerialized]
+        private Args m_Args;
+
+        [NonSerialized]
+        private NetworkCharacterAdapter m_Adapter;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

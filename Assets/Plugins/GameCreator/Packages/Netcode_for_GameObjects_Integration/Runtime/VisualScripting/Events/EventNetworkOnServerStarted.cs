@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Server Started")]
-    [Description("Triggered when the network session starts as dedicated Server (no local client).")]
+    [Description(
+        "Triggered when the network session starts as dedicated Server (no local client)."
+    )]
     [Category("Network/Session/On Server Started")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Server", "Dedicated", "Session", "Start")]
-
     [Serializable]
     public class EventNetworkOnServerStarted : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

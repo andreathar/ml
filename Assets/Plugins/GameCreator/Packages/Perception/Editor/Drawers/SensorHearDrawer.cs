@@ -17,7 +17,7 @@ namespace GameCreator.Editor.Perception
             SerializedProperty minIntensity = property.FindPropertyRelative("m_MinIntensity");
             SerializedProperty maxIntensity = property.FindPropertyRelative("m_MaxIntensity");
             SerializedProperty decayTime = property.FindPropertyRelative("m_DecayTime");
-            
+
             content.Add(new PropertyField(useObstruction));
             content.Add(new SpaceSmaller());
             content.Add(new PropertyField(minIntensity));
@@ -25,7 +25,7 @@ namespace GameCreator.Editor.Perception
             content.Add(new PropertyField(maxIntensity));
             content.Add(new SpaceSmaller());
             content.Add(new PropertyField(decayTime));
-            
+
             return content;
         }
     }

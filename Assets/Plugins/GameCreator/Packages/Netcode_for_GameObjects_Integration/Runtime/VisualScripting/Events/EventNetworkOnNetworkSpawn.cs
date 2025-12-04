@@ -13,14 +13,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/On Network Spawn")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Spawn", "Initialize")]
-
     [Serializable]
     public class EventNetworkOnNetworkSpawn : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
-        [NonSerialized] private NetworkCharacterAdapter m_Adapter;
+        [NonSerialized]
+        private Args m_Args;
+
+        [NonSerialized]
+        private NetworkCharacterAdapter m_Adapter;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

@@ -6,18 +6,18 @@ using UnityEngine;
 namespace GameCreator.Runtime.Perception
 {
     [AddComponentMenu("")]
-    public class LuminanceManager : Singleton<LuminanceManager> 
+    public class LuminanceManager : Singleton<LuminanceManager>
     {
         private struct LuminanceData
         {
             // PROPERTIES: ------------------------------------------------------------------------
-            
+
             public int Frame { get; }
             public Vector3 Position { get; }
             public float Luminance { get; }
-            
+
             // CONSTRUCTOR: -----------------------------------------------------------------------
-            
+
             public LuminanceData(int frame, Vector3 position, float luminance)
             {
                 this.Frame = frame;
@@ -25,31 +25,33 @@ namespace GameCreator.Runtime.Perception
                 this.Luminance = luminance;
             }
         }
-        
+
         ///////////////////////////////////////////////////////////////////////////////////////////
-        
+
         private const float TIMEOUT_CLEAR_CACHE = 100f;
-        
+
         // MEMBERS: -------------------------------------------------------------------------------
 
         [NonSerialized]
         private readonly Dictionary<int, Luminance> m_Instances = new Dictionary<int, Luminance>();
 
-        [NonSerialized] 
-        private readonly Dictionary<int, LuminanceData> m_Cache = new Dictionary<int, LuminanceData>();
-        
+        [NonSerialized]
+        private readonly Dictionary<int, LuminanceData> m_Cache =
+            new Dictionary<int, LuminanceData>();
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        [field: NonSerialized] public float AmbientIntensity { get; set; }
+        [field: NonSerialized]
+        public float AmbientIntensity { get; set; }
 
         public IReadOnlyDictionary<int, Luminance> Instances => this.m_Instances;
-        
+
         // INITIALIZERS: --------------------------------------------------------------------------
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            
+
             ScheduleManager.Instance.RunInterval(
                 this.ClearCache,
                 TIMEOUT_CLEAR_CACHE,
@@ -64,13 +66,13 @@ namespace GameCreator.Runtime.Perception
             int instanceId = instance.GetInstanceID();
             this.m_Instances[instanceId] = instance;
         }
-        
+
         public void Remove(Luminance instance)
         {
             int instanceId = instance.GetInstanceID();
             this.m_Instances.Remove(instanceId);
         }
-        
+
         public float LuminanceAt(Transform target)
         {
             int targetId = target.GetInstanceID();
@@ -81,25 +83,22 @@ namespace GameCreator.Runtime.Perception
                     return data.Luminance;
                 }
             }
-            
+
             float intensity = this.AmbientIntensity;
-            
+
             foreach (KeyValuePair<int, Luminance> entry in this.Instances)
             {
                 Luminance instance = entry.Value;
-                if (instance == null) continue;
+                if (instance == null)
+                    continue;
                 intensity += instance.IntensityTo(target);
             }
-            
-            this.m_Cache[targetId] = new LuminanceData(
-                Time.frameCount,
-                target.position,
-                intensity
-            );
-            
+
+            this.m_Cache[targetId] = new LuminanceData(Time.frameCount, target.position, intensity);
+
             return intensity;
         }
-        
+
         // PRIVATE METHODS: -----------------------------------------------------------------------
 
         private void ClearCache()

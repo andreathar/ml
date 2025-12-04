@@ -9,11 +9,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Network Noise Heard")]
-    [Description("Triggered when a networked Perception hears a noise (server-validated). Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when a networked Perception hears a noise (server-validated). Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Perception/On Network Noise Heard")]
     [Image(typeof(GameCreator.Runtime.Perception.IconEar), ColorTheme.Type.Yellow)]
     [Keywords("Network", "Multiplayer", "Perception", "Hear", "Noise", "Sound", "Audio")]
-
     [Serializable]
     public class EventNetworkOnNoiseHeard : TriggerEvent
     {
@@ -28,7 +29,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -50,18 +52,23 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnNoiseHeard(Perception perception, StimulusNoise noise)
         {
-            if (perception == null) return;
+            if (perception == null)
+                return;
 
             // Filter by perception
-            if (!m_Perception.Match(perception.gameObject, m_Args)) return;
+            if (!m_Perception.Match(perception.gameObject, m_Args))
+                return;
 
             // Filter by noise tag
             if (!string.IsNullOrEmpty(m_NoiseTag))
             {
-                if (noise.Tag != m_NoiseTag) return;
+                if (noise.Tag != m_NoiseTag)
+                    return;
             }
 
-            Debug.Log($"[EventNetworkOnNoiseHeard] Triggered: {perception.name} heard noise (tag: {noise.Tag ?? "null"})");
+            Debug.Log(
+                $"[EventNetworkOnNoiseHeard] Triggered: {perception.name} heard noise (tag: {noise.Tag ?? "null"})"
+            );
 
             // Set perception as Self, noise source position could be used for Target
             var args = new Args(perception.gameObject);

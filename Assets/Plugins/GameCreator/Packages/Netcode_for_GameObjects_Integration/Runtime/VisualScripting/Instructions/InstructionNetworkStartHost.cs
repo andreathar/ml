@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Start Host")]
     [Image(typeof(IconPlay), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Host", "Server", "Start")]
-
     [Serializable]
     public class InstructionNetworkStartHost : Instruction
     {

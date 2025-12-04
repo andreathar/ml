@@ -9,11 +9,12 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Network Target Tracked")]
-    [Description("Triggered when a networked Perception starts tracking a new target. Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when a networked Perception starts tracking a new target. Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Perception/On Network Target Tracked")]
     [Image(typeof(GameCreator.Runtime.Perception.IconEye), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Perception", "Track", "Target", "Detect", "See")]
-
     [Serializable]
     public class EventNetworkOnTargetTracked : TriggerEvent
     {
@@ -27,7 +28,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -49,15 +51,20 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnTargetTracked(Perception perception, GameObject target)
         {
-            if (perception == null || target == null) return;
+            if (perception == null || target == null)
+                return;
 
             // Filter by perception
-            if (!m_Perception.Match(perception.gameObject, m_Args)) return;
+            if (!m_Perception.Match(perception.gameObject, m_Args))
+                return;
 
             // Filter by target
-            if (!m_Target.Match(target, m_Args)) return;
+            if (!m_Target.Match(target, m_Args))
+                return;
 
-            Debug.Log($"[EventNetworkOnTargetTracked] Triggered: {perception.name} now tracking {target.name}");
+            Debug.Log(
+                $"[EventNetworkOnTargetTracked] Triggered: {perception.name} now tracking {target.name}"
+            );
 
             // Set both perception and target accessible in Args
             var args = new Args(perception.gameObject, target);

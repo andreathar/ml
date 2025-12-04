@@ -12,11 +12,11 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/On All Players Ready")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Ready", "Players", "All", "Lobby")]
-
     [Serializable]
     public class EventNetworkOnAllPlayersReady : TriggerEvent
     {
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         protected internal override void OnEnable(Trigger trigger)
         {

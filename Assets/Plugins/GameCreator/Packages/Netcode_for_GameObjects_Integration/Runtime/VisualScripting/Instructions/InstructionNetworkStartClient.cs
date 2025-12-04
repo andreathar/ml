@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Start Client")]
     [Image(typeof(IconPlay), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Client", "Connect", "Join")]
-
     [Serializable]
     public class InstructionNetworkStartClient : Instruction
     {
@@ -27,7 +26,9 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         {
             if (NetworkManager.Singleton == null)
             {
-                Debug.LogError("[InstructionNetworkStartClient] NetworkManager not found in scene.");
+                Debug.LogError(
+                    "[InstructionNetworkStartClient] NetworkManager not found in scene."
+                );
                 return Task.CompletedTask;
             }
 

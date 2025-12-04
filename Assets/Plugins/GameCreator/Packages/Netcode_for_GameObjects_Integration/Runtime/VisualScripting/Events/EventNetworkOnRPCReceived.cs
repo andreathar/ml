@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/RPC/On RPC Message Received")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "RPC", "Message", "Event", "Channel")]
-
     [Serializable]
     public class EventNetworkOnRPCReceived : TriggerEvent
     {
@@ -24,7 +23,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         [Tooltip("Event name to filter (empty = all events)")]
         private string m_EventName = "";
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         protected internal override void OnEnable(Trigger trigger)
         {

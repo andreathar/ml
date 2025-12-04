@@ -7,14 +7,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Local Player Rotation")]
     [Category("Network/Network Local Player Rotation")]
-
     [Description("Returns the rotation of the local client's NetworkCharacter")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
-
     [Serializable]
     public class GetRotationNetworkLocalPlayer : PropertyTypeGetRotation
     {
-        [SerializeField] private RotationSpace m_Space = RotationSpace.Global;
+        [SerializeField]
+        private RotationSpace m_Space = RotationSpace.Global;
 
         public override Quaternion Get(Args args)
         {
@@ -29,13 +28,14 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         private Quaternion GetLocalPlayerRotation()
         {
             Transform transform = GetLocalPlayerTransform();
-            if (transform == null) return Quaternion.identity;
+            if (transform == null)
+                return Quaternion.identity;
 
             return this.m_Space switch
             {
                 RotationSpace.Local => transform.localRotation,
                 RotationSpace.Global => transform.rotation,
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(),
             };
         }
 
@@ -52,9 +52,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             return ShortcutPlayer.Transform;
         }
 
-        public static PropertyGetRotation Create => new PropertyGetRotation(
-            new GetRotationNetworkLocalPlayer()
-        );
+        public static PropertyGetRotation Create =>
+            new PropertyGetRotation(new GetRotationNetworkLocalPlayer());
 
         public override string String => $"{this.m_Space} Network Local Player";
 
@@ -63,10 +62,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             get
             {
                 // In editor, find any character marked as player
-                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(FindObjectsSortMode.None);
+                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(
+                    FindObjectsSortMode.None
+                );
                 foreach (Character instance in instances)
                 {
-                    if (instance.IsPlayer) return instance.transform.rotation;
+                    if (instance.IsPlayer)
+                        return instance.transform.rotation;
                 }
 
                 return Quaternion.identity;

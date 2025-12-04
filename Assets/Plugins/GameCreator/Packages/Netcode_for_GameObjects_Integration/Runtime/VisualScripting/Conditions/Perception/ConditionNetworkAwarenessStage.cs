@@ -8,11 +8,21 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("Network Awareness Stage Is")]
-    [Description("Returns true if the networked Perception's awareness stage for a target matches the specified stage")]
+    [Description(
+        "Returns true if the networked Perception's awareness stage for a target matches the specified stage"
+    )]
     [Category("Network/Perception/Network Awareness Stage Is")]
     [Image(typeof(GameCreator.Runtime.Perception.IconAwareness), ColorTheme.Type.Yellow)]
-    [Keywords("Network", "Multiplayer", "Perception", "Awareness", "Stage", "Alert", "Suspicious", "Aware")]
-
+    [Keywords(
+        "Network",
+        "Multiplayer",
+        "Perception",
+        "Awareness",
+        "Stage",
+        "Alert",
+        "Suspicious",
+        "Aware"
+    )]
     [Serializable]
     public class ConditionNetworkAwarenessStage : Condition
     {
@@ -37,13 +47,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             var perceptionGO = m_Perception.Get(args);
-            if (perceptionGO == null) return false;
+            if (perceptionGO == null)
+                return false;
 
             var networkPerception = perceptionGO.GetComponent<NetworkPerception>();
-            if (networkPerception == null) return false;
+            if (networkPerception == null)
+                return false;
 
             var target = m_Target.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             AwareStage currentStage = networkPerception.GetAwarenessStage(target);
             return m_Stage.HasFlag((AwareMask)currentStage);

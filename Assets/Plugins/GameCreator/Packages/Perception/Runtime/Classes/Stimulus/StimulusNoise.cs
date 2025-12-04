@@ -7,15 +7,20 @@ namespace GameCreator.Runtime.Perception
     {
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        [field: NonSerialized] public string Tag { get; }
-        
-        [field: NonSerialized] public Vector3 Position { get; }
-        [field: NonSerialized] public float Radius { get; }
-        
-        [field: NonSerialized] public float Intensity { get; private set; }
+        [field: NonSerialized]
+        public string Tag { get; }
+
+        [field: NonSerialized]
+        public Vector3 Position { get; }
+
+        [field: NonSerialized]
+        public float Radius { get; }
+
+        [field: NonSerialized]
+        public float Intensity { get; private set; }
 
         // CONSTRUCTORS: --------------------------------------------------------------------------
-        
+
         public StimulusNoise(string tag, Vector3 position, float radius, float intensity)
         {
             this.Tag = tag;
@@ -23,7 +28,7 @@ namespace GameCreator.Runtime.Perception
             this.Radius = radius;
             this.Intensity = intensity;
         }
-        
+
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
         public void DecreaseIntensity(float amount)

@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Scene/On Network Scene Loaded")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Scene", "Load", "Ready")]
-
     [Serializable]
     public class EventNetworkOnSceneLoaded : TriggerEvent
     {
@@ -20,7 +19,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         [Tooltip("Scene name to filter (empty = any scene)")]
         private string m_SceneName = "";
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         protected internal override void OnEnable(Trigger trigger)
         {

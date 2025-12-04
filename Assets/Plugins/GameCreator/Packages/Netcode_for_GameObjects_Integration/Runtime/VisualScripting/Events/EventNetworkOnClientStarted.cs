@@ -8,17 +8,19 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Client Started")]
-    [Description("Triggered when the network session starts as Client (connecting to a remote host/server).")]
+    [Description(
+        "Triggered when the network session starts as Client (connecting to a remote host/server)."
+    )]
     [Category("Network/Session/On Client Started")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Client", "Connect", "Session", "Start")]
-
     [Serializable]
     public class EventNetworkOnClientStarted : TriggerEvent
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 

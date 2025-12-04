@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Disconnect")]
     [Image(typeof(IconStop), ColorTheme.Type.Red)]
     [Keywords("Network", "Multiplayer", "Disconnect", "Stop", "Shutdown")]
-
     [Serializable]
     public class InstructionNetworkDisconnect : Instruction
     {

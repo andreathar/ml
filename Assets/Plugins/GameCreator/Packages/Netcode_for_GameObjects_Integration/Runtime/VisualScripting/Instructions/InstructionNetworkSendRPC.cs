@@ -12,7 +12,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/RPC/Send RPC Message")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "RPC", "Message", "Send", "Event")]
-
     [Serializable]
     public class InstructionNetworkSendRPC : Instruction
     {
@@ -20,7 +19,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         {
             Server,
             AllClients,
-            Broadcast
+            Broadcast,
         }
 
         [SerializeField]
@@ -60,15 +59,33 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             switch (m_Target)
             {
                 case SendTarget.Server:
-                    NetworkRPCManager.Instance.SendToServer(channel, eventName, stringData, intData, floatData);
+                    NetworkRPCManager.Instance.SendToServer(
+                        channel,
+                        eventName,
+                        stringData,
+                        intData,
+                        floatData
+                    );
                     break;
 
                 case SendTarget.AllClients:
-                    NetworkRPCManager.Instance.SendToAllClients(channel, eventName, stringData, intData, floatData);
+                    NetworkRPCManager.Instance.SendToAllClients(
+                        channel,
+                        eventName,
+                        stringData,
+                        intData,
+                        floatData
+                    );
                     break;
 
                 case SendTarget.Broadcast:
-                    NetworkRPCManager.Instance.RequestBroadcast(channel, eventName, stringData, intData, floatData);
+                    NetworkRPCManager.Instance.RequestBroadcast(
+                        channel,
+                        eventName,
+                        stringData,
+                        intData,
+                        floatData
+                    );
                     break;
             }
 

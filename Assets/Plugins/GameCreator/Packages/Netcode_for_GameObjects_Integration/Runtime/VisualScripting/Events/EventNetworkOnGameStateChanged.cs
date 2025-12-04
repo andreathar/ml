@@ -12,15 +12,17 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Game State/On Game State Changed")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "State", "Lobby", "Playing", "Game")]
-
     [Serializable]
     public class EventNetworkOnGameStateChanged : TriggerEvent
     {
         [SerializeField]
         [Tooltip("Only trigger for specific state (None = any state)")]
-        private NetworkGameStateManager.GameState m_FilterState = NetworkGameStateManager.GameState.None;
+        private NetworkGameStateManager.GameState m_FilterState = NetworkGameStateManager
+            .GameState
+            .None;
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         protected internal override void OnEnable(Trigger trigger)
         {
@@ -35,10 +37,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             NetworkGameStateManager.EventStateChanged -= OnStateChanged;
         }
 
-        private void OnStateChanged(NetworkGameStateManager.GameState oldState, NetworkGameStateManager.GameState newState)
+        private void OnStateChanged(
+            NetworkGameStateManager.GameState oldState,
+            NetworkGameStateManager.GameState newState
+        )
         {
             // Filter if specific state requested
-            if (m_FilterState != NetworkGameStateManager.GameState.None && newState != m_FilterState)
+            if (
+                m_FilterState != NetworkGameStateManager.GameState.None
+                && newState != m_FilterState
+            )
                 return;
 
             _ = this.m_Trigger.Execute(this.m_Args);

@@ -7,10 +7,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Local Player Position")]
     [Category("Network/Network Local Player Position")]
-
     [Description("Returns the world position of the local client's NetworkCharacter")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
-
     [Serializable]
     public class GetPositionNetworkLocalPlayer : PropertyTypeGetPosition
     {
@@ -38,9 +36,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             return transform != null ? transform.position : Vector3.zero;
         }
 
-        public static PropertyGetPosition Create => new PropertyGetPosition(
-            new GetPositionNetworkLocalPlayer()
-        );
+        public static PropertyGetPosition Create =>
+            new PropertyGetPosition(new GetPositionNetworkLocalPlayer());
 
         public override string String => "Network Local Player";
 
@@ -49,10 +46,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             get
             {
                 // In editor, find any character marked as player
-                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(FindObjectsSortMode.None);
+                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(
+                    FindObjectsSortMode.None
+                );
                 foreach (Character instance in instances)
                 {
-                    if (instance.IsPlayer) return instance.transform.position;
+                    if (instance.IsPlayer)
+                        return instance.transform.position;
                 }
 
                 return Vector3.zero;

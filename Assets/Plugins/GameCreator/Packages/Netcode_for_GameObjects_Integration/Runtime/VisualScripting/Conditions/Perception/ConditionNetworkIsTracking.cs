@@ -11,7 +11,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Perception/Is Network Tracking")]
     [Image(typeof(GameCreator.Runtime.Perception.IconEye), ColorTheme.Type.Blue)]
     [Keywords("Network", "Multiplayer", "Perception", "Track", "Target", "Check")]
-
     [Serializable]
     public class ConditionNetworkIsTracking : Condition
     {
@@ -32,13 +31,16 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         protected override bool Run(Args args)
         {
             var perceptionGO = m_Perception.Get(args);
-            if (perceptionGO == null) return false;
+            if (perceptionGO == null)
+                return false;
 
             var networkPerception = perceptionGO.GetComponent<NetworkPerception>();
-            if (networkPerception == null) return false;
+            if (networkPerception == null)
+                return false;
 
             var target = m_Target.Get(args);
-            if (target == null) return false;
+            if (target == null)
+                return false;
 
             return networkPerception.IsTracking(target);
         }

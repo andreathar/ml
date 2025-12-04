@@ -9,11 +9,20 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Version(1, 0, 0)]
     [Title("On Network Evidence Noticed")]
-    [Description("Triggered when a networked Perception notices evidence (tampering detected). Can be placed ANYWHERE in the scene.")]
+    [Description(
+        "Triggered when a networked Perception notices evidence (tampering detected). Can be placed ANYWHERE in the scene."
+    )]
     [Category("Network/Perception/On Network Evidence Noticed")]
     [Image(typeof(GameCreator.Runtime.Perception.IconEvidence), ColorTheme.Type.Red)]
-    [Keywords("Network", "Multiplayer", "Perception", "Evidence", "Notice", "Tamper", "Investigate")]
-
+    [Keywords(
+        "Network",
+        "Multiplayer",
+        "Perception",
+        "Evidence",
+        "Notice",
+        "Tamper",
+        "Investigate"
+    )]
     [Serializable]
     public class EventNetworkOnEvidenceNoticed : TriggerEvent
     {
@@ -27,7 +36,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Args m_Args;
+        [NonSerialized]
+        private Args m_Args;
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
@@ -49,20 +59,26 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 
         private void OnEvidenceNoticed(Perception perception, Evidence evidence)
         {
-            if (perception == null) return;
+            if (perception == null)
+                return;
 
             // Filter by perception
-            if (!m_Perception.Match(perception.gameObject, m_Args)) return;
+            if (!m_Perception.Match(perception.gameObject, m_Args))
+                return;
 
             // Filter by evidence
-            if (evidence != null && !m_Evidence.Match(evidence.gameObject, m_Args)) return;
+            if (evidence != null && !m_Evidence.Match(evidence.gameObject, m_Args))
+                return;
 
-            Debug.Log($"[EventNetworkOnEvidenceNoticed] Triggered: {perception.name} noticed evidence {evidence?.name ?? "null"}");
+            Debug.Log(
+                $"[EventNetworkOnEvidenceNoticed] Triggered: {perception.name} noticed evidence {evidence?.name ?? "null"}"
+            );
 
             // Set perception as Self, evidence as Target
-            var args = evidence != null
-                ? new Args(perception.gameObject, evidence.gameObject)
-                : new Args(perception.gameObject);
+            var args =
+                evidence != null
+                    ? new Args(perception.gameObject, evidence.gameObject)
+                    : new Args(perception.gameObject);
 
             _ = m_Trigger.Execute(args);
         }

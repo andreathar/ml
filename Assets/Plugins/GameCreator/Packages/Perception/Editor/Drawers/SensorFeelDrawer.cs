@@ -18,35 +18,35 @@ namespace GameCreator.Editor.Perception
 
             PropertyField fieldUpdate = new PropertyField(update);
             PropertyField fieldInterval = new PropertyField(interval);
-            
+
             content.Add(fieldUpdate);
             content.Add(fieldInterval);
-            
+
             fieldUpdate.RegisterValueChangeCallback(changeEvent =>
             {
                 int updateMode = changeEvent.changedProperty.enumValueIndex;
-                fieldInterval.style.display = updateMode == (int) UpdateMode.Interval
+                fieldInterval.style.display =
+                    updateMode == (int)UpdateMode.Interval ? DisplayStyle.Flex : DisplayStyle.None;
+            });
+
+            fieldInterval.style.display =
+                update.enumValueIndex == (int)UpdateMode.Interval
                     ? DisplayStyle.Flex
                     : DisplayStyle.None;
-            });
-            
-            fieldInterval.style.display = update.enumValueIndex == (int) UpdateMode.Interval
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
-            
+
             SerializedProperty detection = property.FindPropertyRelative("m_DetectionSpeed");
             SerializedProperty radius = property.FindPropertyRelative("m_Radius");
             SerializedProperty layerMask = property.FindPropertyRelative("m_LayerMask");
-            
+
             PropertyField fieldDetection = new PropertyField(detection);
             PropertyField fieldRadius = new PropertyField(radius);
             PropertyField fieldLayerMask = new PropertyField(layerMask);
-            
+
             content.Add(new SpaceSmall());
             content.Add(fieldDetection);
             content.Add(fieldRadius);
             content.Add(fieldLayerMask);
-            
+
             return content;
         }
     }

@@ -13,7 +13,6 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
     [Category("Network/Scene/Load Network Scene")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Green)]
     [Keywords("Network", "Multiplayer", "Scene", "Load", "Level")]
-
     [Serializable]
     public class InstructionNetworkLoadScene : Instruction
     {
@@ -21,7 +20,10 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         private PropertyGetString m_SceneName = new PropertyGetString("Game");
 
         [SerializeField]
-        private UnityEngine.SceneManagement.LoadSceneMode m_LoadMode = UnityEngine.SceneManagement.LoadSceneMode.Single;
+        private UnityEngine.SceneManagement.LoadSceneMode m_LoadMode = UnityEngine
+            .SceneManagement
+            .LoadSceneMode
+            .Single;
 
         public override string Title => $"Load Network Scene '{m_SceneName}'";
 
