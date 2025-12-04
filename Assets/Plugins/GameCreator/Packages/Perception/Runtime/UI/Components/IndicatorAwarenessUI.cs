@@ -10,59 +10,79 @@ namespace GameCreator.Runtime.Perception.UnityUI
 {
     [AddComponentMenu("Game Creator/UI/Perception/Indicator Awareness UI")]
     [Icon(RuntimePaths.PACKAGES + "Perception/Editor/Gizmos/GizmoAwarenessUI.png")]
-
     [DefaultExecutionOrder(ApplicationManager.EXECUTION_ORDER_LAST_LATER)]
-
     [Serializable]
     public class IndicatorAwarenessUI : MonoBehaviour
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
 
         [UnityEditor.InitializeOnEnterPlayMode]
         private static void OnEnterPlayMode()
         {
             ListPerceptions.Clear();
         }
-
-        #endif
+#endif
 
         private static readonly List<ISpatialHash> ListPerceptions = new List<ISpatialHash>();
 
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
 
-        [SerializeField] private PropertyGetGameObject m_Camera = GetGameObjectCameraMain.Create;
+        [SerializeField]
+        private PropertyGetGameObject m_Camera = GetGameObjectCameraMain.Create;
 
-        [SerializeField] private PropertyGetGameObject m_Target = GetGameObjectPlayer.Create();
-        [SerializeField] private PropertyGetDecimal m_Radius = GetDecimalDecimal.Create(15f);
+        [SerializeField]
+        private PropertyGetGameObject m_Target = GetGameObjectPlayer.Create();
 
-        [SerializeField] private PropertyGetColor m_ColorNone = GetColorColorsWhite.Create;
-        [SerializeField] private PropertyGetColor m_ColorSuspicious = GetColorColorsYellow.Create;
-        [SerializeField] private PropertyGetColor m_ColorAlert = GetColorColorsYellow.Create;
-        [SerializeField] private PropertyGetColor m_ColorAware = GetColorColorsRed.Create;
+        [SerializeField]
+        private PropertyGetDecimal m_Radius = GetDecimalDecimal.Create(15f);
 
-        [SerializeField] private GameObject m_Prefab;
-        [SerializeField] private RectTransform m_Content;
+        [SerializeField]
+        private PropertyGetColor m_ColorNone = GetColorColorsWhite.Create;
 
-        [SerializeField] private bool m_KeepInBounds;
-        [SerializeField] private ConditionList m_Filter = new ConditionList();
+        [SerializeField]
+        private PropertyGetColor m_ColorSuspicious = GetColorColorsYellow.Create;
+
+        [SerializeField]
+        private PropertyGetColor m_ColorAlert = GetColorColorsYellow.Create;
+
+        [SerializeField]
+        private PropertyGetColor m_ColorAware = GetColorColorsRed.Create;
+
+        [SerializeField]
+        private GameObject m_Prefab;
+
+        [SerializeField]
+        private RectTransform m_Content;
+
+        [SerializeField]
+        private bool m_KeepInBounds;
+
+        [SerializeField]
+        private ConditionList m_Filter = new ConditionList();
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Camera m_CameraCache;
-        [NonSerialized] private Canvas m_Canvas;
+        [NonSerialized]
+        private Camera m_CameraCache;
 
-        [NonSerialized] private Args m_ArgsComponent;
-        [NonSerialized] private Args m_ArgsTarget;
+        [NonSerialized]
+        private Canvas m_Canvas;
 
-        [NonSerialized] private readonly Vector3[] m_ContentCorners = new Vector3[4];
+        [NonSerialized]
+        private Args m_ArgsComponent;
+
+        [NonSerialized]
+        private Args m_ArgsTarget;
+
+        [NonSerialized]
+        private readonly Vector3[] m_ContentCorners = new Vector3[4];
 
         // INITIALIZERS: --------------------------------------------------------------------------
 
         private void Awake()
         {
-            this.m_Canvas = this.m_Content != null
-                ? this.m_Content.GetComponentInParent<Canvas>()
-                : null;
+            this.m_Canvas =
+                this.m_Content != null ? this.m_Content.GetComponentInParent<Canvas>() : null;
 
             this.m_ArgsComponent = new Args(this.gameObject);
         }
@@ -77,10 +97,12 @@ namespace GameCreator.Runtime.Perception.UnityUI
 
         private void LateUpdate()
         {
-            if (this.m_Canvas == null) return;
+            if (this.m_Canvas == null)
+                return;
 
             this.m_CameraCache = this.m_Camera.Get<Camera>(this.gameObject);
-            if (this.m_CameraCache == null) return;
+            if (this.m_CameraCache == null)
+                return;
 
             GameObject target = this.m_Target.Get(this.m_ArgsComponent);
             if (target != this.m_ArgsTarget.Self)
@@ -91,7 +113,7 @@ namespace GameCreator.Runtime.Perception.UnityUI
             ListPerceptions.Clear();
             if (target != null)
             {
-                float radius = (float) this.m_Radius.Get(this.m_ArgsComponent);
+                float radius = (float)this.m_Radius.Get(this.m_ArgsComponent);
                 SpatialHashPerception.Find(target.transform.position, radius, ListPerceptions);
             }
 
@@ -113,7 +135,11 @@ namespace GameCreator.Runtime.Perception.UnityUI
 
             ListPerceptions.Sort(this.SortByDistance);
 
-            RectTransformUtils.RebuildChildren(this.m_Content, this.m_Prefab, ListPerceptions.Count);
+            RectTransformUtils.RebuildChildren(
+                this.m_Content,
+                this.m_Prefab,
+                ListPerceptions.Count
+            );
             this.m_Content.GetLocalCorners(this.m_ContentCorners);
 
             for (int i = 0; i < ListPerceptions.Count; i++)
@@ -122,7 +148,8 @@ namespace GameCreator.Runtime.Perception.UnityUI
                 Perception perception = spatialHash as Perception;
                 Character character = perception.Get<Character>();
 
-                if (perception == null) continue;
+                if (perception == null)
+                    continue;
 
                 Vector3 instancePosition = spatialHash.Position;
                 if (character != null)
@@ -137,10 +164,15 @@ namespace GameCreator.Runtime.Perception.UnityUI
                 if (spotPositionRelative.z < 0f)
                 {
                     spotPositionRelative.z *= -1f;
-                    instancePosition = this.m_CameraCache.transform.TransformPoint(spotPositionRelative);
+                    instancePosition = this.m_CameraCache.transform.TransformPoint(
+                        spotPositionRelative
+                    );
                 }
 
-                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(this.m_CameraCache, instancePosition);
+                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(
+                    this.m_CameraCache,
+                    instancePosition
+                );
 
                 screenPoint.x = Mathf.Clamp(screenPoint.x, 0f, this.m_CameraCache.pixelWidth);
                 screenPoint.y = Mathf.Clamp(screenPoint.y, 0f, this.m_CameraCache.pixelHeight);
@@ -209,14 +241,19 @@ namespace GameCreator.Runtime.Perception.UnityUI
                 }
                 else
                 {
-                    if (itemBounds.min.x < contentCornerTopLeft.x) onScreen = false;
-                    if (itemBounds.max.y > contentCornerTopLeft.y) onScreen = false;
+                    if (itemBounds.min.x < contentCornerTopLeft.x)
+                        onScreen = false;
+                    if (itemBounds.max.y > contentCornerTopLeft.y)
+                        onScreen = false;
 
-                    if (itemBounds.min.y < contentCornerBottomRight.y) onScreen = false;
-                    if (itemBounds.max.x > contentCornerBottomRight.x) onScreen = false;
+                    if (itemBounds.min.y < contentCornerBottomRight.y)
+                        onScreen = false;
+                    if (itemBounds.max.x > contentCornerBottomRight.x)
+                        onScreen = false;
                 }
 
-                IndicatorAwarenessItemUI itemIndicator = itemInstance.Get<IndicatorAwarenessItemUI>();
+                IndicatorAwarenessItemUI itemIndicator =
+                    itemInstance.Get<IndicatorAwarenessItemUI>();
 
                 Vector2 screenCenter = new Vector2(
                     this.m_CameraCache.pixelWidth * 0.5f,
@@ -235,14 +272,10 @@ namespace GameCreator.Runtime.Perception.UnityUI
                         AwareStage.Suspicious => this.m_ColorSuspicious.Get(this.m_ArgsComponent),
                         AwareStage.Alert => this.m_ColorAlert.Get(this.m_ArgsComponent),
                         AwareStage.Aware => this.m_ColorAware.Get(this.m_ArgsComponent),
-                        _ => throw new ArgumentOutOfRangeException()
+                        _ => throw new ArgumentOutOfRangeException(),
                     };
 
-                    itemIndicator.Refresh(
-                        awareness,
-                        color,
-                        onScreen, rotation
-                    );
+                    itemIndicator.Refresh(awareness, color, onScreen, rotation);
                 }
 
                 itemInstance.SetActive(this.m_KeepInBounds || onScreen);

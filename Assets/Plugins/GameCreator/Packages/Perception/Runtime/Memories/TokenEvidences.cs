@@ -9,9 +9,10 @@ namespace GameCreator.Runtime.Perception
     public class TokenEvidences : Token
     {
         // MEMBERS: -------------------------------------------------------------------------------
-        
-        [SerializeField] private string[] m_List;
-        
+
+        [SerializeField]
+        private string[] m_List;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public string[] List => this.m_List;
@@ -29,7 +30,8 @@ namespace GameCreator.Runtime.Perception
             List<string> evidences = new List<string>();
             foreach (string evidenceTag in perception.EvidenceTags)
             {
-                if (!perception.GetEvidence(evidenceTag)) continue;
+                if (!perception.GetEvidence(evidenceTag))
+                    continue;
                 evidences.Add(evidenceTag);
             }
 

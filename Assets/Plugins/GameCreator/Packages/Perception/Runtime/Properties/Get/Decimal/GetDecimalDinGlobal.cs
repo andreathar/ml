@@ -5,10 +5,8 @@ namespace GameCreator.Runtime.Perception
 {
     [Title("Din Global")]
     [Category("Perception/Din Global")]
-    
     [Description("The global ambient noise intensity")]
     [Image(typeof(IconStorm), ColorTheme.Type.Red)]
-
     [Serializable]
     public class GetDecimalDinGlobal : PropertyTypeGetDecimal
     {
@@ -16,7 +14,7 @@ namespace GameCreator.Runtime.Perception
         {
             return HearManager.Instance.GlobalDin;
         }
-        
+
         public override string String => "Global Din";
     }
 }

@@ -9,7 +9,8 @@ namespace GameCreator.Runtime.Perception
     {
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
 
-        [SerializeReference] private TSensor[] m_Sensors =
+        [SerializeReference]
+        private TSensor[] m_Sensors =
         {
             new SensorSee(),
             new SensorFeel(),
@@ -18,24 +19,28 @@ namespace GameCreator.Runtime.Perception
         };
 
         // PROPERTIES: ----------------------------------------------------------------------------
-        
+
         public override int Length => this.m_Sensors.Length;
-        
-        [field: NonSerialized] private Perception Perception { get; set; }
-        
+
+        [field: NonSerialized]
+        private Perception Perception { get; set; }
+
         // PUBLIC METHODS: ------------------------------------------------------------------------
-        
-        public T Get<T>() where T : TSensor
+
+        public T Get<T>()
+            where T : TSensor
         {
             foreach (TSensor sensor in this.m_Sensors)
             {
-                if (!sensor.IsEnabled) continue;
-                if (sensor is T sensorType) return sensorType;
+                if (!sensor.IsEnabled)
+                    continue;
+                if (sensor is T sensorType)
+                    return sensorType;
             }
-            
+
             return null;
         }
-        
+
         // INITIALIZERS: --------------------------------------------------------------------------
 
         public void Enable(Perception perception)
@@ -57,7 +62,7 @@ namespace GameCreator.Runtime.Perception
         }
 
         // UPDATE METHODS: ------------------------------------------------------------------------
-        
+
         public void Update()
         {
             foreach (TSensor sense in this.m_Sensors)
@@ -73,7 +78,7 @@ namespace GameCreator.Runtime.Perception
                 sense.FixedUpdate();
             }
         }
-        
+
         // GIZMOS: --------------------------------------------------------------------------------
 
         public void DrawGizmos(Perception perception)

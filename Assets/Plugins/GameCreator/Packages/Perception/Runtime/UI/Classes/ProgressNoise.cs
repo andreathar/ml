@@ -7,9 +7,10 @@ namespace GameCreator.Runtime.Perception.UnityUI
     public class ProgressNoise : TProgressSection
     {
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
-        
-        [SerializeField] private GameObject m_ActiveIfAudible;
-        
+
+        [SerializeField]
+        private GameObject m_ActiveIfAudible;
+
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
         public override void Refresh(float ratio, bool above)
@@ -17,7 +18,8 @@ namespace GameCreator.Runtime.Perception.UnityUI
             base.Refresh(ratio, above);
 
             bool audible = ratio > float.Epsilon && above;
-            if (this.m_ActiveIfAudible != null) this.m_ActiveIfAudible.SetActive(audible);
+            if (this.m_ActiveIfAudible != null)
+                this.m_ActiveIfAudible.SetActive(audible);
         }
     }
 }

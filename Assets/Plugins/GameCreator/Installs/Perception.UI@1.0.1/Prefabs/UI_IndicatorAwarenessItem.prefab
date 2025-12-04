@@ -105,6 +105,10 @@ MonoBehaviour:
     m_Left: {fileID: 0}
     m_Top: {fileID: 0}
     m_Bottom: {fileID: 0}
+    m_Percent:
+      m_Type: 0
+      m_Text: {fileID: 0}
+      m_TMP: {fileID: 0}
 --- !u!1 &1472192200381914761
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5906858145315246438}
   m_Layer: 0
   m_Name: NetworkSceneCoordinator
-  m_TagString: Untagged
+  m_TagString: Managers
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -48,7 +48,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   m_LobbySceneName: Lobby
   m_DefaultGameSceneName: Game
-  m_MinLoadingTime: 1
+  m_MinLoadingTime: 2
   m_UseAsyncLoading: 1
 --- !u!114 &5906858145315246438
 MonoBehaviour:

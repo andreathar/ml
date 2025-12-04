@@ -1,22 +1,21 @@
 using System;
-using UnityEngine;
 using GameCreator.Runtime.Common;
+using UnityEngine;
 
 namespace GameCreator.Runtime.Perception
 {
     [Title("Evidence")]
     [Category("Perception/Evidence")]
-    
     [Image(typeof(IconEvidence), ColorTheme.Type.Green)]
     [Description("Reference to a Evidence game object")]
-
-    [Serializable] [HideLabelsInEditor]
+    [Serializable]
+    [HideLabelsInEditor]
     public class GetGameObjectEvidence : PropertyTypeGetGameObject
     {
-        [SerializeField] private Evidence m_Evidence;
+        [SerializeField]
+        private Evidence m_Evidence;
 
-        public GetGameObjectEvidence()
-        { }
+        public GetGameObjectEvidence() { }
 
         public GetGameObjectEvidence(Evidence evidence)
         {
@@ -33,23 +32,18 @@ namespace GameCreator.Runtime.Perception
             return this.m_Evidence != null ? this.m_Evidence.gameObject : null;
         }
 
-        public static PropertyGetGameObject Create => new PropertyGetGameObject(
-            new GetGameObjectEvidence()
-        );
+        public static PropertyGetGameObject Create =>
+            new PropertyGetGameObject(new GetGameObjectEvidence());
 
         public static PropertyGetGameObject CreateWith(Evidence evidence)
         {
-            return new PropertyGetGameObject(
-                new GetGameObjectEvidence(evidence)
-            );
+            return new PropertyGetGameObject(new GetGameObjectEvidence(evidence));
         }
 
-        public override string String => this.m_Evidence != null
-            ? this.m_Evidence.gameObject.name
-            : "(none)";
+        public override string String =>
+            this.m_Evidence != null ? this.m_Evidence.gameObject.name : "(none)";
 
-        public override GameObject EditorValue => this.m_Evidence != null
-            ? this.m_Evidence.gameObject 
-            : null;
+        public override GameObject EditorValue =>
+            this.m_Evidence != null ? this.m_Evidence.gameObject : null;
     }
 }

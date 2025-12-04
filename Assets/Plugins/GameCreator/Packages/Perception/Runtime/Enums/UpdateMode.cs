@@ -4,6 +4,6 @@ namespace GameCreator.Runtime.Perception
     {
         EveryFrame,
         Interval,
-        Manual
+        Manual,
     }
 }

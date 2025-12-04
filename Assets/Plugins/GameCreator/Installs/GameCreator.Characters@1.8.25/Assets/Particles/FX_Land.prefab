@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8894929110429428713}
   m_Layer: 0
   m_Name: Dust
-  m_TagString: Untagged
+  m_TagString: Particles
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4905,7 +4905,7 @@ GameObject:
   - component: {fileID: 8894929110622384771}
   m_Layer: 0
   m_Name: FX_Land
-  m_TagString: Untagged
+  m_TagString: VisualEffects
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
