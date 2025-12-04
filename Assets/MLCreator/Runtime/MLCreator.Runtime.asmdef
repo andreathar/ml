@@ -1,0 +1,21 @@
+{
+    "name": "MLCreator.Runtime",
+    "rootNamespace": "MLCreator.Runtime",
+    "references": [
+        "GameCreator.Runtime.Common",
+        "GameCreator.Runtime.Characters",
+        "GameCreator.Runtime.VisualScripting",
+        "GameCreator.Runtime.Variables",
+        "GameCreator.Runtime.Perception",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

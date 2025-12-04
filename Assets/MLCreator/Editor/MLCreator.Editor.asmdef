@@ -1,0 +1,22 @@
+{
+    "name": "MLCreator.Editor",
+    "rootNamespace": "MLCreator.Editor",
+    "references": [
+        "MLCreator.Runtime",
+        "GameCreator.Editor.Common",
+        "GameCreator.Editor.Characters",
+        "GameCreator.Editor.VisualScripting",
+        "GameCreator.Runtime.Common"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
