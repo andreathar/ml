@@ -1,22 +1,21 @@
 using System;
-using UnityEngine;
 using GameCreator.Runtime.Common;
+using UnityEngine;
 
 namespace GameCreator.Runtime.Characters
 {
     [Title("Character")]
     [Category("Characters/Character")]
-    
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow)]
     [Description("Reference to a Character game object")]
-
-    [Serializable] [HideLabelsInEditor]
+    [Serializable]
+    [HideLabelsInEditor]
     public class GetGameObjectCharactersInstance : PropertyTypeGetGameObject
     {
-        [SerializeField] private Character m_Character;
+        [SerializeField]
+        private Character m_Character;
 
-        public GetGameObjectCharactersInstance()
-        { }
+        public GetGameObjectCharactersInstance() { }
 
         public GetGameObjectCharactersInstance(Character character)
         {
@@ -33,23 +32,18 @@ namespace GameCreator.Runtime.Characters
             return this.m_Character != null ? this.m_Character.gameObject : null;
         }
 
-        public static PropertyGetGameObject Create => new PropertyGetGameObject(
-            new GetGameObjectCharactersInstance()
-        );
+        public static PropertyGetGameObject Create =>
+            new PropertyGetGameObject(new GetGameObjectCharactersInstance());
 
         public static PropertyGetGameObject CreateWith(Character character)
         {
-            return new PropertyGetGameObject(
-                new GetGameObjectCharactersInstance(character)
-            );
+            return new PropertyGetGameObject(new GetGameObjectCharactersInstance(character));
         }
 
-        public override string String => this.m_Character != null
-            ? this.m_Character.gameObject.name
-            : "(none)";
+        public override string String =>
+            this.m_Character != null ? this.m_Character.gameObject.name : "(none)";
 
-        public override GameObject EditorValue => this.m_Character != null
-            ? this.m_Character.gameObject 
-            : null;
+        public override GameObject EditorValue =>
+            this.m_Character != null ? this.m_Character.gameObject : null;
     }
 }

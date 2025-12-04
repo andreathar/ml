@@ -13,11 +13,11 @@ namespace GameCreator.Runtime.Characters
 
         protected float m_MinRadius;
         protected float m_MaxRadius;
-        
+
         // PROPERTIES: ----------------------------------------------------------------------------
-        
+
         public Transform Target => this.m_Target;
-        
+
         public float MinRadius => this.m_MinRadius;
         public float MaxRadius => this.m_MaxRadius;
 
@@ -30,9 +30,8 @@ namespace GameCreator.Runtime.Characters
             this.m_ActiveFollow = true;
             this.m_Target = target;
 
-            this.m_LastKnownPosition = this.m_Target != null
-                ? this.m_Target.position
-                : this.Transform.position;
+            this.m_LastKnownPosition =
+                this.m_Target != null ? this.m_Target.position : this.Transform.position;
 
             this.m_IsFollowing = true;
 
@@ -46,7 +45,7 @@ namespace GameCreator.Runtime.Characters
         {
             Character.MovementType movementType = base.Stop(success);
             this.m_ActiveFollow = false;
-            
+
             return movementType;
         }
 
@@ -54,14 +53,15 @@ namespace GameCreator.Runtime.Characters
 
         public override Character.MovementType Update()
         {
-            if (this.m_Target) this.m_LastKnownPosition = this.m_Target.position;
+            if (this.m_Target)
+                this.m_LastKnownPosition = this.m_Target.position;
 
             float distance = Vector3.Distance(this.Transform.position, this.m_LastKnownPosition);
             bool shouldStop = (
-                !this.m_Target ||
-                !this.m_ActiveFollow ||
-                (this.m_IsFollowing && distance <= this.m_MinRadius) ||
-                (!this.m_IsFollowing && distance <= this.m_MaxRadius)
+                !this.m_Target
+                || !this.m_ActiveFollow
+                || (this.m_IsFollowing && distance <= this.m_MinRadius)
+                || (!this.m_IsFollowing && distance <= this.m_MaxRadius)
             );
 
             Vector3 direction = this.m_Target.position - this.Transform.position;

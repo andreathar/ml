@@ -6,24 +6,32 @@ namespace GameCreator.Runtime.Console
 {
     internal class ConsoleUI : MonoBehaviour
     {
-        private const HideFlags HIDE_FLAGS = HideFlags.HideInHierarchy |
-                                             HideFlags.HideInInspector;
-        
-        // EXPOSED MEMBERS: -----------------------------------------------------------------------
-        
-        [SerializeField] private GameObject m_PrefabLineSubmit;
-        [SerializeField] private GameObject m_PrefabLineResponse;
-        [SerializeField] private GameObject m_PrefabLineError;
-        
-        [SerializeField] private GameObject m_Panel;
+        private const HideFlags HIDE_FLAGS = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
 
-        [SerializeField] private InputField m_Input;
-        [SerializeField] private ScrollRect m_Scroll;
-        
+        // EXPOSED MEMBERS: -----------------------------------------------------------------------
+
+        [SerializeField]
+        private GameObject m_PrefabLineSubmit;
+
+        [SerializeField]
+        private GameObject m_PrefabLineResponse;
+
+        [SerializeField]
+        private GameObject m_PrefabLineError;
+
+        [SerializeField]
+        private GameObject m_Panel;
+
+        [SerializeField]
+        private InputField m_Input;
+
+        [SerializeField]
+        private ScrollRect m_Scroll;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public bool IsOpen => this.m_Panel.activeInHierarchy;
-        
+
         // INITIALIZERS: --------------------------------------------------------------------------
 
         private void Awake()
@@ -35,16 +43,18 @@ namespace GameCreator.Runtime.Console
 
         public void Submit()
         {
-            if (!this.IsOpen) return;
-            
+            if (!this.IsOpen)
+                return;
+
             string text = this.m_Input.text;
-            if (string.IsNullOrEmpty(text)) return;
-            
+            if (string.IsNullOrEmpty(text))
+                return;
+
             Input input = new Input(text);
 
             this.Print(input.ToString(), this.m_PrefabLineSubmit);
             this.m_Input.text = string.Empty;
-            
+
             Console.Submit(input);
         }
 
@@ -74,27 +84,26 @@ namespace GameCreator.Runtime.Console
             this.m_Panel.SetActive(true);
             this.m_Input.Select();
         }
-        
+
         // INTERNAL METHODS: ----------------------------------------------------------------------
 
         internal void Print(Output output)
         {
-            GameObject prefab = output.IsError
-                ? this.m_PrefabLineError
-                : this.m_PrefabLineResponse;
-            
+            GameObject prefab = output.IsError ? this.m_PrefabLineError : this.m_PrefabLineResponse;
+
             this.Print(output.Text, prefab);
         }
-        
+
         // PRIVATE METHODS: -----------------------------------------------------------------------
 
         private void Print(string text, GameObject prefab)
         {
-            if (string.IsNullOrEmpty(text)) return;
+            if (string.IsNullOrEmpty(text))
+                return;
 
             GameObject result = Instantiate(prefab, this.m_Scroll.content);
             result.GetComponent<Text>().text = text;
-            
+
             this.m_Input.Select();
             this.m_Input.ActivateInputField();
 

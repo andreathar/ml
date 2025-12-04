@@ -10,10 +10,8 @@ namespace GameCreator.Runtime.Characters
     [DisallowMultipleComponent]
     [HelpURL("https://docs.gamecreator.io/gamecreator/characters")]
     [DefaultExecutionOrder(ApplicationManager.EXECUTION_ORDER_DEFAULT_EARLIER)]
-    
     [AddComponentMenu("Game Creator/Characters/Character")]
     [Icon(RuntimePaths.GIZMOS + "GizmoCharacter.png")]
-    
     public class Character : MonoBehaviour, ISpatialHash
     {
         public enum MovementType
@@ -26,41 +24,65 @@ namespace GameCreator.Runtime.Characters
         // CONSTANTS: -----------------------------------------------------------------------------
 
         public const float BIG_EPSILON = 0.01f;
-        
+
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
-        
-        [SerializeField] protected bool m_IsPlayer;
-        [SerializeField] protected TimeMode m_Time;
-        
-        [SerializeField] protected Busy m_Busy = new Busy();
-        [SerializeReference] protected CharacterKernel m_Kernel = new CharacterKernel();
-        
-        [SerializeField] protected AnimimGraph m_AnimimGraph = new AnimimGraph();
-        [SerializeField] protected InverseKinematics m_InverseKinematics = new InverseKinematics();
-        
-        [SerializeField] protected Interaction m_Interaction = new Interaction();
-        [SerializeField] protected Footsteps m_Footsteps = new Footsteps();
-        [SerializeField] protected Ragdoll m_Ragdoll = new Ragdoll();
-        [SerializeField] protected Props m_Props = new Props();
-        [SerializeField] protected Combat m_Combat = new Combat();
-        [SerializeField] protected Jump m_Jump = new Jump();
-        [SerializeField] protected Dash m_Dash = new Dash();
-        
+
+        [SerializeField]
+        protected bool m_IsPlayer;
+
+        [SerializeField]
+        protected TimeMode m_Time;
+
+        [SerializeField]
+        protected Busy m_Busy = new Busy();
+
+        [SerializeReference]
+        protected CharacterKernel m_Kernel = new CharacterKernel();
+
+        [SerializeField]
+        protected AnimimGraph m_AnimimGraph = new AnimimGraph();
+
+        [SerializeField]
+        protected InverseKinematics m_InverseKinematics = new InverseKinematics();
+
+        [SerializeField]
+        protected Interaction m_Interaction = new Interaction();
+
+        [SerializeField]
+        protected Footsteps m_Footsteps = new Footsteps();
+
+        [SerializeField]
+        protected Ragdoll m_Ragdoll = new Ragdoll();
+
+        [SerializeField]
+        protected Props m_Props = new Props();
+
+        [SerializeField]
+        protected Combat m_Combat = new Combat();
+
+        [SerializeField]
+        protected Jump m_Jump = new Jump();
+
+        [SerializeField]
+        protected Dash m_Dash = new Dash();
+
         // MEMBERS: -------------------------------------------------------------------------------
-        
-        [NonSerialized] private bool m_IsDead;
-        
+
+        [NonSerialized]
+        private bool m_IsDead;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public Busy Busy => this.m_Busy;
-        
+
         public TimeMode Time
         {
             get => this.m_Time;
             set => this.m_Time = value;
         }
-        
-        [field: NonSerialized] public Args Args { get; private set; }
+
+        [field: NonSerialized]
+        public Args Args { get; private set; }
 
         public bool IsPlayer
         {
@@ -72,8 +94,12 @@ namespace GameCreator.Runtime.Characters
 
                 switch (this.m_IsPlayer)
                 {
-                    case true: this.EventChangeToPlayer?.Invoke(); break;
-                    case false: this.EventChangeToNPC?.Invoke(); break;
+                    case true:
+                        this.EventChangeToPlayer?.Invoke();
+                        break;
+                    case false:
+                        this.EventChangeToNPC?.Invoke();
+                        break;
                 }
             }
         }
@@ -83,13 +109,18 @@ namespace GameCreator.Runtime.Characters
             get => this.m_IsDead;
             set
             {
-                if (this.m_IsDead == value) return;
+                if (this.m_IsDead == value)
+                    return;
                 this.m_IsDead = value;
 
                 switch (this.m_IsDead)
                 {
-                    case true:  this.EventDie?.Invoke(); break;
-                    case false: this.EventRevive?.Invoke(); break;
+                    case true:
+                        this.EventDie?.Invoke();
+                        break;
+                    case false:
+                        this.EventRevive?.Invoke();
+                        break;
                 }
             }
         }
@@ -106,16 +137,22 @@ namespace GameCreator.Runtime.Characters
         public Dash Dash => this.m_Dash;
 
         public PlayableGraph AnimationGraph => this.m_AnimimGraph.Graph;
-        
+
         public StatesOutput States => this.m_AnimimGraph.States;
         public GesturesOutput Gestures => this.m_AnimimGraph.Gestures;
-        
+
         public float RootMotionPosition => this.m_AnimimGraph.RootMotionPosition;
         public float RootMotionRotation => this.m_AnimimGraph.RootMotionRotation;
 
-        public bool CanUseRootMotionPosition { set => this.m_AnimimGraph.UseRootMotionPosition = value; }
-        public bool CanUseRootMotionRotation { set => this.m_AnimimGraph.UseRootMotionRotation = value; }
-        
+        public bool CanUseRootMotionPosition
+        {
+            set => this.m_AnimimGraph.UseRootMotionPosition = value;
+        }
+        public bool CanUseRootMotionRotation
+        {
+            set => this.m_AnimimGraph.UseRootMotionRotation = value;
+        }
+
         public Phases Phases => this.m_AnimimGraph.Phases;
 
         public IUnitPlayer Player => this.m_Kernel?.Player;
@@ -123,7 +160,7 @@ namespace GameCreator.Runtime.Characters
         public IUnitDriver Driver => this.m_Kernel?.Driver;
         public IUnitFacing Facing => this.m_Kernel?.Facing;
         public IUnitAnimim Animim => this.m_Kernel?.Animim;
-        
+
         public Vector3 Eyes
         {
             get
@@ -131,7 +168,8 @@ namespace GameCreator.Runtime.Characters
                 if (this.Animim.Animator != null && this.Animim.Animator.isHuman)
                 {
                     Transform head = this.Animim.Animator.GetBoneTransform(HumanBodyBones.Head);
-                    if (head != null) return head.position;
+                    if (head != null)
+                        return head.position;
                 }
 
                 return this.transform.position + Vector3.up * (this.Motion.Height * 0.5f);
@@ -140,7 +178,7 @@ namespace GameCreator.Runtime.Characters
 
         public Vector3 Crown => this.transform.position + Vector3.up * this.Motion.Height * 0.5f;
         public Vector3 Feet => this.transform.position - Vector3.up * this.Motion.Height * 0.5f;
-        
+
         // EVENTS: --------------------------------------------------------------------------------
 
         public event Action EventEnable;
@@ -149,10 +187,10 @@ namespace GameCreator.Runtime.Characters
 
         public event Action EventBeforeUpdate;
         public event Action EventAfterUpdate;
-        
+
         public event Action EventBeforeLateUpdate;
         public event Action EventAfterLateUpdate;
-        
+
         public event Action EventBeforeFixedUpdate;
         public event Action EventAfterFixedUpdate;
 
@@ -167,15 +205,16 @@ namespace GameCreator.Runtime.Characters
 
         public event Action EventChangeToPlayer;
         public event Action EventChangeToNPC;
-        
+
         // INITIALIZERS: --------------------------------------------------------------------------
 
         protected virtual void Awake()
         {
             this.Args = new Args(this);
-            
-            if (this.IsPlayer) ShortcutPlayer.Change(this.gameObject);
-            
+
+            if (this.IsPlayer)
+                ShortcutPlayer.Change(this.gameObject);
+
             this.m_Busy?.OnStartup(this);
             this.m_Kernel?.OnStartup(this);
             this.m_AnimimGraph?.OnStartup(this);
@@ -187,7 +226,7 @@ namespace GameCreator.Runtime.Characters
             this.m_Combat?.OnStartup(this);
             this.m_Jump?.OnStartup(this);
             this.m_Dash?.OnStartup(this);
-            
+
             SpatialHashCharacters.Insert(this);
         }
 
@@ -216,9 +255,9 @@ namespace GameCreator.Runtime.Characters
             this.m_Combat?.OnDispose(this);
             this.m_Jump?.OnDispose(this);
             this.m_Dash?.OnDispose(this);
-            
+
             SpatialHashCharacters.Remove(this);
-            
+
             this.EventDestroy?.Invoke();
         }
 
@@ -233,7 +272,7 @@ namespace GameCreator.Runtime.Characters
             this.m_Combat?.OnEnable();
             this.m_Jump?.OnEnable();
             this.m_Dash?.OnEnable();
-            
+
             this.EventEnable?.Invoke();
         }
 
@@ -248,7 +287,7 @@ namespace GameCreator.Runtime.Characters
             this.m_Combat?.OnDisable();
             this.m_Jump?.OnDisable();
             this.m_Dash?.OnDisable();
-            
+
             this.EventDisable?.Invoke();
         }
 
@@ -271,10 +310,10 @@ namespace GameCreator.Runtime.Characters
         protected virtual void LateUpdate()
         {
             this.EventBeforeLateUpdate?.Invoke();
-            
+
             this.Combat?.OnLateUpdate();
             this.m_Ragdoll.OnLateUpdate();
-            
+
             this.EventAfterLateUpdate?.Invoke();
         }
 
@@ -291,10 +330,10 @@ namespace GameCreator.Runtime.Characters
 
         protected virtual void OnDrawGizmosSelected()
         {
-            #if UNITY_EDITOR
-            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject)) return;
-            #endif
-            
+#if UNITY_EDITOR
+            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject))
+                return;
+#endif
             this.m_Kernel?.OnDrawGizmos(this);
             this.m_Ragdoll?.OnDrawGizmos(this);
             this.m_Footsteps?.OnDrawGizmos(this);
@@ -314,16 +353,21 @@ namespace GameCreator.Runtime.Characters
         {
             this.EventJump?.Invoke(force);
         }
-        
+
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
         public struct ChangeOptions
         {
-            [NonSerialized] public MaterialSoundsAsset materials;
-            [NonSerialized] public RuntimeAnimatorController controller;
-            [NonSerialized] public Vector3 offset;
+            [NonSerialized]
+            public MaterialSoundsAsset materials;
+
+            [NonSerialized]
+            public RuntimeAnimatorController controller;
+
+            [NonSerialized]
+            public Vector3 offset;
         }
-        
+
         /// <summary>
         /// Change the 3D character model.
         /// </summary>
@@ -332,8 +376,9 @@ namespace GameCreator.Runtime.Characters
         /// <returns>The instance of the new model used</returns>
         public GameObject ChangeModel(GameObject prefab, ChangeOptions options)
         {
-            if (prefab == null) return null;
-            
+            if (prefab == null)
+                return null;
+
             this.EventBeforeChangeModel?.Invoke();
 
             Transform hull = this.Animim.Mannequin;
@@ -348,20 +393,21 @@ namespace GameCreator.Runtime.Characters
                 this.Animim.Mannequin = new GameObject("Mannequin").transform;
                 this.Animim.Mannequin.transform.SetParent(this.transform);
             }
-            
+
             Vector3 position = Vector3.down * (this.Motion.Height * 0.5f);
 
             this.Animim.Mannequin.transform.localPosition = position + options.offset;
             this.Animim.Mannequin.transform.localRotation = Quaternion.identity;
             this.Animim.Mannequin.transform.localScale = Vector3.one;
-            
+
             GameObject model = Instantiate(prefab, this.Animim.Mannequin);
-            
+
             model.name = prefab.name;
 
             Animator modelAnimator = model.GetComponentInChildren<Animator>(true);
-            if (modelAnimator == null) modelAnimator = model.AddComponent<Animator>();
-            
+            if (modelAnimator == null)
+                modelAnimator = model.AddComponent<Animator>();
+
             this.Animim.Animator = modelAnimator;
 
             if (Application.isPlaying)
@@ -370,7 +416,7 @@ namespace GameCreator.Runtime.Characters
                 this.Animim.ApplyMannequinRotation();
                 this.Animim.ApplyMannequinScale();
             }
-            
+
             if (modelAnimator != null && options.controller != null)
             {
                 modelAnimator.runtimeAnimatorController = options.controller;
@@ -380,20 +426,20 @@ namespace GameCreator.Runtime.Characters
             {
                 this.m_Footsteps.ChangeFootstepSounds(options.materials);
             }
-            
+
             this.EventAfterChangeModel?.Invoke();
             return model;
         }
-        
+
         // VALIDATION: ----------------------------------------------------------------------------
-        
+
         private void OnValidate()
         {
             this.m_Busy ??= new Busy();
             this.m_Kernel ??= new CharacterKernel();
             this.m_AnimimGraph ??= new AnimimGraph();
             this.m_InverseKinematics ??= new InverseKinematics();
-            
+
             this.m_Footsteps ??= new Footsteps();
             this.m_Ragdoll ??= new Ragdoll();
             this.m_Props ??= new Props();
@@ -402,5 +448,5 @@ namespace GameCreator.Runtime.Characters
 
             this.m_Interaction ??= new Interaction();
         }
-    }   
+    }
 }

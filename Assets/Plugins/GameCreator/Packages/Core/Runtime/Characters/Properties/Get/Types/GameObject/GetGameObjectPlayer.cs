@@ -6,25 +6,19 @@ namespace GameCreator.Runtime.Characters
 {
     [Title("Player")]
     [Category("Characters/Player")]
-    
     [Description("Game Object that represents the Player")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
-
     [Serializable]
     public class GetGameObjectPlayer : PropertyTypeGetGameObject
     {
         public override GameObject Get(Args args)
         {
-            return ShortcutPlayer.Instance != null 
-                ? ShortcutPlayer.Instance.gameObject
-                : null;
+            return ShortcutPlayer.Instance != null ? ShortcutPlayer.Instance.gameObject : null;
         }
 
         public override GameObject Get(GameObject gameObject)
         {
-            return ShortcutPlayer.Instance != null 
-                ? ShortcutPlayer.Instance.gameObject
-                : null;
+            return ShortcutPlayer.Instance != null ? ShortcutPlayer.Instance.gameObject : null;
         }
 
         public static PropertyGetGameObject Create()
@@ -34,15 +28,18 @@ namespace GameCreator.Runtime.Characters
         }
 
         public override string String => "Player";
-        
+
         public override GameObject EditorValue
         {
             get
             {
-                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(FindObjectsSortMode.None);
+                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(
+                    FindObjectsSortMode.None
+                );
                 foreach (Character instance in instances)
                 {
-                    if (instance.IsPlayer) return instance.gameObject;
+                    if (instance.IsPlayer)
+                        return instance.gameObject;
                 }
 
                 return null;

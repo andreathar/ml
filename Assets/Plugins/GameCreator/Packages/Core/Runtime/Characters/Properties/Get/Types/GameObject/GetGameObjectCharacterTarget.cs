@@ -7,15 +7,14 @@ namespace GameCreator.Runtime.Characters
 {
     [Title("Character Target")]
     [Category("Characters/Combat/Character Target")]
-    
     [Description("Game Object targeted by the specified Character")]
     [Image(typeof(IconBullsEye), ColorTheme.Type.Yellow)]
-
     [Serializable]
     public class GetGameObjectCharacterTarget : PropertyTypeGetGameObject
     {
-        [SerializeField] private PropertyGetGameObject m_From = GetGameObjectPlayer.Create();
-        
+        [SerializeField]
+        private PropertyGetGameObject m_From = GetGameObjectPlayer.Create();
+
         public override GameObject Get(Args args)
         {
             Character character = this.m_From.Get<Character>(args);

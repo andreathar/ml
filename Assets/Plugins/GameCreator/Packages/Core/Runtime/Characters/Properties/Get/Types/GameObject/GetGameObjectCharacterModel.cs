@@ -6,15 +6,14 @@ namespace GameCreator.Runtime.Characters
 {
     [Title("Character Model")]
     [Category("Characters/Character Model")]
-    
     [Description("Game Object that represents the model of a Character (under Mannequin)")]
     [Image(typeof(IconCharacter), ColorTheme.Type.Yellow, typeof(OverlayArrowDown))]
-
     [Serializable]
     public class GetGameObjectCharacterModel : PropertyTypeGetGameObject
     {
-        [SerializeField] private PropertyGetGameObject m_Character = GetGameObjectPlayer.Create();
-        
+        [SerializeField]
+        private PropertyGetGameObject m_Character = GetGameObjectPlayer.Create();
+
         public override GameObject Get(Args args)
         {
             Character character = this.m_Character.Get<Character>(args);
@@ -36,16 +35,18 @@ namespace GameCreator.Runtime.Characters
         }
 
         public override string String => $"{this.m_Character} Model";
-        
+
         public override GameObject EditorValue
         {
             get
             {
                 GameObject reference = this.m_Character.EditorValue;
-                if (reference == null) return null;
+                if (reference == null)
+                    return null;
 
                 Character character = reference.GetComponent<Character>();
-                if (character == null) return null;
+                if (character == null)
+                    return null;
 
                 return character.Animim.Animator != null
                     ? character.Animim.Animator.gameObject
