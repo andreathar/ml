@@ -258,6 +258,9 @@ namespace GameCreator.Netcode.Runtime
                 // NPC - server controls, all clients see it as remote
                 this.BecomeNPC();
 
+                // Notify session events
+                NetworkSessionEvents.NotifyNPCSpawned(this);
+
                 Debug.Log(
                     $"[NetworkCharacter] {gameObject.name} spawned as NPC "
                         + $"(Server-authoritative, NetworkObjectId: {this.m_NetworkObject?.NetworkObjectId ?? 0})"
@@ -275,6 +278,9 @@ namespace GameCreator.Netcode.Runtime
                     this.BecomeRemotePlayer();
                 }
 
+                // Notify session events
+                NetworkSessionEvents.NotifyPlayerSpawned(this, this.IsLocalOwner);
+
                 Debug.Log(
                     $"[NetworkCharacter] {gameObject.name} spawned as PLAYER "
                         + $"(ClientId: {this.OwnerClientId}, IsLocalOwner: {this.IsLocalOwner}, "
@@ -289,6 +295,9 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void OnNetworkDespawn()
         {
+            // Notify session events before unregistering
+            NetworkSessionEvents.NotifyCharacterDespawned(this);
+
             // Unregister from the registry
             if (this.m_IsRegistered)
             {

@@ -3812,7 +3812,7 @@ Transform:
   m_GameObject: {fileID: 8230587750230797869}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1.08, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3952,8 +3952,8 @@ MonoBehaviour:
         m_Rotation: {x: 0, y: 0, z: 0}
         m_Scale: {x: 1, y: 1, z: 1}
         m_SmoothTime: 0.5
-        m_Mannequin: {fileID: 0}
-        m_Animator: {fileID: 0}
+        m_Mannequin: {fileID: 1262643134702126425}
+        m_Animator: {fileID: 5513080447165554280}
         m_StartState: {fileID: 0}
         m_Reaction: {fileID: 0}
     - rid: 1083509421220299078

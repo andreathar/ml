@@ -4,7 +4,8 @@
     "references": [
         "GameCreator.Runtime.Core",
         "Unity.Netcode.Runtime",
-        "Unity.Collections"
+        "Unity.Collections",
+        "com.IvanMurzak.Unity.MCP.Common"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -9,12 +9,14 @@ namespace GameCreator.Runtime.Characters
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [SerializeField] private int m_AgentTypeIndex;
-        
+        [SerializeField]
+        private int m_AgentTypeIndex;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        public int AgentType => this.m_AgentTypeIndex < NavMesh.GetSettingsCount() 
-            ? NavMesh.GetSettingsByIndex(this.m_AgentTypeIndex).agentTypeID 
-            : NavMesh.GetSettingsByIndex(0).agentTypeID;
+        public int AgentType =>
+            this.m_AgentTypeIndex < NavMesh.GetSettingsCount()
+                ? NavMesh.GetSettingsByIndex(this.m_AgentTypeIndex).agentTypeID
+                : NavMesh.GetSettingsByIndex(0).agentTypeID;
     }
 }

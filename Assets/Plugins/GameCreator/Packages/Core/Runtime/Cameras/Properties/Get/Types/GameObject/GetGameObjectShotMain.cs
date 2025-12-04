@@ -6,10 +6,8 @@ namespace GameCreator.Runtime.Cameras
 {
     [Title("Main Shot")]
     [Category("Cameras/Main Shot")]
-    
     [Image(typeof(IconCameraShot), ColorTheme.Type.Yellow, typeof(OverlayDot))]
     [Description("Reference to the current Main Camera Shot")]
-
     [Serializable]
     public class GetGameObjectShotMain : PropertyTypeGetGameObject
     {
@@ -18,9 +16,8 @@ namespace GameCreator.Runtime.Cameras
             return ShortcutMainShot.Instance;
         }
 
-        public static PropertyGetGameObject Create => new PropertyGetGameObject(
-            new GetGameObjectShotMain()
-        );
+        public static PropertyGetGameObject Create =>
+            new PropertyGetGameObject(new GetGameObjectShotMain());
 
         public override string String => "Main Shot";
     }

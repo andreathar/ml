@@ -6,30 +6,34 @@ namespace GameCreator.Runtime.Cameras
 {
     [AddComponentMenu("Game Creator/Cameras/Shot Camera")]
     [Icon(RuntimePaths.GIZMOS + "GizmoShot.png")]
-    
     [DefaultExecutionOrder(ApplicationManager.EXECUTION_ORDER_DEFAULT)]
-    
     [Serializable]
     public class ShotCamera : MonoBehaviour
     {
         public enum Clipping
         {
             AvoidClipping,
-            ClipThrough
+            ClipThrough,
         }
-        
+
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [SerializeField] private bool m_IsMainShot;
-        [SerializeField] private TimeMode m_TimeMode;
-        [SerializeField] private Clipping m_Clipping = Clipping.AvoidClipping; 
-        
-        [SerializeReference] private IShotType m_ShotType = new ShotTypeFixed();
+        [SerializeField]
+        private bool m_IsMainShot;
+
+        [SerializeField]
+        private TimeMode m_TimeMode;
+
+        [SerializeField]
+        private Clipping m_Clipping = Clipping.AvoidClipping;
+
+        [SerializeReference]
+        private IShotType m_ShotType = new ShotTypeFixed();
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public IShotType ShotType => this.m_ShotType;
-        
+
         public bool IsMainShot => this.m_IsMainShot;
         public bool AvoidClipping => this.m_Clipping == Clipping.AvoidClipping;
 
@@ -51,7 +55,7 @@ namespace GameCreator.Runtime.Cameras
         }
 
         public bool HasObstacle => this.m_ShotType.HasObstacle;
-        
+
         // EVENTS: --------------------------------------------------------------------------------
 
         public event Action<TCamera> EventChangeTo;
@@ -61,7 +65,8 @@ namespace GameCreator.Runtime.Cameras
 
         protected virtual void Awake()
         {
-            if (this.m_IsMainShot) ShortcutMainShot.Change(this);
+            if (this.m_IsMainShot)
+                ShortcutMainShot.Change(this);
             this.m_ShotType?.Awake(this);
         }
 
@@ -84,19 +89,19 @@ namespace GameCreator.Runtime.Cameras
 
         private void OnDrawGizmos()
         {
-            #if UNITY_EDITOR
-            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject)) return;
-            #endif
-            
+#if UNITY_EDITOR
+            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject))
+                return;
+#endif
             this.m_ShotType?.DrawGizmos(this.transform);
         }
-        
+
         private void OnDrawGizmosSelected()
         {
-            #if UNITY_EDITOR
-            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject)) return;
-            #endif
-            
+#if UNITY_EDITOR
+            if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(this.gameObject))
+                return;
+#endif
             this.m_ShotType?.DrawGizmosSelected(this.transform);
         }
 
