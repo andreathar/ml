@@ -173,12 +173,13 @@ namespace GameCreator.Netcode.Runtime
             s_Instance = this;
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
             if (s_Instance == this)
             {
                 s_Instance = null;
             }
+            base.OnDestroy();
         }
 
         public override void OnNetworkSpawn()

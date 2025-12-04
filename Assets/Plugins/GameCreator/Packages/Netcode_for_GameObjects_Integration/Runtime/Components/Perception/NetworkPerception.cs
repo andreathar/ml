@@ -87,7 +87,6 @@ namespace GameCreator.Netcode.Runtime
         // MEMBERS: -------------------------------------------------------------------------------
 
         [NonSerialized] private Perception m_Perception;
-        [NonSerialized] private NetworkObject m_NetworkObject;
         [NonSerialized] private bool m_IsInitialized;
         [NonSerialized] private bool m_EventsHooked;
         [NonSerialized] private float m_LastSyncTime;
@@ -107,11 +106,6 @@ namespace GameCreator.Netcode.Runtime
         /// The local Perception component this NetworkPerception synchronizes.
         /// </summary>
         public Perception Perception => m_Perception;
-
-        /// <summary>
-        /// The NetworkObject component on this GameObject.
-        /// </summary>
-        public NetworkObject NetworkObject => m_NetworkObject;
 
         /// <summary>
         /// True if this perception is server-authoritative (typical for NPCs).
@@ -146,7 +140,6 @@ namespace GameCreator.Netcode.Runtime
             m_Evidences = new NetworkList<EvidenceData>();
 
             m_Perception = GetComponent<Perception>();
-            m_NetworkObject = GetComponent<NetworkObject>();
 
             if (m_Perception == null)
             {
@@ -328,7 +321,7 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Request to set awareness level for a target (called by clients or server).
         /// </summary>
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void SetAwarenessRpc(ulong targetNetworkId, float awareness, RpcParams rpcParams = default)
         {
             var target = GetGameObjectForNetworkId(targetNetworkId);
@@ -344,7 +337,7 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Request to add awareness for a target.
         /// </summary>
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void AddAwarenessRpc(ulong targetNetworkId, float delta, float maxAwareness = 1f, RpcParams rpcParams = default)
         {
             var target = GetGameObjectForNetworkId(targetNetworkId);
@@ -359,7 +352,7 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Request to start tracking a target.
         /// </summary>
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void TrackTargetRpc(ulong targetNetworkId, RpcParams rpcParams = default)
         {
             var target = GetGameObjectForNetworkId(targetNetworkId);
@@ -374,7 +367,7 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Request to stop tracking a target.
         /// </summary>
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server)]
         public void UntrackTargetRpc(ulong targetNetworkId, RpcParams rpcParams = default)
         {
             var target = GetGameObjectForNetworkId(targetNetworkId);

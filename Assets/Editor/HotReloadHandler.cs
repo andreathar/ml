@@ -14,23 +14,21 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
+
 #if UNITY_2019_1_OR_NEWER
 using UnityEditor.Compilation;
 #endif
-
-// Suppress Unity domain-reload analyzer warnings for this editor-only hot reload handler.
-// The handler relies on Editor callbacks (InitializeOnLoad/static constructor and
-// AssemblyReloadEvents) rather than runtime RuntimeInitializeOnLoadMethod semantics.
-#pragma warning disable UDR0001, UDR0002, UDR0003, UDR0005
 
 /// <summary>
 /// Editor window that handles hot reload functionality between Unity and VS Code/Cursor.
@@ -94,8 +92,7 @@ public class HotReloadHandler : EditorWindow
         EditorApplication.quitting += OnEditorQuitting;
 
         // Auto-start on Unity load
-        EditorApplication.delayCall += () =>
-        {
+        EditorApplication.delayCall += () => {
             if (!isInitialized && wasRunningBeforeReload)
             {
                 // Clear the flag
@@ -104,8 +101,6 @@ public class HotReloadHandler : EditorWindow
             }
         };
     }
-
-    
 
     /// <summary>
     /// Starts the hot reload server if not already running.
@@ -161,9 +156,7 @@ public class HotReloadHandler : EditorWindow
             // Check if a server is actually running on our port
             if (!IsPortInUse(currentPort))
             {
-                Debug.Log(
-                    "Previous instance mutex found but port is free. Proceeding with startup."
-                );
+                Debug.Log("Previous instance mutex found but port is free. Proceeding with startup.");
                 try
                 {
                     instanceMutex.ReleaseMutex();
@@ -175,9 +168,7 @@ public class HotReloadHandler : EditorWindow
             }
             else
             {
-                Debug.Log(
-                    "Another instance of Hot Reload server is already running. Skipping initialization."
-                );
+                Debug.Log("Another instance of Hot Reload server is already running. Skipping initialization.");
                 instanceMutex.Close();
                 instanceMutex = null;
                 return;
@@ -230,12 +221,7 @@ public class HotReloadHandler : EditorWindow
         {
             // Check if the specific error is "Address already in use"
             // Common error codes for this are 10048 (WSAEADDRINUSE on Windows) or 48/98 on Unix-like systems.
-            if (
-                ex.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse
-                || ex.ErrorCode == 48
-                || ex.ErrorCode == 98
-                || ex.ErrorCode == 10048
-            )
+            if (ex.SocketErrorCode == System.Net.Sockets.SocketError.AddressAlreadyInUse || ex.ErrorCode == 48 || ex.ErrorCode == 98 || ex.ErrorCode == 10048)
             {
                 return true; // Port is in use
             }
@@ -332,18 +318,14 @@ public class HotReloadHandler : EditorWindow
 
             if (showDebugLogs)
             {
-                Debug.Log(
-                    $"Port {portToReuse} not available yet, attempt {attempt + 1}/{PORT_RETRY_ATTEMPTS}"
-                );
+                Debug.Log($"Port {portToReuse} not available yet, attempt {attempt + 1}/{PORT_RETRY_ATTEMPTS}");
             }
         }
 
         // If we couldn't restart on the same port, start normally
         if (!restarted)
         {
-            Debug.LogWarning(
-                $"Could not reload on port {portToReuse}, starting on available port..."
-            );
+            Debug.LogWarning($"Could not reload on port {portToReuse}, starting on available port...");
             StartListenerThread();
         }
     }
@@ -581,19 +563,12 @@ public class HotReloadHandler : EditorWindow
 
                 try
                 {
-                    server = new System.Net.Sockets.TcpListener(
-                        System.Net.IPAddress.Any,
-                        portToTry
-                    );
+                    server = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, portToTry);
 
                     // Try to set socket options to allow port reuse
                     try
                     {
-                        server.Server.SetSocketOption(
-                            SocketOptionLevel.Socket,
-                            SocketOptionName.ReuseAddress,
-                            true
-                        );
+                        server.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     }
                     catch (Exception ex)
                     {
@@ -610,9 +585,7 @@ public class HotReloadHandler : EditorWindow
                     // Defer EditorPrefs call to main thread
                     lock (mainThreadActionsLock)
                     {
-                        mainThreadActions.Enqueue(() =>
-                            EditorPrefs.SetInt(lastPortPrefKey, lastSuccessfulPort)
-                        );
+                        mainThreadActions.Enqueue(() => EditorPrefs.SetInt(lastPortPrefKey, lastSuccessfulPort));
                     }
                     serverStarted = true;
 
@@ -625,9 +598,7 @@ public class HotReloadHandler : EditorWindow
                     {
                         if (showDebugLogs || (isPreferredPort && attempt == maxAttempts - 1))
                         {
-                            Debug.LogWarning(
-                                $"Port {portToTry} is in use (attempt {attempt + 1}/{maxAttempts})"
-                            );
+                            Debug.LogWarning($"Port {portToTry} is in use (attempt {attempt + 1}/{maxAttempts})");
                         }
                         continue;
                     }
@@ -684,9 +655,7 @@ public class HotReloadHandler : EditorWindow
                         // Only log connection if debug logs are enabled
                         if (showDebugLogs)
                         {
-                            Debug.Log(
-                                $"VS Code connected to Unity Hot Reload server on port {currentPort}"
-                            );
+                            Debug.Log($"VS Code connected to Unity Hot Reload server on port {currentPort}");
                         }
 
                         // Handle client in a separate thread to allow multiple connections
@@ -897,9 +866,9 @@ public class HotReloadHandler : EditorWindow
             AssetDatabase.Refresh(ImportAssetOptions.Default);
 
             // Request script compilation (Unity 2019.1 or newer)
-#if UNITY_2019_1_OR_NEWER
+            #if UNITY_2019_1_OR_NEWER
             CompilationPipeline.RequestScriptCompilation();
-#endif
+            #endif
 
             if (showDebugLogs)
             {
@@ -980,11 +949,7 @@ public class HotReloadHandler : EditorWindow
             // Try to set socket options to allow port reuse
             try
             {
-                server.Server.SetSocketOption(
-                    SocketOptionLevel.Socket,
-                    SocketOptionName.ReuseAddress,
-                    true
-                );
+                server.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             }
             catch (Exception ex)
             {
@@ -1001,9 +966,7 @@ public class HotReloadHandler : EditorWindow
             // Defer EditorPrefs call to main thread
             lock (mainThreadActionsLock)
             {
-                mainThreadActions.Enqueue(() =>
-                    EditorPrefs.SetInt(lastPortPrefKey, lastSuccessfulPort)
-                );
+                mainThreadActions.Enqueue(() => EditorPrefs.SetInt(lastPortPrefKey, lastSuccessfulPort));
             }
             isServerRunning = true;
             Debug.Log($"Unity Hot Reload server listening on port {currentPort}");
