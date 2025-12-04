@@ -9,14 +9,17 @@ namespace GameCreator.Runtime.Characters
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Character m_Character;
-        
-        [NonSerialized] private GameObject m_Model;
+        [NonSerialized]
+        private Character m_Character;
+
+        [NonSerialized]
+        private GameObject m_Model;
 
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
-        
-        [SerializeField] private RigLayers m_RigLayers = new RigLayers();
-        
+
+        [SerializeField]
+        private RigLayers m_RigLayers = new RigLayers();
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public Character Character => this.m_Character;
@@ -38,31 +41,33 @@ namespace GameCreator.Runtime.Characters
 
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
-        public T GetRig<T>() where T : TRig
+        public T GetRig<T>()
+            where T : TRig
         {
             return this.m_RigLayers.GetRig<T>();
         }
-        
-        public bool HasRig<T>() where T : TRig
+
+        public bool HasRig<T>()
+            where T : TRig
         {
             return this.m_RigLayers.GetRig<T>() != null;
         }
 
-        public T RequireRig<T>() where T : TRig, new()
+        public T RequireRig<T>()
+            where T : TRig, new()
         {
             return this.GetRig<T>() ?? this.m_RigLayers.Create<T>();
         }
-        
+
         // LIFECYCLE METHODS: ---------------------------------------------------------------------
-        
+
         internal void OnStartup(Character character)
         {
             this.m_Character = character;
             this.m_RigLayers.OnStartup(this);
         }
-        
-        internal void AfterStartup(Character character)
-        { }
+
+        internal void AfterStartup(Character character) { }
 
         internal void OnEnable()
         {
@@ -73,17 +78,18 @@ namespace GameCreator.Runtime.Characters
         {
             this.m_RigLayers.OnDisable();
         }
-        
+
         internal void OnUpdate()
         {
             this.m_RigLayers.OnUpdate();
         }
 
         // GIZMOS: --------------------------------------------------------------------------------
-        
+
         public void OnDrawGizmos(Character character)
         {
-            if (!Application.isPlaying) return;
+            if (!Application.isPlaying)
+                return;
             this.m_RigLayers.OnDrawGizmos();
         }
     }

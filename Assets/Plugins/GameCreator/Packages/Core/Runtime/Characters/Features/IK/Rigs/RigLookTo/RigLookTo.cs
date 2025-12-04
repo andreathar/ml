@@ -8,12 +8,10 @@ namespace GameCreator.Runtime.Characters.IK
     [Title("Look at Targets")]
     [Category("Look at Targets")]
     [Image(typeof(IconEye), ColorTheme.Type.Green)]
-    
     [Description(
-        "IK system that allows the Character to naturally look at points of interest using the " +
-        "whole upper-body chain of bones. Requires a humanoid character"
+        "IK system that allows the Character to naturally look at points of interest using the "
+            + "whole upper-body chain of bones. Requires a humanoid character"
     )]
-    
     [Serializable]
     public class RigLookTo : TRigAnimatorIK
     {
@@ -26,11 +24,13 @@ namespace GameCreator.Runtime.Characters.IK
 
                 foreach (ILookTo lookTo in this)
                 {
-                    if (lookTo is not { Exists: true }) continue;
+                    if (lookTo is not { Exists: true })
+                        continue;
 
                     float distance = Vector3.Distance(target, lookTo.Position);
-                    if (distance >= minDistance) continue;
-                    
+                    if (distance >= minDistance)
+                        continue;
+
                     minLookTo = lookTo;
                     minDistance = distance;
                 }
@@ -38,10 +38,9 @@ namespace GameCreator.Runtime.Characters.IK
                 return minLookTo;
             }
         }
-        
-        private class LookLayers : SortedDictionary<int, LookTargets>
-        { }
-        
+
+        private class LookLayers : SortedDictionary<int, LookTargets> { }
+
         // CONSTANTS: -----------------------------------------------------------------------------
 
         public const string RIG_NAME = "RigLookTo";
@@ -51,10 +50,14 @@ namespace GameCreator.Runtime.Characters.IK
 
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
 
-        [SerializeField] private float m_TrackSpeed = 270f;
-        [SerializeField] private float m_MaxAngle = 90f;
+        [SerializeField]
+        private float m_TrackSpeed = 270f;
 
-        [SerializeField] private LookSection[] m_Sections =
+        [SerializeField]
+        private float m_MaxAngle = 90f;
+
+        [SerializeField]
+        private LookSection[] m_Sections =
         {
             new LookSection(HumanBodyBones.Chest, 1f),
             new LookSection(HumanBodyBones.Neck, 2f),
@@ -63,18 +66,26 @@ namespace GameCreator.Runtime.Characters.IK
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private AnimFloat m_WeightTarget = new AnimFloat(0f, SMOOTH_TIME);
+        [NonSerialized]
+        private AnimFloat m_WeightTarget = new AnimFloat(0f, SMOOTH_TIME);
 
-        [NonSerialized] private Transform m_LookHandle;
-        [NonSerialized] private Transform m_LookPoint;
+        [NonSerialized]
+        private Transform m_LookHandle;
 
-        [NonSerialized] private ILookTo m_LookToTarget;
-        [NonSerialized] private readonly LookLayers m_Layers = new LookLayers();
-        
-        [NonSerialized] private LookSection m_Head = new LookSection(HumanBodyBones.Head, 1f);
+        [NonSerialized]
+        private Transform m_LookPoint;
+
+        [NonSerialized]
+        private ILookTo m_LookToTarget;
+
+        [NonSerialized]
+        private readonly LookLayers m_Layers = new LookLayers();
+
+        [NonSerialized]
+        private LookSection m_Head = new LookSection(HumanBodyBones.Head, 1f);
 
         // PROPERTIES: ----------------------------------------------------------------------------
-        
+
         public override string Title => "Look at Target";
         public override string Name => RIG_NAME;
 
@@ -85,43 +96,49 @@ namespace GameCreator.Runtime.Characters.IK
 
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
-         public void SetTarget<T>(T look) where T : ILookTo
-         {
-             if (look == null) return;
-             if (!this.m_Layers.ContainsKey(look.Layer))
-             {
-                 this.m_Layers[look.Layer] = new LookTargets();
-             }
+        public void SetTarget<T>(T look)
+            where T : ILookTo
+        {
+            if (look == null)
+                return;
+            if (!this.m_Layers.ContainsKey(look.Layer))
+            {
+                this.m_Layers[look.Layer] = new LookTargets();
+            }
 
-             if (this.m_Layers[look.Layer].Contains(look)) return;
-             
-             this.m_Layers[look.Layer].Add(look);
-         }
+            if (this.m_Layers[look.Layer].Contains(look))
+                return;
 
-         public void RemoveTarget<T>(T look) where T : ILookTo
-         {
-             if (look == null) return;
-             if (this.m_Layers.TryGetValue(look.Layer, out LookTargets targets))
-             {
-                 targets.Remove(look);
-             }
-         }
+            this.m_Layers[look.Layer].Add(look);
+        }
 
-         public void ClearTargets()
-         {
-             foreach (KeyValuePair<int, LookTargets> entry in this.m_Layers)
-             {
-                 if (entry.Key == 0) continue;
-                 entry.Value.Clear();
-             }
-         }
-        
+        public void RemoveTarget<T>(T look)
+            where T : ILookTo
+        {
+            if (look == null)
+                return;
+            if (this.m_Layers.TryGetValue(look.Layer, out LookTargets targets))
+            {
+                targets.Remove(look);
+            }
+        }
+
+        public void ClearTargets()
+        {
+            foreach (KeyValuePair<int, LookTargets> entry in this.m_Layers)
+            {
+                if (entry.Key == 0)
+                    continue;
+                entry.Value.Clear();
+            }
+        }
+
         // IMPLEMENT METHODS: ---------------------------------------------------------------------
 
         protected override void DoEnable(Character character)
         {
             base.DoEnable(character);
-            
+
             this.Initialize();
 
             this.Character.EventBeforeLateUpdate -= this.OnLateUpdate;
@@ -137,28 +154,28 @@ namespace GameCreator.Runtime.Characters.IK
         protected override void DoUpdate(Character character)
         {
             base.DoUpdate(character);
-            
+
             this.m_LookToTarget = this.GetLookTrackTarget(character);
-            
+
             Vector3 targetDirection;
-            
+
             this.m_LookHandle.position = character.Eyes;
-            
+
             if (this.m_LookToTarget is { Exists: true })
             {
                 this.m_WeightTarget.Target = 1f;
                 Vector3 targetPosition = this.m_LookToTarget.Position;
-                
+
                 Vector3 characterDirection = character.transform.forward;
                 targetDirection = targetPosition - character.Eyes;
-                
+
                 float angle = Vector3.Angle(characterDirection, targetDirection);
-                
+
                 float distance = Vector2.Distance(
                     character.transform.position.XZ(),
                     targetPosition.XZ()
                 );
-                
+
                 if (angle > this.m_MaxAngle || distance < character.Motion.Radius)
                 {
                     this.m_WeightTarget.Target = 0f;
@@ -175,7 +192,7 @@ namespace GameCreator.Runtime.Characters.IK
                 this.m_WeightTarget.Target,
                 this.Character.Time.DeltaTime
             );
-            
+
             this.m_LookHandle.rotation = Quaternion.RotateTowards(
                 this.m_LookHandle.rotation,
                 Quaternion.LookRotation(targetDirection, Vector3.up),
@@ -186,35 +203,40 @@ namespace GameCreator.Runtime.Characters.IK
         private void OnLateUpdate()
         {
             Vector3 targetDirection = this.m_LookPoint.position - this.m_LookHandle.position;
-            Vector3 targetLocalDirection = this.Character.transform.InverseTransformDirection(targetDirection).normalized;
-            
+            Vector3 targetLocalDirection = this
+                .Character.transform.InverseTransformDirection(targetDirection)
+                .normalized;
+
             float yaw = Mathf.Atan2(targetLocalDirection.x, targetLocalDirection.z) * Mathf.Rad2Deg;
             float pitch = Mathf.Asin(-targetLocalDirection.y) * Mathf.Rad2Deg;
-            
+
             this.m_Head.Transform.Rotate(
                 this.Character.transform.right,
                 pitch * this.m_WeightTarget.Current,
                 Space.World
             );
-            
+
             float totalWeight = 0f;
 
             foreach (LookSection section in this.m_Sections)
             {
-                if (!section.IsValid) continue;
+                if (!section.IsValid)
+                    continue;
 
                 section.Transform.localRotation *= section.Rotation;
                 totalWeight += section.Weight;
             }
-            
-            if (totalWeight <= float.Epsilon) return;
-            
+
+            if (totalWeight <= float.Epsilon)
+                return;
+
             foreach (LookSection section in this.m_Sections)
             {
-                if (!section.IsValid) continue;
-                
+                if (!section.IsValid)
+                    continue;
+
                 float weightRatio = section.Weight / totalWeight;
-                
+
                 section.Transform.Rotate(
                     Vector3.up,
                     yaw * (this.m_WeightTarget.Current * weightRatio),
@@ -236,15 +258,16 @@ namespace GameCreator.Runtime.Characters.IK
             bone = this.Animator.GetBoneTransform(boneType);
             return bone != null;
         }
-        
+
         private ILookTo GetLookTrackTarget(Character character)
         {
-            foreach (KeyValuePair<int,LookTargets> entryLayer in this.m_Layers)
+            foreach (KeyValuePair<int, LookTargets> entryLayer in this.m_Layers)
             {
                 ILookTo target = entryLayer.Value.Get(character.Eyes);
-                if (target is { Exists: true }) return target;
+                if (target is { Exists: true })
+                    return target;
             }
-            
+
             return null;
         }
 
@@ -252,12 +275,14 @@ namespace GameCreator.Runtime.Characters.IK
         {
             if (this.m_LookHandle == null || this.m_LookPoint == null)
             {
-                if (this.m_LookHandle != null) UnityEngine.Object.Destroy(this.m_LookHandle.gameObject);
-                if (this.m_LookPoint != null) UnityEngine.Object.Destroy(this.m_LookPoint.gameObject);
-                
+                if (this.m_LookHandle != null)
+                    UnityEngine.Object.Destroy(this.m_LookHandle.gameObject);
+                if (this.m_LookPoint != null)
+                    UnityEngine.Object.Destroy(this.m_LookPoint.gameObject);
+
                 GameObject handle = new GameObject(RIG_NAME + "Handle");
                 GameObject point = new GameObject(RIG_NAME + "Point");
-                
+
                 handle.hideFlags = HideFlags.HideAndDontSave;
                 point.hideFlags = HideFlags.HideAndDontSave;
 
@@ -276,24 +301,25 @@ namespace GameCreator.Runtime.Characters.IK
                     section.Transform = bone;
                 }
             }
-            
+
             if (this.GetBone(this.m_Head.Bone, out Transform boneHead))
             {
                 this.m_Head.Transform = boneHead;
             }
         }
-        
+
         // GIZMOS: --------------------------------------------------------------------------------
 
-         protected override void DoDrawGizmos(Character character)
-         {
-             base.DoDrawGizmos(character);
-             Gizmos.color = Color.cyan;
-             
-             if (this.m_LookPoint == null) return;
-             
-             Gizmos.DrawWireCube(this.m_LookPoint.position, Vector3.one * 0.1f);
-             Gizmos.DrawLine(this.Character.Eyes, this.m_LookPoint.position);
-         }
+        protected override void DoDrawGizmos(Character character)
+        {
+            base.DoDrawGizmos(character);
+            Gizmos.color = Color.cyan;
+
+            if (this.m_LookPoint == null)
+                return;
+
+            Gizmos.DrawWireCube(this.m_LookPoint.position, Vector3.one * 0.1f);
+            Gizmos.DrawLine(this.Character.Eyes, this.m_LookPoint.position);
+        }
     }
 }

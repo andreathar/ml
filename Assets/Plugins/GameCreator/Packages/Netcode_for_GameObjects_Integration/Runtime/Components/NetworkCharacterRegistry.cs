@@ -7,19 +7,25 @@ using UnityEngine;
 namespace GameCreator.Netcode.Runtime
 {
     /// <summary>
-    /// Central registry for all active NetworkCharacters.
+    /// Central registry for all active NetworkCharacters (players and NPCs).
     /// Provides efficient lookup by ClientId and caches the local player reference.
     ///
     /// Host vs Client:
     /// - Host (Server + Client): LocalClientId == 0, IsHost == true
     /// - Client (Pure client): LocalClientId > 0, IsHost == false
     /// - Dedicated Server: IsServer && !IsClient, no local player
+    ///
+    /// Player vs NPC:
+    /// - Players: Character.IsPlayer = true, owned by client (Host or remote)
+    /// - NPCs: Character.IsPlayer = false, server-authoritative
     /// </summary>
     public static class NetworkCharacterRegistry
     {
         // MEMBERS: -------------------------------------------------------------------------------
 
-        private static readonly List<NetworkCharacter> s_Characters = new();
+        private static readonly List<NetworkCharacter> s_AllCharacters = new();
+        private static readonly List<NetworkCharacter> s_PlayerCharacters = new();
+        private static readonly List<NetworkCharacter> s_NPCCharacters = new();
         private static readonly Dictionary<ulong, NetworkCharacter> s_CharactersByClientId = new();
         private static NetworkCharacter s_LocalPlayerCache;
         private static bool s_LocalPlayerCacheDirty = true;
@@ -27,14 +33,34 @@ namespace GameCreator.Netcode.Runtime
         // PROPERTIES: ----------------------------------------------------------------------------
 
         /// <summary>
-        /// All registered NetworkCharacters (spawned and active).
+        /// All registered NetworkCharacters (players and NPCs).
         /// </summary>
-        public static IReadOnlyList<NetworkCharacter> All => s_Characters;
+        public static IReadOnlyList<NetworkCharacter> All => s_AllCharacters;
 
         /// <summary>
-        /// Number of registered NetworkCharacters.
+        /// All registered player characters (IsPlayer = true).
         /// </summary>
-        public static int Count => s_Characters.Count;
+        public static IReadOnlyList<NetworkCharacter> Players => s_PlayerCharacters;
+
+        /// <summary>
+        /// All registered NPC characters (IsPlayer = false, server-authoritative).
+        /// </summary>
+        public static IReadOnlyList<NetworkCharacter> NPCs => s_NPCCharacters;
+
+        /// <summary>
+        /// Number of all registered NetworkCharacters.
+        /// </summary>
+        public static int Count => s_AllCharacters.Count;
+
+        /// <summary>
+        /// Number of registered player characters.
+        /// </summary>
+        public static int PlayerCount => s_PlayerCharacters.Count;
+
+        /// <summary>
+        /// Number of registered NPC characters.
+        /// </summary>
+        public static int NPCCount => s_NPCCharacters.Count;
 
         /// <summary>
         /// The local player's NetworkCharacter.
@@ -102,23 +128,43 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Register a NetworkCharacter with the registry.
         /// Called automatically by NetworkCharacter on network spawn.
+        /// Players are registered by ClientId, NPCs are added to a separate list.
         /// </summary>
         public static void Register(NetworkCharacter character)
         {
             if (character == null) return;
-            if (s_Characters.Contains(character)) return;
+            if (s_AllCharacters.Contains(character)) return;
 
-            s_Characters.Add(character);
+            s_AllCharacters.Add(character);
 
             var networkObject = character.GetComponent<NetworkObject>();
-            if (networkObject != null && networkObject.IsSpawned)
+            bool isPlayer = character.IsPlayer;
+            bool isNPC = !isPlayer;
+
+            if (isPlayer)
             {
-                ulong ownerId = networkObject.OwnerClientId;
-                s_CharactersByClientId[ownerId] = character;
+                // Player character - register by ClientId
+                s_PlayerCharacters.Add(character);
+
+                if (networkObject != null && networkObject.IsSpawned)
+                {
+                    ulong ownerId = networkObject.OwnerClientId;
+                    s_CharactersByClientId[ownerId] = character;
+
+                    Debug.Log(
+                        $"[NetworkCharacterRegistry] Registered PLAYER {character.name} "
+                            + $"(ClientId: {ownerId}, IsLocalOwner: {networkObject.IsOwner})"
+                    );
+                }
+            }
+            else
+            {
+                // NPC character - server-authoritative
+                s_NPCCharacters.Add(character);
 
                 Debug.Log(
-                    $"[NetworkCharacterRegistry] Registered {character.name} "
-                        + $"(ClientId: {ownerId}, IsLocalOwner: {networkObject.IsOwner})"
+                    $"[NetworkCharacterRegistry] Registered NPC {character.name} "
+                        + $"(Server-authoritative, NetworkObjectId: {networkObject?.NetworkObjectId ?? 0})"
                 );
             }
 
@@ -133,7 +179,9 @@ namespace GameCreator.Netcode.Runtime
         {
             if (character == null) return;
 
-            bool removed = s_Characters.Remove(character);
+            bool removed = s_AllCharacters.Remove(character);
+            s_PlayerCharacters.Remove(character);
+            s_NPCCharacters.Remove(character);
 
             // Remove from ClientId dictionary
             var keysToRemove = s_CharactersByClientId
@@ -218,17 +266,17 @@ namespace GameCreator.Netcode.Runtime
         }
 
         /// <summary>
-        /// Get all NetworkCharacters except the local player.
+        /// Get all player characters except the local player.
         /// Useful for "find all other players" scenarios.
         /// </summary>
         public static IEnumerable<NetworkCharacter> GetOtherPlayers()
         {
             var localPlayer = LocalPlayer;
-            return s_Characters.Where(c => c != localPlayer);
+            return s_PlayerCharacters.Where(c => c != localPlayer);
         }
 
         /// <summary>
-        /// Get the closest NetworkCharacter to a position (excluding the local player).
+        /// Get the closest player character to a position (excluding the local player).
         /// </summary>
         public static NetworkCharacter GetClosestOtherPlayer(Vector3 position)
         {
@@ -246,6 +294,79 @@ namespace GameCreator.Netcode.Runtime
             }
 
             return closest;
+        }
+
+        /// <summary>
+        /// Get the closest NPC to a position.
+        /// </summary>
+        public static NetworkCharacter GetClosestNPC(Vector3 position)
+        {
+            NetworkCharacter closest = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (var npc in s_NPCCharacters)
+            {
+                float distance = Vector3.Distance(position, npc.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = npc;
+                }
+            }
+
+            return closest;
+        }
+
+        /// <summary>
+        /// Get the closest character (player or NPC) to a position, optionally excluding the local player.
+        /// </summary>
+        public static NetworkCharacter GetClosestCharacter(Vector3 position, bool excludeLocalPlayer = true)
+        {
+            NetworkCharacter closest = null;
+            float closestDistance = float.MaxValue;
+            var localPlayer = excludeLocalPlayer ? LocalPlayer : null;
+
+            foreach (var character in s_AllCharacters)
+            {
+                if (character == localPlayer) continue;
+
+                float distance = Vector3.Distance(position, character.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = character;
+                }
+            }
+
+            return closest;
+        }
+
+        /// <summary>
+        /// Get all NPCs within a radius of a position.
+        /// </summary>
+        public static IEnumerable<NetworkCharacter> GetNPCsInRadius(Vector3 position, float radius)
+        {
+            float radiusSqr = radius * radius;
+            return s_NPCCharacters.Where(npc =>
+                (npc.transform.position - position).sqrMagnitude <= radiusSqr
+            );
+        }
+
+        /// <summary>
+        /// Get all characters (players and NPCs) within a radius of a position.
+        /// </summary>
+        public static IEnumerable<NetworkCharacter> GetCharactersInRadius(
+            Vector3 position,
+            float radius,
+            bool excludeLocalPlayer = true
+        )
+        {
+            float radiusSqr = radius * radius;
+            var localPlayer = excludeLocalPlayer ? LocalPlayer : null;
+
+            return s_AllCharacters.Where(c =>
+                c != localPlayer && (c.transform.position - position).sqrMagnitude <= radiusSqr
+            );
         }
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
@@ -283,7 +404,9 @@ namespace GameCreator.Netcode.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticState()
         {
-            s_Characters.Clear();
+            s_AllCharacters.Clear();
+            s_PlayerCharacters.Clear();
+            s_NPCCharacters.Clear();
             s_CharactersByClientId.Clear();
             s_LocalPlayerCache = null;
             s_LocalPlayerCacheDirty = true;

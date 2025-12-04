@@ -6,10 +6,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Player by Client ID")]
     [Category("Network/Network Player by Client ID")]
-
     [Description("Returns a NetworkCharacter by their Client ID (0 = Host, 1+ = Clients)")]
     [Image(typeof(IconPlayer), ColorTheme.Type.Yellow)]
-
     [Serializable]
     public class GetGameObjectNetworkPlayerByClientId : PropertyTypeGetGameObject
     {
@@ -39,7 +37,7 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
         {
             GetGameObjectNetworkPlayerByClientId instance = new GetGameObjectNetworkPlayerByClientId
             {
-                m_ClientId = new PropertyGetInteger(clientId)
+                m_ClientId = new PropertyGetInteger(clientId),
             };
             return new PropertyGetGameObject(instance);
         }

@@ -7,10 +7,10 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Local Player")]
     [Category("Network/Network Local Player")]
-
-    [Description("Returns the local client's NetworkCharacter - the character owned by this client")]
+    [Description(
+        "Returns the local client's NetworkCharacter - the character owned by this client"
+    )]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
-
     [Serializable]
     public class GetGameObjectNetworkLocalPlayer : PropertyTypeGetGameObject
     {
@@ -55,10 +55,13 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             get
             {
                 // In editor, find any character marked as player
-                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(FindObjectsSortMode.None);
+                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(
+                    FindObjectsSortMode.None
+                );
                 foreach (Character instance in instances)
                 {
-                    if (instance.IsPlayer) return instance.gameObject;
+                    if (instance.IsPlayer)
+                        return instance.gameObject;
                 }
 
                 return null;

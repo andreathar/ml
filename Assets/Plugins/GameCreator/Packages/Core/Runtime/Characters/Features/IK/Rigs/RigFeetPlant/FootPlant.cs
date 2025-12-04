@@ -7,32 +7,52 @@ namespace GameCreator.Runtime.Characters.IK
     internal class FootPlant
     {
         private const int RAYCAST_FIXED_SIZE = 10;
-        
+
         private const float COEFFICIENT_RANGE_FEET_UP = 0.5f;
         private const float COEFFICIENT_RANGE_FEET_DOWN = 0.2f;
 
         // MEMBERS: -------------------------------------------------------------------------------
-        
-        [NonSerialized] private readonly RaycastHit[] m_RaycastHitsBuffer = new RaycastHit[RAYCAST_FIXED_SIZE];
 
-        [NonSerialized] private readonly AnimFloat m_Weight = new AnimFloat(0f, 0f);
+        [NonSerialized]
+        private readonly RaycastHit[] m_RaycastHitsBuffer = new RaycastHit[RAYCAST_FIXED_SIZE];
 
-        [NonSerialized] private readonly AnimVector3 m_DeltaPosition = new AnimVector3(Vector3.zero, 0f);
-        [NonSerialized] private readonly AnimQuaternion m_DeltaRotation = new AnimQuaternion(Quaternion.identity, 0f);
-        
-        [NonSerialized] private Transform m_BoneTransform;
+        [NonSerialized]
+        private readonly AnimFloat m_Weight = new AnimFloat(0f, 0f);
 
-        [NonSerialized] private bool m_HasHit;
-        [NonSerialized] private Vector3 m_HitPoint;
-        [NonSerialized] private Vector3 m_HitNormal;
+        [NonSerialized]
+        private readonly AnimVector3 m_DeltaPosition = new AnimVector3(Vector3.zero, 0f);
+
+        [NonSerialized]
+        private readonly AnimQuaternion m_DeltaRotation = new AnimQuaternion(
+            Quaternion.identity,
+            0f
+        );
+
+        [NonSerialized]
+        private Transform m_BoneTransform;
+
+        [NonSerialized]
+        private bool m_HasHit;
+
+        [NonSerialized]
+        private Vector3 m_HitPoint;
+
+        [NonSerialized]
+        private Vector3 m_HitNormal;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
-        [field: NonSerialized] private HumanBodyBones Bone { get; }
-        [field: NonSerialized] private AvatarIKGoal AvatarIK { get; }
-        
-        [field: NonSerialized] private RigFeetPlant Rig { get; }
-        [field: NonSerialized] private int Phase { get; }
+        [field: NonSerialized]
+        private HumanBodyBones Bone { get; }
+
+        [field: NonSerialized]
+        private AvatarIKGoal AvatarIK { get; }
+
+        [field: NonSerialized]
+        private RigFeetPlant Rig { get; }
+
+        [field: NonSerialized]
+        private int Phase { get; }
 
         private IUnitDriver Driver => this.Rig.Character.Driver;
 
@@ -51,7 +71,7 @@ namespace GameCreator.Runtime.Characters.IK
         }
 
         // CONSTRUCTOR: ---------------------------------------------------------------------------
-        
+
         public FootPlant(HumanBodyBones bone, AvatarIKGoal avatarIK, RigFeetPlant rig, int phase)
         {
             this.Bone = bone;
@@ -68,7 +88,7 @@ namespace GameCreator.Runtime.Characters.IK
             this.Rig.Character.Animim.EventOnAnimatorIK -= this.OnAnimatorIK;
             this.Rig.Character.Animim.EventOnAnimatorIK += this.OnAnimatorIK;
         }
-        
+
         // CALLBACKS: -----------------------------------------------------------------------------
 
         private void OnAnimatorIK(int layerIndex)
@@ -80,11 +100,12 @@ namespace GameCreator.Runtime.Characters.IK
         private void OnAnimatorUpdateFoot()
         {
             Animator animator = this.Rig.Animator;
-            if (animator == null) return;
-            
+            if (animator == null)
+                return;
+
             float feetRangeUp = this.Rig.Character.Motion.Height * COEFFICIENT_RANGE_FEET_UP;
             float feetRangeDown = this.Rig.Character.Motion.Height * COEFFICIENT_RANGE_FEET_DOWN;
-            
+
             Vector3 bonePosition = animator.GetIKPosition(this.AvatarIK);
             Vector3 castDirection = Vector3.down;
             Vector3 castPosition = bonePosition - castDirection * feetRangeUp;
@@ -97,14 +118,15 @@ namespace GameCreator.Runtime.Characters.IK
                 this.Rig.FootMask,
                 QueryTriggerInteraction.Ignore
             );
-            
+
             float minDistance = Mathf.Infinity;
             RaycastHit minHit = new RaycastHit();
-            
+
             for (int i = 0; i < hitCount; ++i)
             {
                 RaycastHit hit = this.m_RaycastHitsBuffer[i];
-                if (hit.distance > minDistance) continue;
+                if (hit.distance > minDistance)
+                    continue;
 
                 minHit = hit;
                 minDistance = hit.distance;
@@ -127,7 +149,8 @@ namespace GameCreator.Runtime.Characters.IK
         private void OnAnimatorSetFoot()
         {
             Animator animator = this.Rig.Animator;
-            if (animator == null) return;
+            if (animator == null)
+                return;
 
             if (this.m_HasHit)
             {
@@ -151,21 +174,22 @@ namespace GameCreator.Runtime.Characters.IK
 
                 this.m_Weight.Target = 0f;
             }
-            
-            float weight = this.Rig.IsActive && this.Driver.IsGrounded
-                ? this.Rig.Character.Phases.Get(this.Phase) * this.m_Weight.Current
-                : 0f;
+
+            float weight =
+                this.Rig.IsActive && this.Driver.IsGrounded
+                    ? this.Rig.Character.Phases.Get(this.Phase) * this.m_Weight.Current
+                    : 0f;
 
             Vector3 position = animator.GetIKPosition(AvatarIK);
-            Quaternion rotation =  animator.GetIKRotation(AvatarIK);
+            Quaternion rotation = animator.GetIKRotation(AvatarIK);
 
             animator.SetIKPositionWeight(this.AvatarIK, weight);
             animator.SetIKPosition(this.AvatarIK, this.m_DeltaPosition.Current + position);
-            
+
             animator.SetIKRotationWeight(this.AvatarIK, weight);
             animator.SetIKRotation(this.AvatarIK, this.m_DeltaRotation.Current * rotation);
         }
-        
+
         // PUBLIC METHODS: ------------------------------------------------------------------------
 
         public void Update()
@@ -175,10 +199,10 @@ namespace GameCreator.Runtime.Characters.IK
 
             this.m_Weight.Smooth = smoothTime;
             this.m_Weight.UpdateWithDelta(deltaTime);
-            
+
             this.m_DeltaPosition.Smooth = Vector3.one * smoothTime;
             this.m_DeltaRotation.Smooth = smoothTime;
-            
+
             this.m_DeltaPosition.UpdateWithDelta(deltaTime);
             this.m_DeltaRotation.UpdateWithDelta(deltaTime);
         }

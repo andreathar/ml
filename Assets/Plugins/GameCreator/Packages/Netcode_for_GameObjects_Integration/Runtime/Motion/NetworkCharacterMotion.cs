@@ -58,10 +58,17 @@ namespace GameCreator.Netcode.Runtime
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private Character m_Character;
-        [NonSerialized] private float m_LastSyncTime;
-        [NonSerialized] private Vector3 m_TargetMoveDirection;
-        [NonSerialized] private float m_TargetLinearSpeed;
+        [NonSerialized]
+        private Character m_Character;
+
+        [NonSerialized]
+        private float m_LastSyncTime;
+
+        [NonSerialized]
+        private Vector3 m_TargetMoveDirection;
+
+        [NonSerialized]
+        private float m_TargetLinearSpeed;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
@@ -134,8 +141,10 @@ namespace GameCreator.Netcode.Runtime
 
         private void Update()
         {
-            if (!IsSpawned) return;
-            if (this.m_Character == null) return;
+            if (!IsSpawned)
+                return;
+            if (this.m_Character == null)
+                return;
 
             if (IsOwner)
             {
@@ -149,19 +158,24 @@ namespace GameCreator.Netcode.Runtime
 
         /// <summary>
         /// Owner: Sync local motion state to network variables.
-        /// </summary>
+        /// /// </summary>
         private void UpdateOwnerSync()
         {
             // Rate limit syncing
-            if (Time.time - this.m_LastSyncTime < this.SyncInterval) return;
+            if (Time.time - this.m_LastSyncTime < this.SyncInterval)
+                return;
             this.m_LastSyncTime = Time.time;
 
             IUnitMotion motion = this.m_Character.Motion;
-            if (motion == null) return;
+            if (motion == null)
+                return;
 
             // Sync move direction if changed
             Vector3 currentDirection = motion.MoveDirection;
-            if (Vector3.Distance(currentDirection, this.m_NetworkMoveDirection.Value) > SYNC_THRESHOLD)
+            if (
+                Vector3.Distance(currentDirection, this.m_NetworkMoveDirection.Value)
+                > SYNC_THRESHOLD
+            )
             {
                 this.m_NetworkMoveDirection.Value = currentDirection;
             }
@@ -239,7 +253,8 @@ namespace GameCreator.Netcode.Runtime
         /// </summary>
         public void RequestJump(float force)
         {
-            if (!IsOwner) return;
+            if (!IsOwner)
+                return;
             RequestJumpServerRpc(force);
         }
 
@@ -251,9 +266,16 @@ namespace GameCreator.Netcode.Runtime
         /// <param name="gravity">Gravity during dash</param>
         /// <param name="duration">Dash duration in seconds</param>
         /// <param name="fade">Fade out time</param>
-        public void RequestDash(Vector3 direction, float speed, float gravity = 0f, float duration = 0.5f, float fade = 0.2f)
+        public void RequestDash(
+            Vector3 direction,
+            float speed,
+            float gravity = 0f,
+            float duration = 0.5f,
+            float fade = 0.2f
+        )
         {
-            if (!IsOwner) return;
+            if (!IsOwner)
+                return;
             RequestDashServerRpc(direction, speed, gravity, duration, fade);
         }
 
@@ -275,7 +297,8 @@ namespace GameCreator.Netcode.Runtime
         [ClientRpc]
         private void ExecuteJumpClientRpc(float force)
         {
-            if (IsOwner) return; // Owner already executed locally
+            if (IsOwner)
+                return; // Owner already executed locally
 
             if (this.m_Character.Jump != null)
             {
@@ -284,7 +307,13 @@ namespace GameCreator.Netcode.Runtime
         }
 
         [ServerRpc]
-        private void RequestDashServerRpc(Vector3 direction, float speed, float gravity, float duration, float fade)
+        private void RequestDashServerRpc(
+            Vector3 direction,
+            float speed,
+            float gravity,
+            float duration,
+            float fade
+        )
         {
             // Server validates and executes dash
             if (this.m_Character.Dash != null)
@@ -297,9 +326,16 @@ namespace GameCreator.Netcode.Runtime
         }
 
         [ClientRpc]
-        private void ExecuteDashClientRpc(Vector3 direction, float speed, float gravity, float duration, float fade)
+        private void ExecuteDashClientRpc(
+            Vector3 direction,
+            float speed,
+            float gravity,
+            float duration,
+            float fade
+        )
         {
-            if (IsOwner) return; // Owner already executed locally
+            if (IsOwner)
+                return; // Owner already executed locally
 
             if (this.m_Character.Dash != null)
             {

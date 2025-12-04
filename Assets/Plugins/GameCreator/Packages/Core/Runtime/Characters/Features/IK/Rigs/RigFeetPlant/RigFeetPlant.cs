@@ -7,12 +7,10 @@ namespace GameCreator.Runtime.Characters.IK
     [Title("Align Feet with Ground")]
     [Category("Align Feet with Ground")]
     [Image(typeof(IconFootprint), ColorTheme.Type.Green)]
-    
     [Description(
-        "IK system that allows the Character to correctly align their feet to uneven terrain. " +
-        "It also avoids character's feet from penetrating the floor. Requires a humanoid character"
+        "IK system that allows the Character to correctly align their feet to uneven terrain. "
+            + "It also avoids character's feet from penetrating the floor. Requires a humanoid character"
     )]
-    
     [Serializable]
     public class RigFeetPlant : TRigAnimatorIK
     {
@@ -21,22 +19,30 @@ namespace GameCreator.Runtime.Characters.IK
         public const string RIG_NAME = "RigFeetPlant";
 
         // EXPOSED MEMBERS: -----------------------------------------------------------------------
-        
-        [SerializeField] private float m_FootOffset;
-        [SerializeField] private LayerMask m_FootMask = Physics.DefaultRaycastLayers;
-        [SerializeField] private float m_SmoothTime = 0.25f;
+
+        [SerializeField]
+        private float m_FootOffset;
+
+        [SerializeField]
+        private LayerMask m_FootMask = Physics.DefaultRaycastLayers;
+
+        [SerializeField]
+        private float m_SmoothTime = 0.25f;
 
         // MEMBERS: -------------------------------------------------------------------------------
 
-        [NonSerialized] private FootPlant m_LimbFootL;
-        [NonSerialized] private FootPlant m_LimbFootR;
+        [NonSerialized]
+        private FootPlant m_LimbFootL;
+
+        [NonSerialized]
+        private FootPlant m_LimbFootR;
 
         // PROPERTIES: ----------------------------------------------------------------------------
 
         public override string Title => "Align Feet with Ground";
-        
+
         public override string Name => RIG_NAME;
-        
+
         public override bool RequiresHuman => true;
         public override bool DisableOnBusy => false;
 
@@ -49,9 +55,19 @@ namespace GameCreator.Runtime.Characters.IK
         protected override void DoEnable(Character character)
         {
             base.DoEnable(character);
-            
-            this.m_LimbFootL = new FootPlant(HumanBodyBones.LeftFoot,  AvatarIKGoal.LeftFoot,  this, 0);
-            this.m_LimbFootR = new FootPlant(HumanBodyBones.RightFoot, AvatarIKGoal.RightFoot, this, 1);
+
+            this.m_LimbFootL = new FootPlant(
+                HumanBodyBones.LeftFoot,
+                AvatarIKGoal.LeftFoot,
+                this,
+                0
+            );
+            this.m_LimbFootR = new FootPlant(
+                HumanBodyBones.RightFoot,
+                AvatarIKGoal.RightFoot,
+                this,
+                1
+            );
         }
 
         protected override void DoUpdate(Character character)

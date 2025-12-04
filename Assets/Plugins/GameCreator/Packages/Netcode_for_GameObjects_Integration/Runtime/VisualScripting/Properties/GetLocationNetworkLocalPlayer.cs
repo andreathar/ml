@@ -7,10 +7,10 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
 {
     [Title("Network Local Player Location")]
     [Category("Network/Network Local Player Location")]
-
-    [Description("Returns the position and rotation of the local client's NetworkCharacter as a Location")]
+    [Description(
+        "Returns the position and rotation of the local client's NetworkCharacter as a Location"
+    )]
     [Image(typeof(IconPlayer), ColorTheme.Type.Green)]
-
     [Serializable]
     public class GetLocationNetworkLocalPlayer : PropertyTypeGetLocation
     {
@@ -48,9 +48,8 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             return ShortcutPlayer.Transform;
         }
 
-        public static PropertyGetLocation Create => new PropertyGetLocation(
-            new GetLocationNetworkLocalPlayer()
-        );
+        public static PropertyGetLocation Create =>
+            new PropertyGetLocation(new GetLocationNetworkLocalPlayer());
 
         public override string String => "Network Local Player";
 
@@ -59,12 +58,17 @@ namespace GameCreator.Netcode.Runtime.VisualScripting
             get
             {
                 // In editor, find any character marked as player
-                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(FindObjectsSortMode.None);
+                Character[] instances = UnityEngine.Object.FindObjectsByType<Character>(
+                    FindObjectsSortMode.None
+                );
                 foreach (Character instance in instances)
                 {
                     if (instance.IsPlayer)
                     {
-                        return new Location(instance.transform.position, instance.transform.rotation);
+                        return new Location(
+                            instance.transform.position,
+                            instance.transform.rotation
+                        );
                     }
                 }
 

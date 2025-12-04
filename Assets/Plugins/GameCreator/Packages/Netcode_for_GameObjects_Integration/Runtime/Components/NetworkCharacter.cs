@@ -51,6 +51,12 @@ namespace GameCreator.Netcode.Runtime
         [NonSerialized]
         private bool m_IsRegistered;
 
+        [NonSerialized]
+        private bool m_BaseOnEnablePending;
+
+        [NonSerialized]
+        private bool m_BaseAwakePending;
+
         // PROPERTIES: ----------------------------------------------------------------------------
 
         /// <summary>
@@ -135,20 +141,79 @@ namespace GameCreator.Netcode.Runtime
             // Cache NetworkObject reference
             this.m_NetworkObject = GetComponent<NetworkObject>();
 
-            // Call base Character.Awake() for standard initialization
-            base.Awake();
+            // Ensure Animator reference is set before calling base.Awake()
+            // When Netcode instantiates prefabs, the serialized Animator reference may not be resolved yet
+            // Try to find and assign it if the Animim unit exists but Animator is null
+            this.EnsureAnimatorReference();
 
-            this.m_IsInitialized = true;
+            // Only call base.Awake() if Animator is ready
+            // base.Awake() initializes AnimimGraph and InverseKinematics which require Animator
+            if (this.Animim?.Animator != null)
+            {
+                base.Awake();
+                this.m_IsInitialized = true;
+                this.m_BaseAwakePending = false;
+            }
+            else
+            {
+                // Defer base.Awake() until Animator is ready
+                // This can happen with network-spawned prefabs
+                this.m_BaseAwakePending = true;
+                this.m_IsInitialized = false;
+                Debug.LogWarning(
+                    $"[NetworkCharacter] {gameObject.name}: Animator not ready during Awake, deferring initialization"
+                );
+            }
+        }
+
+        /// <summary>
+        /// Ensures the Animator reference is set on the Animim unit.
+        /// If the serialized reference is null, attempts to find the Animator in children (Mannequin).
+        /// </summary>
+        private void EnsureAnimatorReference()
+        {
+            // Check if Animim exists and has a null Animator
+            if (this.Animim != null && this.Animim.Animator == null)
+            {
+                // Try to find Animator in children (typically on Mannequin child object)
+                Animator animator = GetComponentInChildren<Animator>(true);
+                if (animator != null)
+                {
+                    this.Animim.Animator = animator;
+                    Debug.Log(
+                        $"[NetworkCharacter] {gameObject.name}: Found and assigned Animator from child '{animator.gameObject.name}'"
+                    );
+                }
+            }
         }
 
         protected override void OnEnable()
         {
-            base.OnEnable();
-
             // Ensure NetworkCharacterSync component exists for network callbacks
             if (GetComponent<NetworkCharacterSync>() == null)
             {
                 gameObject.AddComponent<NetworkCharacterSync>();
+            }
+
+            // If Awake hasn't completed yet, defer OnEnable as well
+            if (this.m_BaseAwakePending)
+            {
+                this.m_BaseOnEnablePending = true;
+                return;
+            }
+
+            // Only call base.OnEnable if Animator is ready
+            // This prevents NullReferenceException in IK system when network-spawned
+            // The Animator is on a child object (Mannequin) and may not be resolved yet
+            if (this.Animim?.Animator != null)
+            {
+                base.OnEnable();
+                this.m_BaseOnEnablePending = false;
+            }
+            else
+            {
+                // Defer base.OnEnable until Animator is ready
+                this.m_BaseOnEnablePending = true;
             }
         }
 
@@ -174,30 +239,48 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Called when this NetworkObject is spawned on the network.
         /// Registers with NetworkCharacterRegistry for efficient lookup.
+        /// Handles both player characters and NPCs appropriately.
         /// </summary>
         public void OnNetworkSpawn()
         {
             this.m_IsNetworkSpawned = true;
 
-            // Register with the registry
+            // Register with the registry (handles players vs NPCs internally)
             NetworkCharacterRegistry.Register(this);
             this.m_IsRegistered = true;
 
-            // Set up local vs remote player
-            if (this.IsLocalOwner)
+            // Determine if this is a player character or NPC
+            // NPCs have IsPlayer = false and are server-authoritative
+            bool isNPC = !this.IsPlayer;
+
+            if (isNPC)
             {
-                this.BecomeLocalPlayer();
+                // NPC - server controls, all clients see it as remote
+                this.BecomeNPC();
+
+                Debug.Log(
+                    $"[NetworkCharacter] {gameObject.name} spawned as NPC "
+                        + $"(Server-authoritative, NetworkObjectId: {this.m_NetworkObject?.NetworkObjectId ?? 0})"
+                );
             }
             else
             {
-                this.BecomeRemotePlayer();
-            }
+                // Player character - set up local vs remote player
+                if (this.IsLocalOwner)
+                {
+                    this.BecomeLocalPlayer();
+                }
+                else
+                {
+                    this.BecomeRemotePlayer();
+                }
 
-            Debug.Log(
-                $"[NetworkCharacter] {gameObject.name} spawned on network "
-                    + $"(ClientId: {this.OwnerClientId}, IsLocalOwner: {this.IsLocalOwner}, "
-                    + $"IsHost: {NetworkCharacterRegistry.IsHost})"
-            );
+                Debug.Log(
+                    $"[NetworkCharacter] {gameObject.name} spawned as PLAYER "
+                        + $"(ClientId: {this.OwnerClientId}, IsLocalOwner: {this.IsLocalOwner}, "
+                        + $"IsHost: {NetworkCharacterRegistry.IsHost})"
+                );
+            }
         }
 
         /// <summary>
@@ -221,25 +304,30 @@ namespace GameCreator.Netcode.Runtime
         /// <summary>
         /// Called by NetworkCharacterSync when ownership of this NetworkObject changes.
         /// Updates registry mapping and local player state.
+        /// Note: NPCs typically don't change ownership, but this handles the case if they do.
         /// </summary>
         public void HandleOwnershipChanged(ulong previousOwner, ulong newOwner)
         {
-            // Update the registry mapping
-            NetworkCharacterRegistry.UpdateClientIdMapping(this, newOwner);
+            // NPCs don't need ClientId mapping updates - they're not player-owned
+            if (!this.IsNPC)
+            {
+                // Update the registry mapping for players
+                NetworkCharacterRegistry.UpdateClientIdMapping(this, newOwner);
 
-            // Update local vs remote player state
-            if (this.IsLocalOwner)
-            {
-                this.BecomeLocalPlayer();
-            }
-            else
-            {
-                this.BecomeRemotePlayer();
+                // Update local vs remote player state
+                if (this.IsLocalOwner)
+                {
+                    this.BecomeLocalPlayer();
+                }
+                else
+                {
+                    this.BecomeRemotePlayer();
+                }
             }
 
             Debug.Log(
                 $"[NetworkCharacter] {gameObject.name} ownership changed: "
-                    + $"{previousOwner} -> {newOwner} (IsLocalOwner: {this.IsLocalOwner})"
+                    + $"{previousOwner} -> {newOwner} (IsLocalOwner: {this.IsLocalOwner}, IsNPC: {this.IsNPC})"
             );
         }
 
@@ -247,7 +335,30 @@ namespace GameCreator.Netcode.Runtime
 
         protected override void Update()
         {
-            // Skip update if not properly initialized (animation system not ready)
+            // Handle deferred Awake initialization
+            if (this.m_BaseAwakePending)
+            {
+                // Try to ensure Animator reference again
+                this.EnsureAnimatorReference();
+
+                if (this.Animim?.Animator != null)
+                {
+                    // Animator is now ready, complete deferred Awake
+                    base.Awake();
+                    this.m_IsInitialized = true;
+                    this.m_BaseAwakePending = false;
+                    Debug.Log(
+                        $"[NetworkCharacter] {gameObject.name}: Completed deferred Awake initialization"
+                    );
+                }
+                else
+                {
+                    // Still waiting for Animator
+                    return;
+                }
+            }
+
+            // Skip update if not properly initialized
             if (!this.m_IsInitialized)
                 return;
 
@@ -257,19 +368,26 @@ namespace GameCreator.Netcode.Runtime
             if (this.Gestures == null)
                 return;
 
+            // Complete deferred OnEnable once Animator is ready
+            if (this.m_BaseOnEnablePending)
+            {
+                base.OnEnable();
+                this.m_BaseOnEnablePending = false;
+            }
+
             base.Update();
         }
 
         protected override void LateUpdate()
         {
-            if (!this.m_IsInitialized)
+            if (!this.m_IsInitialized || this.m_BaseAwakePending)
                 return;
             base.LateUpdate();
         }
 
         protected override void FixedUpdate()
         {
-            if (!this.m_IsInitialized)
+            if (!this.m_IsInitialized || this.m_BaseAwakePending)
                 return;
             base.FixedUpdate();
         }
@@ -308,6 +426,32 @@ namespace GameCreator.Netcode.Runtime
                 $"[NetworkCharacter] {gameObject.name} became remote player (ShortcutPlayer preserved)"
             );
         }
+
+        /// <summary>
+        /// Called when this character is an NPC (server-authoritative).
+        /// NPCs are not player-controlled and are synchronized by the server.
+        /// </summary>
+        public void BecomeNPC()
+        {
+            // NPCs should never be IsPlayer = true
+            this.m_IsPlayer = false;
+
+            // Disable input for NPCs - they're controlled by AI/server
+            if (this.Player != null)
+            {
+                this.Player.IsControllable = false;
+            }
+
+            Debug.Log(
+                $"[NetworkCharacter] {gameObject.name} configured as NPC (server-authoritative)"
+            );
+        }
+
+        /// <summary>
+        /// Returns true if this character is an NPC (not a player character).
+        /// NPCs are server-authoritative and controlled by AI.
+        /// </summary>
+        public bool IsNPC => !this.IsPlayer;
 
         // PRIVATE METHODS: -----------------------------------------------------------------------
 
